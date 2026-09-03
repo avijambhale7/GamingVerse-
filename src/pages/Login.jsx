@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   GoogleAuthProvider,
   signInWithPopup,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
   updateProfile,
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
@@ -39,6 +41,10 @@ function Login() {
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
 
   const [resetEmail, setResetEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [confirmationResult, setConfirmationResult] = useState(null);
+  const recaptchaVerifierRef = useRef(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -174,6 +180,156 @@ function Login() {
         alert("Invalid email address.");
       } else {
         alert("Could not send reset email: " + error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearRecaptcha = () => {
+    const verifier = recaptchaVerifierRef.current;
+
+    if (verifier) {
+      try {
+        verifier.clear();
+      } catch (error) {
+        console.warn("Could not clear reCAPTCHA:", error);
+      }
+    }
+
+    recaptchaVerifierRef.current = null;
+
+    const container = document.getElementById("phone-recaptcha-container");
+    if (container) {
+      container.innerHTML = "";
+    }
+  };
+
+  const resetPhoneAuthState = () => {
+    clearRecaptcha();
+    setConfirmationResult(null);
+    setVerificationCode("");
+    setPhoneNumber("");
+  };
+
+  const setupRecaptcha = async () => {
+    if (recaptchaVerifierRef.current) {
+      return recaptchaVerifierRef.current;
+    }
+
+    const container = document.getElementById("phone-recaptcha-container");
+
+    if (!container) {
+      throw new Error("reCAPTCHA container is not available.");
+    }
+
+    // Prevent Firebase from seeing an already-rendered widget in this element.
+    container.innerHTML = "";
+
+    const verifier = new RecaptchaVerifier(auth, container, {
+      size: "invisible",
+      callback: () => {},
+      "expired-callback": () => {
+        clearRecaptcha();
+      },
+    });
+
+    recaptchaVerifierRef.current = verifier;
+
+    try {
+      await verifier.render();
+    } catch (error) {
+      try {
+        verifier.clear();
+      } catch {}
+      recaptchaVerifierRef.current = null;
+      container.innerHTML = "";
+      throw error;
+    }
+
+    return verifier;
+  };
+
+  useEffect(() => {
+    if (modal !== "phone") {
+      clearRecaptcha();
+    }
+
+    return () => {
+      clearRecaptcha();
+    };
+  }, [modal]);
+
+  const handleSendPhoneCode = async (e) => {
+    e.preventDefault();
+
+    const cleanPhone = phoneNumber.trim().replace(/[\s()-]/g, "");
+
+    if (!/^\+[1-9]\d{7,14}$/.test(cleanPhone)) {
+      alert(
+        "Enter a valid phone number with country code. Example: +919876543210",
+      );
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const verifier = recaptchaVerifierRef.current || (await setupRecaptcha());
+      const result = await signInWithPhoneNumber(auth, cleanPhone, verifier);
+
+      setConfirmationResult(result);
+      setVerificationCode("");
+      alert("OTP sent successfully!");
+    } catch (error) {
+      console.error("Phone login error:", error);
+
+      clearRecaptcha();
+
+      if (error.code === "auth/invalid-phone-number") {
+        alert("Invalid phone number.");
+      } else if (error.code === "auth/too-many-requests") {
+        alert("Too many attempts. Please try again later.");
+      } else if (error.code === "auth/operation-not-allowed") {
+        alert("Phone authentication is not enabled in Firebase yet.");
+      } else {
+        alert("Could not send OTP: " + error.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyPhoneCode = async (e) => {
+    e.preventDefault();
+
+    if (!confirmationResult) {
+      alert("Please request an OTP first.");
+      return;
+    }
+
+    if (!/^\\d{6}$/.test(verificationCode.trim())) {
+      alert("Enter the 6-digit OTP.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await confirmationResult.confirm(verificationCode.trim());
+      alert("Mobile login successful!");
+      resetPhoneAuthState();
+      setModal(null);
+      navigate("/games");
+    } catch (error) {
+      console.error("OTP verification error:", error);
+
+      if (error.code === "auth/invalid-verification-code") {
+        alert("Invalid OTP. Please check the code and try again.");
+      } else if (error.code === "auth/code-expired") {
+        alert("This OTP has expired. Request a new one.");
+      } else {
+        alert("OTP verification failed: " + error.message);
       }
     } finally {
       setLoading(false);
@@ -328,6 +484,19 @@ function Login() {
           Continue with Google
         </button>
 
+        <button
+          type="button"
+          className="social-button"
+          onClick={() => {
+            setModal("phone");
+            setVerificationCode("");
+          }}
+          disabled={loading}
+        >
+          <span>📱</span>
+          Continue with Mobile No.
+        </button>
+
         <p className="create-account">
           Don't have an account?
           <button type="button" onClick={() => setModal("create")}>
@@ -335,6 +504,101 @@ function Login() {
           </button>
         </p>
       </div>
+
+      {/* Mobile phone login modal */}
+      {modal === "phone" && (
+        <div className="modal-backdrop" onClick={resetPhoneAuthState}>
+          <div
+            className="auth-modal phone-auth-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="modal-close"
+              type="button"
+              onClick={() => {
+                resetPhoneAuthState();
+                setModal(null);
+              }}
+              aria-label="Close"
+            >
+              ×
+            </button>
+
+            <div className="modal-icon">📱</div>
+            <h2>Continue with Mobile No.</h2>
+            <p>
+              {confirmationResult
+                ? "Enter the 6-digit OTP sent to your mobile number."
+                : "Enter your mobile number with country code."}
+            </p>
+            <div
+              id="phone-recaptcha-container"
+              className="phone-recaptcha-container"
+              aria-hidden="true"
+            />
+
+            {!confirmationResult ? (
+              <form onSubmit={handleSendPhoneCode}>
+                <input
+                  type="tel"
+                  placeholder="+919876543210"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  autoComplete="tel"
+                  inputMode="tel"
+                  required
+                />
+
+                <button
+                  type="submit"
+                  className="modal-submit"
+                  disabled={loading}
+                >
+                  {loading ? "Sending OTP..." : "Send OTP"}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyPhoneCode}>
+                <input
+                  type="text"
+                  placeholder="Enter 6-digit OTP"
+                  value={verificationCode}
+                  onChange={(e) =>
+                    setVerificationCode(
+                      e.target.value.replace(/\D/g, "").slice(0, 6),
+                    )
+                  }
+                  inputMode="numeric"
+                  maxLength={6}
+                  autoComplete="one-time-code"
+                  required
+                />
+
+                <button
+                  type="submit"
+                  className="modal-submit"
+                  disabled={loading}
+                >
+                  {loading ? "Verifying..." : "Verify & Continue"}
+                </button>
+
+                <button
+                  type="button"
+                  className="phone-resend-button"
+                  onClick={() => {
+                    clearRecaptcha();
+                    setConfirmationResult(null);
+                    setVerificationCode("");
+                  }}
+                  disabled={loading}
+                >
+                  Change Number / Resend OTP
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Create account modal */}
       {modal === "create" && (

@@ -871,3 +871,43 @@ body {
     padding: 30px 22px;
   }
 }
+
+/* =========================================
+   MOBILE NUMBER AUTHENTICATION
+========================================= */
+
+.phone-recaptcha-container {
+  position: fixed;
+  left: -10000px;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.phone-auth-modal {
+  max-width: 430px;
+}
+
+.phone-resend-button {
+  width: 100%;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: #b03cff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.phone-resend-button:hover {
+  color: #d38aff;
+}
+
+.phone-resend-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
