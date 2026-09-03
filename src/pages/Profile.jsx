@@ -3,6 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged, signOut, updateProfile } from "firebase/auth";
 import { get, ref, update } from "firebase/database";
 import { auth, db } from "../firebase";
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
 import "./Profile.css";
 
 /* =========================================================
@@ -252,6 +258,7 @@ function Profile() {
   const [filter, setFilter] = useState("all");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [photoFile, setPhotoFile] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -402,6 +409,40 @@ function Profile() {
       [name]: value,
     }));
   };
+  const handlePhotoSelect = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setMessage("Please select an image file.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage("Profile photo must be 5 MB or smaller.");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      setPhotoFile(file);
+      setProfile((previous) => ({
+        ...previous,
+        photoURL: String(reader.result || ""),
+      }));
+      setMessage("");
+    };
+
+    reader.onerror = () => {
+      setMessage("Could not preview the selected photo.");
+    };
+
+    reader.readAsDataURL(file);
+  };
 
   const handleSave = async (event) => {
     event.preventDefault();
@@ -419,6 +460,20 @@ function Profile() {
     setMessage("");
 
     try {
+      let savedPhotoURL = profile.photoURL.trim();
+
+      if (photoFile) {
+        const storage = getStorage();
+        const safeFileName = photoFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const photoRef = storageRef(
+          storage,
+          `profilePhotos/${user.uid}/${Date.now()}_${safeFileName}`,
+        );
+
+        const uploadResult = await uploadBytes(photoRef, photoFile);
+        savedPhotoURL = await getDownloadURL(uploadResult.ref);
+      }
+
       const updatedData = {
         firstName: profile.firstName.trim(),
         lastName: profile.lastName.trim(),
@@ -428,16 +483,18 @@ function Profile() {
         instagram: profile.instagram.trim(),
         twitter: profile.twitter.trim(),
         youtube: profile.youtube.trim(),
-        photoURL: profile.photoURL.trim(),
+        photoURL: savedPhotoURL,
       };
 
       await updateProfile(user, {
         displayName: cleanUsername,
+        ...(savedPhotoURL ? { photoURL: savedPhotoURL } : {}),
       });
 
       await update(ref(db, `users/${user.uid}`), updatedData);
 
       setProfile(updatedData);
+      setPhotoFile(null);
       setMessage("Profile saved successfully.");
 
       setTimeout(() => {
@@ -534,30 +591,38 @@ function Profile() {
 
           <form className="edit-profile-card" onSubmit={handleSave}>
             <div className="edit-photo-section">
-              <div className="large-profile-avatar">
-                {profile.photoURL ? (
-                  <img src={profile.photoURL} alt="Profile" />
-                ) : (
-                  <span>
-                    {(profile.firstName || profile.username || "G")
-                      .charAt(0)
-                      .toUpperCase()}
-                  </span>
-                )}
-              </div>
+              <label
+                className="upload-photo-button"
+                htmlFor="profile-photo-upload"
+              >
+                <div className="large-profile-avatar">
+                  {profile.photoURL ? (
+                    <img src={profile.photoURL} alt="Profile" />
+                  ) : (
+                    <span aria-hidden="true">📷</span>
+                  )}
 
-              <div>
-                <h3>Profile Photo</h3>
-                <p>Add a URL for your profile image.</p>
+                  <div className="upload-photo-overlay" aria-hidden="true">
+                    📷
+                  </div>
+                </div>
+              </label>
+
+              <div className="edit-photo-copy">
+                <h3>Profile photo</h3>
+                <p>Upload a new profile photo</p>
 
                 <input
-                  className="photo-url-input"
-                  type="url"
-                  name="photoURL"
-                  value={profile.photoURL}
-                  onChange={handleEditChange}
-                  placeholder="https://example.com/photo.jpg"
+                  id="profile-photo-upload"
+                  type="file"
+                  accept="image/*"
+                  className="profile-file-input"
+                  onChange={handlePhotoSelect}
                 />
+
+                {photoFile && (
+                  <span className="selected-photo-name">{photoFile.name}</span>
+                )}
               </div>
             </div>
 
