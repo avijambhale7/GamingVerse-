@@ -2145,7 +2145,7 @@ function Games() {
                         >
                           👁{" "}
                           {watchedGames.includes(selectedGame.name)
-                            ? "Mark as watched"
+                            ? "Marked as watched"
                             : "Mark as watched"}
                         </button>
 
