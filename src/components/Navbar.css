@@ -1,0 +1,514 @@
+/* =========================================
+   GAMINGVERSE NAVBAR
+========================================= */
+
+.gv-navbar {
+  width: 100%;
+  height: 92px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 35px;
+
+  background:
+    radial-gradient(
+      circle at 20% 50%,
+      rgba(112, 0, 255, 0.12),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 80% 50%,
+      rgba(0, 174, 255, 0.08),
+      transparent 35%
+    ),
+    #07070c;
+
+  border-bottom: 1px solid rgba(145, 65, 255, 0.25);
+
+  position: sticky;
+  top: 0;
+  z-index: 999;
+
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.4),
+    0 1px 20px rgba(117, 0, 255, 0.08);
+
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* =========================================
+   LEFT
+========================================= */
+
+.gv-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* =========================================
+   MENU BUTTON
+========================================= */
+
+.gv-menu-btn {
+  width: 45px;
+  height: 45px;
+
+  border: none;
+  background: transparent;
+
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  gap: 5px;
+
+  cursor: pointer;
+}
+
+.gv-menu-btn span {
+  width: 25px;
+  height: 2px;
+
+  background: #ffffff;
+
+  border-radius: 5px;
+
+  transition: 0.3s;
+}
+
+.gv-menu-btn:hover span {
+  background: #a855f7;
+}
+
+/* =========================================
+   LOGO
+========================================= */
+
+.gv-logo {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  text-decoration: none;
+
+  cursor: pointer;
+}
+
+/* LOGO ICON */
+
+.gv-logo-icon {
+  width: 55px;
+  height: 55px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 28px;
+
+  border-radius: 15px;
+
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+
+  box-shadow:
+    0 0 20px rgba(139, 92, 246, 0.55),
+    inset 0 0 15px rgba(255, 255, 255, 0.08);
+
+  transition: 0.3s;
+}
+
+.gv-logo:hover .gv-logo-icon {
+  transform: rotate(-5deg) scale(1.05);
+
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.8);
+}
+
+/* LOGO TEXT */
+
+.gv-logo-name {
+  font-size: 29px;
+
+  font-weight: 800;
+
+  letter-spacing: -1px;
+
+  color: #ffffff;
+}
+
+.gv-logo-name span {
+  background: linear-gradient(90deg, #8b5cf6, #c026d3, #a855f7);
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  background-clip: text;
+}
+
+/* TAGLINE */
+
+.gv-tagline {
+  margin-top: 2px;
+
+  font-size: 9px;
+
+  letter-spacing: 1.3px;
+
+  color: #777783;
+
+  font-weight: 500;
+}
+
+/* =========================================
+   NAVIGATION
+========================================= */
+
+.gv-nav {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-left: auto;
+  margin-right: 30px;
+}
+
+.gv-nav-link {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 14px 16px;
+
+  color: #92929e;
+
+  text-decoration: none;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  border-radius: 10px;
+
+  transition: 0.25s;
+}
+
+.gv-nav-icon {
+  font-size: 17px;
+}
+
+.gv-nav-link:hover {
+  color: #ffffff;
+
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.gv-nav-link.active {
+  color: #ffffff;
+}
+
+.gv-nav-link.active::after {
+  content: "";
+
+  position: absolute;
+
+  bottom: -18px;
+
+  left: 20%;
+
+  width: 60%;
+
+  height: 3px;
+
+  border-radius: 10px;
+
+  background: linear-gradient(90deg, #8b5cf6, #d946ef);
+
+  box-shadow: 0 0 10px #a855f7;
+}
+
+/* =========================================
+   RIGHT
+========================================= */
+
+.gv-right {
+  display: flex;
+  align-items: center;
+
+  gap: 18px;
+}
+
+/* =========================================
+   SEARCH
+========================================= */
+
+.gv-search {
+  width: 220px;
+  height: 46px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 0 14px;
+
+  border-radius: 13px;
+
+  border: 1px solid rgba(145, 65, 255, 0.25);
+
+  background: rgba(255, 255, 255, 0.025);
+
+  transition: 0.25s;
+}
+
+.gv-search:focus-within {
+  border-color: #9141ff;
+
+  box-shadow: 0 0 20px rgba(145, 65, 255, 0.15);
+}
+
+.gv-search-icon {
+  font-size: 16px;
+
+  opacity: 0.7;
+}
+
+.gv-search input {
+  width: 100%;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  color: #ffffff;
+
+  font-size: 13px;
+}
+
+.gv-search input::placeholder {
+  color: #777783;
+}
+
+/* =========================================
+   NOTIFICATION
+========================================= */
+
+.gv-notification {
+  width: 43px;
+  height: 43px;
+
+  border-radius: 50%;
+
+  border: none;
+
+  background: transparent;
+
+  color: #ffffff;
+
+  font-size: 19px;
+
+  cursor: pointer;
+
+  position: relative;
+
+  transition: 0.25s;
+}
+
+.gv-notification:hover {
+  background: rgba(139, 92, 246, 0.12);
+
+  transform: translateY(-2px);
+}
+
+.gv-notification-dot {
+  position: absolute;
+
+  width: 8px;
+  height: 8px;
+
+  background: #ff315d;
+
+  border-radius: 50%;
+
+  top: 8px;
+  right: 8px;
+
+  box-shadow: 0 0 8px #ff315d;
+}
+
+/* =========================================
+   PROFILE
+========================================= */
+
+.gv-profile {
+  width: 48px;
+  height: 48px;
+
+  border-radius: 50%;
+
+  padding: 0;
+
+  border: 2px solid #7935ff;
+
+  background: linear-gradient(135deg, #24104f, #08080d);
+
+  cursor: pointer;
+
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+
+  transition: 0.25s;
+}
+
+.gv-profile:hover {
+  transform: scale(1.07);
+
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.7);
+}
+
+.gv-avatar {
+  font-size: 24px;
+}
+
+.gv-online {
+  position: absolute;
+
+  width: 11px;
+  height: 11px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+
+  border: 2px solid #07070c;
+
+  right: -1px;
+  bottom: 1px;
+
+  box-shadow: 0 0 8px #22c55e;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1200px) {
+  .gv-nav {
+    margin-right: 10px;
+  }
+
+  .gv-search {
+    width: 170px;
+  }
+
+  .gv-nav-link {
+    padding: 12px 10px;
+  }
+}
+
+@media (max-width: 950px) {
+  .gv-menu-btn {
+    display: flex;
+  }
+
+  .gv-navbar {
+    padding: 0 20px;
+  }
+
+  .gv-nav {
+    display: none;
+
+    position: absolute;
+
+    top: 92px;
+    left: 15px;
+    right: 15px;
+
+    margin: 0;
+
+    padding: 15px;
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    background: rgba(8, 8, 14, 0.98);
+
+    border: 1px solid rgba(139, 92, 246, 0.3);
+
+    border-radius: 15px;
+
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .gv-nav.active {
+    display: flex;
+  }
+
+  .gv-nav-link {
+    padding: 14px;
+  }
+
+  .gv-nav-link.active::after {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .gv-logo-name {
+    font-size: 22px;
+  }
+
+  .gv-logo-icon {
+    width: 45px;
+    height: 45px;
+
+    font-size: 23px;
+  }
+
+  .gv-tagline {
+    display: none;
+  }
+
+  .gv-search {
+    display: none;
+  }
+}
+
+@media (max-width: 450px) {
+  .gv-navbar {
+    height: 75px;
+  }
+
+  .gv-nav {
+    top: 75px;
+  }
+
+  .gv-logo-name {
+    font-size: 19px;
+  }
+
+  .gv-logo-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+  }
+
+  .gv-right {
+    gap: 5px;
+  }
+}

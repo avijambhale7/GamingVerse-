@@ -1,0 +1,341 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(111, 40, 180, 0.12),
+      transparent 35%
+    ),
+    #050509;
+
+  color: white;
+
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.gamingverse-app {
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at 15% 20%,
+      rgba(104, 35, 180, 0.08),
+      transparent 30%
+    ),
+    radial-gradient(circle at 85% 50%, rgba(30, 90, 180, 0.06), transparent 30%);
+
+  overflow-x: hidden;
+}
+
+/* =========================================
+   MAIN
+========================================= */
+
+.gv-main {
+  width: 100%;
+}
+
+/* =========================================
+   HERO
+========================================= */
+
+.gv-hero {
+  min-height: 600px;
+
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  padding: 80px 8%;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at 75% 50%,
+      rgba(123, 50, 255, 0.17),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at 20% 40%,
+      rgba(31, 100, 255, 0.08),
+      transparent 30%
+    );
+}
+
+.gv-hero-content {
+  max-width: 720px;
+
+  position: relative;
+
+  z-index: 2;
+}
+
+.gv-badge {
+  display: inline-block;
+
+  padding: 9px 15px;
+
+  border-radius: 30px;
+
+  border: 1px solid rgba(168, 85, 247, 0.35);
+
+  background: rgba(139, 92, 246, 0.08);
+
+  color: #c084fc;
+
+  font-size: 12px;
+
+  letter-spacing: 1px;
+
+  margin-bottom: 25px;
+}
+
+.gv-hero h1 {
+  font-size: clamp(45px, 6vw, 80px);
+
+  line-height: 1.05;
+
+  font-weight: 900;
+
+  letter-spacing: -3px;
+
+  margin-bottom: 25px;
+}
+
+.gv-hero h1 span {
+  display: block;
+
+  background: linear-gradient(90deg, #8b5cf6, #d946ef, #a855f7);
+
+  -webkit-background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+
+  background-clip: text;
+}
+
+.gv-hero p {
+  max-width: 600px;
+
+  color: #9696a5;
+
+  font-size: 17px;
+
+  line-height: 1.7;
+
+  margin-bottom: 35px;
+}
+
+/* =========================================
+   HERO BUTTONS
+========================================= */
+
+.gv-hero-buttons {
+  display: flex;
+
+  gap: 15px;
+
+  flex-wrap: wrap;
+}
+
+.gv-primary-btn,
+.gv-secondary-btn {
+  padding: 15px 25px;
+
+  border-radius: 10px;
+
+  text-decoration: none;
+
+  font-size: 14px;
+
+  font-weight: 700;
+
+  transition: 0.25s;
+}
+
+.gv-primary-btn {
+  color: white;
+
+  background: linear-gradient(135deg, #7c3aed, #c026d3);
+
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.3);
+}
+
+.gv-primary-btn:hover {
+  transform: translateY(-3px);
+
+  box-shadow: 0 0 35px rgba(139, 92, 246, 0.55);
+}
+
+.gv-secondary-btn {
+  color: #ffffff;
+
+  border: 1px solid rgba(168, 85, 247, 0.4);
+
+  background: rgba(139, 92, 246, 0.05);
+}
+
+.gv-secondary-btn:hover {
+  background: rgba(139, 92, 246, 0.15);
+
+  border-color: #a855f7;
+}
+
+/* =========================================
+   HERO GLOW
+========================================= */
+
+.gv-hero-glow {
+  position: absolute;
+
+  width: 500px;
+  height: 500px;
+
+  right: 5%;
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  border-radius: 50%;
+
+  background: radial-gradient(
+    circle,
+    rgba(139, 92, 246, 0.18),
+    transparent 65%
+  );
+
+  filter: blur(30px);
+
+  pointer-events: none;
+}
+
+/* =========================================
+   FEATURES
+========================================= */
+
+.gv-features {
+  width: 85%;
+
+  margin: 0 auto 80px;
+
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 20px;
+}
+
+.gv-feature-card {
+  padding: 30px;
+
+  border-radius: 18px;
+
+  border: 1px solid rgba(139, 92, 246, 0.18);
+
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.035),
+    rgba(255, 255, 255, 0.01)
+  );
+
+  transition: 0.3s;
+}
+
+.gv-feature-card:hover {
+  transform: translateY(-7px);
+
+  border-color: rgba(168, 85, 247, 0.5);
+
+  box-shadow:
+    0 15px 40px rgba(0, 0, 0, 0.3),
+    0 0 25px rgba(139, 92, 246, 0.08);
+}
+
+.gv-feature-icon {
+  width: 55px;
+  height: 55px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 14px;
+
+  background: rgba(139, 92, 246, 0.12);
+
+  font-size: 25px;
+
+  margin-bottom: 18px;
+}
+
+.gv-feature-card h3 {
+  font-size: 20px;
+
+  margin-bottom: 10px;
+}
+
+.gv-feature-card p {
+  color: #858592;
+
+  font-size: 14px;
+
+  line-height: 1.6;
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 800px) {
+  .gv-hero {
+    padding: 70px 25px;
+
+    min-height: 550px;
+  }
+
+  .gv-features {
+    width: 90%;
+
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 500px) {
+  .gv-hero {
+    padding: 60px 20px;
+  }
+
+  .gv-hero h1 {
+    font-size: 43px;
+
+    letter-spacing: -2px;
+  }
+
+  .gv-hero p {
+    font-size: 15px;
+  }
+
+  .gv-hero-buttons {
+    flex-direction: column;
+  }
+
+  .gv-primary-btn,
+  .gv-secondary-btn {
+    text-align: center;
+
+    width: 100%;
+  }
+}

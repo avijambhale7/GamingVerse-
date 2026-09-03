@@ -1,0 +1,873 @@
+/* =========================================
+   PAGE
+========================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+  background: #000;
+}
+
+/* =========================================
+   LOGIN PAGE
+========================================= */
+
+.login-page {
+  position: relative;
+
+  width: 100%;
+  min-height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 30px 20px;
+
+  overflow: hidden;
+
+  background: #000;
+}
+
+/* =========================================
+   GAME IMAGE BACKGROUND
+========================================= */
+
+.game-background {
+  position: fixed;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+
+  overflow: hidden;
+
+  z-index: 0;
+
+  background: #000;
+}
+
+/* =========================================
+   IMAGE ROWS
+========================================= */
+
+.image-row {
+  position: absolute;
+
+  display: flex;
+
+  gap: 18px;
+
+  width: max-content;
+
+  /* INCREASED IMAGE VISIBILITY */
+  opacity: 0.88;
+
+  filter: brightness(0.92) saturate(1.18) contrast(1.05);
+
+  pointer-events: none;
+}
+
+/* =========================================
+   IMAGES
+========================================= */
+
+.image-row img {
+  width: 280px;
+  height: 170px;
+
+  object-fit: cover;
+
+  border-radius: 14px;
+
+  flex-shrink: 0;
+
+  display: block;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* =========================================
+   ROW 1
+========================================= */
+
+.row-1 {
+  top: 5%;
+  left: 0;
+
+  animation: moveLeft 45s linear infinite;
+}
+
+/* =========================================
+   ROW 2
+========================================= */
+
+.row-2 {
+  top: 38%;
+  left: -100px;
+
+  animation: moveRight 55s linear infinite;
+}
+
+/* =========================================
+   ROW 3
+========================================= */
+
+.row-3 {
+  top: 71%;
+  left: 0;
+
+  animation: moveLeft 50s linear infinite;
+}
+
+/* =========================================
+   ANIMATIONS
+========================================= */
+
+@keyframes moveLeft {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes moveRight {
+  0% {
+    transform: translateX(-50%);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* =========================================
+   DARK OVERLAY
+========================================= */
+
+.background-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 1;
+
+  pointer-events: none;
+
+  /* MUCH LIGHTER OVERLAY */
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.42),
+    rgba(0, 0, 0, 0.18),
+    rgba(0, 0, 0, 0.42)
+  );
+
+  backdrop-filter: blur(1px);
+}
+
+/* =========================================
+   LOGIN CARD
+========================================= */
+
+.login-card {
+  position: relative;
+
+  z-index: 10;
+
+  width: 100%;
+
+  max-width: 530px;
+
+  padding: 40px 46px 34px;
+
+  /* BLACK TRANSPARENT LOGIN WINDOW */
+  background: rgba(8, 8, 12, 0.76);
+
+  border-radius: 22px;
+
+  /* Glass effect */
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  /* Border */
+  border: 1px solid rgba(255, 255, 255, 0.14);
+
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.85),
+    0 0 45px rgba(150, 45, 255, 0.16);
+
+  color: #ffffff;
+}
+
+/* =========================================
+   GAME ICON
+========================================= */
+
+.game-icon {
+  width: 82px;
+  height: 82px;
+
+  margin: 0 auto 18px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  font-size: 42px;
+
+  border-radius: 22px;
+
+  background: linear-gradient(135deg, #8b24ed, #a932ff);
+
+  box-shadow:
+    0 15px 35px rgba(142, 35, 238, 0.45),
+    0 0 35px rgba(155, 50, 255, 0.22);
+}
+
+/* =========================================
+   TITLE
+========================================= */
+
+.login-title {
+  margin: 0;
+
+  text-align: center;
+
+  font-size: 34px;
+
+  font-weight: 800;
+
+  color: #ffffff;
+
+  letter-spacing: -1px;
+
+  text-shadow: 0 0 20px rgba(160, 55, 255, 0.35);
+}
+
+/* =========================================
+   SUBTITLE
+========================================= */
+
+.login-subtitle {
+  margin: 8px 0 30px;
+
+  text-align: center;
+
+  color: #b5b5c2;
+
+  font-size: 16px;
+}
+
+/* =========================================
+   FORM
+========================================= */
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-group label {
+  display: block;
+
+  margin-bottom: 9px;
+
+  font-size: 15px;
+
+  font-weight: 700;
+
+  color: #ffffff;
+}
+
+/* =========================================
+   INPUT
+========================================= */
+
+.input-wrapper {
+  position: relative;
+
+  width: 100%;
+}
+
+.input-wrapper input {
+  width: 100%;
+
+  height: 54px;
+
+  padding: 0 48px;
+
+  border: 1px solid #343440;
+
+  border-radius: 10px;
+
+  outline: none;
+
+  background: #111118;
+
+  color: #ffffff;
+
+  font-size: 16px;
+
+  transition: 0.25s ease;
+}
+
+.input-wrapper input::placeholder {
+  color: #92929d;
+}
+
+.input-wrapper input:focus {
+  border-color: #a02cff;
+
+  box-shadow: 0 0 0 3px rgba(155, 44, 255, 0.16);
+}
+
+.input-icon {
+  position: absolute;
+
+  left: 18px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  font-size: 18px;
+
+  z-index: 2;
+}
+
+/* =========================================
+   PASSWORD TOGGLE
+========================================= */
+
+.password-toggle {
+  position: absolute;
+
+  right: 15px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  border: none;
+
+  background: transparent;
+
+  color: #aaa;
+
+  cursor: pointer;
+
+  font-size: 18px;
+
+  padding: 4px;
+
+  transition: 0.2s;
+}
+
+.password-toggle:hover {
+  color: #c17aff;
+}
+
+/* =========================================
+   OPTIONS
+========================================= */
+
+.login-options {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  margin-top: 3px;
+
+  margin-bottom: 25px;
+}
+
+/* Remember */
+
+.remember {
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  cursor: pointer;
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  color: #eeeeee;
+}
+
+.remember input {
+  width: 18px !important;
+  height: 18px !important;
+
+  min-width: 18px !important;
+  min-height: 18px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  cursor: pointer;
+
+  accent-color: #9b2cff;
+}
+
+/* Forgot */
+
+.forgot-password {
+  border: none;
+
+  background: none;
+
+  color: #b03cff;
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  padding: 0;
+}
+
+.forgot-password:hover {
+  color: #d38aff;
+
+  text-decoration: underline;
+}
+
+/* =========================================
+   LOGIN BUTTON
+========================================= */
+
+.login-button {
+  width: 100%;
+
+  height: 56px;
+
+  border: none;
+
+  border-radius: 11px;
+
+  background: linear-gradient(90deg, #8d27e8, #aa31ff);
+
+  color: white;
+
+  font-size: 18px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 18px;
+
+  box-shadow: 0 15px 35px rgba(145, 38, 236, 0.32);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.login-button span {
+  font-size: 28px;
+
+  font-weight: 400;
+
+  line-height: 0;
+}
+
+.login-button:hover {
+  transform: translateY(-2px);
+
+  box-shadow: 0 20px 45px rgba(145, 38, 236, 0.5);
+}
+
+.login-button:active {
+  transform: translateY(0);
+}
+
+/* =========================================
+   OR SECTION
+========================================= */
+
+.or-section {
+  display: flex;
+
+  align-items: center;
+
+  gap: 14px;
+
+  margin: 24px 0;
+}
+
+.or-section div {
+  flex: 1;
+
+  height: 1px;
+
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.or-section span {
+  color: #858592;
+
+  font-size: 14px;
+}
+
+/* =========================================
+   SOCIAL BUTTONS
+========================================= */
+
+.social-button {
+  width: 100%;
+
+  height: 54px;
+
+  margin-bottom: 11px;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  border-radius: 11px;
+
+  background: rgba(255, 255, 255, 0.045);
+
+  color: #eeeeee;
+
+  font-size: 16px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 12px;
+
+  transition: 0.2s ease;
+}
+
+.social-button span {
+  font-size: 18px;
+}
+
+.social-button:hover {
+  background: rgba(155, 50, 255, 0.12);
+
+  border-color: rgba(170, 70, 255, 0.5);
+
+  transform: translateY(-1px);
+}
+
+/* =========================================
+   CREATE ACCOUNT
+========================================= */
+
+.create-account {
+  margin: 22px 0 0;
+
+  text-align: center;
+
+  color: #888894;
+
+  font-size: 15px;
+}
+
+.create-account button {
+  border: none;
+
+  background: transparent;
+
+  color: #b03cff;
+
+  font-weight: 700;
+
+  font-size: 15px;
+
+  cursor: pointer;
+
+  margin-left: 4px;
+}
+
+.create-account button:hover {
+  color: #d38aff;
+
+  text-decoration: underline;
+}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 700px) {
+  .login-page {
+    padding: 25px 15px;
+  }
+
+  .login-card {
+    max-width: 470px;
+
+    padding: 34px 28px;
+  }
+
+  .image-row img {
+    width: 220px;
+    height: 135px;
+  }
+}
+
+@media (max-width: 450px) {
+  .login-card {
+    padding: 30px 20px;
+
+    border-radius: 18px;
+  }
+
+  .game-icon {
+    width: 70px;
+    height: 70px;
+
+    font-size: 34px;
+  }
+
+  .login-title {
+    font-size: 29px;
+  }
+
+  .login-subtitle {
+    font-size: 14px;
+  }
+
+  .login-options {
+    gap: 10px;
+  }
+
+  .forgot-password {
+    font-size: 13px;
+  }
+}
+/* =========================================
+   DISABLED BUTTON
+========================================= */
+
+.login-button:disabled,
+.social-button:disabled,
+.modal-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   AUTH MODALS
+========================================= */
+
+.modal-backdrop {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 1000;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(0, 0, 0, 0.75);
+
+  backdrop-filter: blur(8px);
+}
+
+.auth-modal {
+  position: relative;
+
+  width: 100%;
+
+  max-width: 430px;
+
+  padding: 35px;
+
+  border-radius: 20px;
+
+  background: linear-gradient(145deg, #15131d, #0b0a10);
+
+  border: 1px solid rgba(166, 67, 255, 0.35);
+
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.8),
+    0 0 40px rgba(150, 40, 255, 0.15);
+
+  color: white;
+}
+
+.modal-close {
+  position: absolute;
+
+  top: 12px;
+  right: 15px;
+
+  width: 35px;
+  height: 35px;
+
+  border: none;
+
+  background: transparent;
+
+  color: #888;
+
+  font-size: 28px;
+
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  color: white;
+}
+
+.modal-icon {
+  width: 65px;
+  height: 65px;
+
+  margin: 0 auto 18px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 18px;
+
+  background: linear-gradient(135deg, #8725ed, #a932ff);
+
+  font-size: 30px;
+
+  box-shadow: 0 10px 30px rgba(150, 40, 255, 0.3);
+}
+
+.auth-modal h2 {
+  text-align: center;
+
+  margin: 0 0 8px;
+
+  font-size: 27px;
+}
+
+.auth-modal > p {
+  text-align: center;
+
+  color: #9998a7;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+
+  margin-bottom: 25px;
+}
+
+.auth-modal form {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 13px;
+}
+
+.auth-modal input {
+  width: 100%;
+
+  height: 50px;
+
+  padding: 0 15px;
+
+  border-radius: 9px;
+
+  border: 1px solid #30303c;
+
+  background: #111018;
+
+  color: white;
+
+  outline: none;
+
+  font-size: 15px;
+}
+
+.auth-modal input::placeholder {
+  color: #777682;
+}
+
+.auth-modal input:focus {
+  border-color: #9f34ff;
+
+  box-shadow: 0 0 0 3px rgba(159, 52, 255, 0.12);
+}
+
+.modal-submit {
+  width: 100%;
+
+  height: 52px;
+
+  margin-top: 6px;
+
+  border: none;
+
+  border-radius: 10px;
+
+  background: linear-gradient(90deg, #8e27e8, #ab34ff);
+
+  color: white;
+
+  font-size: 15px;
+
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.modal-submit:hover {
+  transform: translateY(-1px);
+
+  box-shadow: 0 10px 25px rgba(150, 40, 255, 0.3);
+}
+
+@media (max-width: 500px) {
+  .auth-modal {
+    padding: 30px 22px;
+  }
+}
