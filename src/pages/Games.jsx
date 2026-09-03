@@ -128,7 +128,7 @@ const gameDetails = {
     releaseDate: "17 September 2013",
     developer: "Rockstar North",
     publisher: "Rockstar Games",
-    trailerUrl: "",
+    trailerUrl: "https://www.youtube.com/embed/hvoD7ehZPcM",
   },
   "Cyberpunk 2077": {
     title: "Cyberpunk 2077",
@@ -139,7 +139,7 @@ const gameDetails = {
     releaseDate: "10 December 2020",
     developer: "CD Projekt Red",
     publisher: "CD Projekt",
-    trailerUrl: "",
+    trailerUrl: "https://www.youtube.com/embed/8X2kIfS6fb8",
   },
   "Assassin's Creed Shadows": {
     title: "Assassin's Creed Shadows",
@@ -150,7 +150,7 @@ const gameDetails = {
     releaseDate: "20 March 2025",
     developer: "Ubisoft Quebec",
     publisher: "Ubisoft",
-    trailerUrl: "",
+    trailerUrl: "https://www.youtube.com/embed/vovkzbtYBC8",
   },
   "Among Us": {
     title: "Among Us",
@@ -161,7 +161,7 @@ const gameDetails = {
     releaseDate: "15 June 2018",
     developer: "Innersloth",
     publisher: "Innersloth",
-    trailerUrl: "",
+    trailerUrl: "https://www.youtube.com/embed/NSJ4cESNQfE",
   },
   "Black Myth Wukong": {
     title: "Black Myth: Wukong",
@@ -172,7 +172,7 @@ const gameDetails = {
     releaseDate: "20 August 2024",
     developer: "Game Science",
     publisher: "Game Science",
-    trailerUrl: "",
+    trailerUrl: "https://www.youtube.com/embed/0Zw-mo0EFt0",
   },
   "Counter Strike 2": {
     title: "Counter-Strike 2",
@@ -183,7 +183,7 @@ const gameDetails = {
     releaseDate: "27 September 2023",
     developer: "Valve",
     publisher: "Valve",
-    trailerUrl: "",
+    trailerUrl: "https://www.youtube.com/embed/nSE38xjMLqE",
   },
   "Ghost of Tsushima": {
     title: "Ghost of Tsushima",
@@ -194,7 +194,7 @@ const gameDetails = {
     releaseDate: "17 July 2020",
     developer: "Sucker Punch Productions",
     publisher: "Sony Interactive Entertainment",
-    trailerUrl: "",
+    trailerUrl: "https://www.youtube.com/embed/kSAvzeopPC8",
   },
   "GTA VI": {
     title: "Grand Theft Auto VI",
@@ -205,7 +205,7 @@ const gameDetails = {
     releaseDate: "19 November 2026",
     developer: "Rockstar Games",
     publisher: "Rockstar Games",
-    trailerUrl: "",
+    trailerUrl: "https://www.youtube.com/embed/VQRLujxTm3c",
   },
   "God of War Ragnarok": {
     title: "God of War Ragnarök",
@@ -216,7 +216,7 @@ const gameDetails = {
     releaseDate: "9 November 2022",
     developer: "Santa Monica Studio",
     publisher: "Sony Interactive Entertainment",
-    trailerUrl: "",
+    trailerUrl: "https://www.youtube.com/embed/g1wr0DfV73E",
   },
   "God of War": {
     title: "God of War",
@@ -227,7 +227,7 @@ const gameDetails = {
     releaseDate: "20 April 2018",
     developer: "Santa Monica Studio",
     publisher: "Sony Interactive Entertainment",
-    trailerUrl: "",
+    trailerUrl: "https://www.youtube.com/embed/lRhzFqA1f7o",
   },
   "Hogwarts Legacy": {
     title: "Hogwarts Legacy",
@@ -238,7 +238,7 @@ const gameDetails = {
     releaseDate: "10 February 2023",
     developer: "Avalanche Software",
     publisher: "Warner Bros. Games",
-    trailerUrl: "",
+    trailerUrl: "https://www.youtube.com/embed/BtyBjOW8sGY",
   },
   Minecraft: {
     title: "Minecraft",
@@ -249,7 +249,7 @@ const gameDetails = {
     releaseDate: "18 November 2011",
     developer: "Mojang Studios",
     publisher: "Mojang Studios",
-    trailerUrl: "",
+    trailerUrl: "https://www.youtube.com/embed/Rla3FUlxJdE",
   },
 };
 
@@ -649,6 +649,7 @@ function Games() {
   const searchInputRef = useRef(null);
   const [selectedGame, setSelectedGame] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [showTrailer, setShowTrailer] = useState(false);
   const [watchedGames, setWatchedGames] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("gamingverse_watched") || "[]");
@@ -950,6 +951,23 @@ function Games() {
     setSelectedGame(null);
     setReviewMessage("");
     setSelectedReview(null);
+  };
+  const openTrailer = (game) => {
+    const trailer = getGameDetails(game?.name || "").trailerUrl;
+
+    if (!trailer) {
+      setReviewMessage("Trailer unavailable for this game.");
+      return;
+    }
+
+    setSelectedGame(game);
+    setShowDetails(false);
+    setShowTrailer(true);
+    setReviewMessage("");
+  };
+
+  const closeTrailer = () => {
+    setShowTrailer(false);
   };
   const closeMeter = () => {
     if (reviewLoading) return;
@@ -2176,15 +2194,14 @@ function Games() {
                         💜 GamingVerse Meter
                       </button>
 
-                      {details.trailerUrl || details.trailerSearchUrl ? (
-                        <a
+                      {details.trailerUrl ? (
+                        <button
                           className="secondary-detail-action"
-                          href={details.trailerUrl || details.trailerSearchUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          type="button"
+                          onClick={() => openTrailer(selectedGame)}
                         >
                           ▶ Watch Trailer
-                        </a>
+                        </button>
                       ) : null}
                     </div>
                   </div>
@@ -2292,6 +2309,66 @@ function Games() {
                 </>
               );
             })()}
+          </section>
+        </div>
+      )}
+
+      {/* ===================================================
+            YOUTUBE TRAILER MODAL
+        =================================================== */}
+      {showTrailer && selectedGame && (
+        <div className="game-trailer-backdrop" onClick={closeTrailer}>
+          <section
+            className="game-trailer-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${getGameDetails(selectedGame.name).title} trailer`}
+          >
+            <div className="game-trailer-header">
+              <div>
+                <span className="game-trailer-kicker">OFFICIAL TRAILER</span>
+                <h2>{getGameDetails(selectedGame.name).title}</h2>
+                <p>Watch the trailer without leaving GamingVerse.</p>
+              </div>
+
+              <button
+                className="game-trailer-close"
+                type="button"
+                onClick={closeTrailer}
+                aria-label="Close trailer"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="game-trailer-frame">
+              <iframe
+                src={`${getGameDetails(selectedGame.name).trailerUrl}?rel=0&modestbranding=1`}
+                title={`${getGameDetails(selectedGame.name).title} official trailer`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+              />
+            </div>
+
+            <div className="game-trailer-footer">
+              <div>
+                <strong>{getGameDetails(selectedGame.name).title}</strong>
+                <span>Official trailer • YouTube</span>
+              </div>
+
+              <a
+                href={getGameDetails(selectedGame.name).trailerUrl.replace(
+                  "https://www.youtube.com/embed/",
+                  "https://www.youtube.com/watch?v=",
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="game-trailer-youtube"
+              >
+                Open on YouTube ↗
+              </a>
+            </div>
           </section>
         </div>
       )}

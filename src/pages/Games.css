@@ -5046,3 +5046,179 @@ body,
 .games-navbar .profile-info {
   display: none;
 }
+
+/* =========================================================
+   IN-SITE GAME TRAILER
+   Used by Game Details -> Watch Trailer.
+   Spaces / Trailers page is intentionally unchanged.
+========================================================= */
+
+.secondary-detail-action {
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.game-trailer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.game-trailer-modal {
+  width: min(1180px, 94vw);
+  max-height: 94vh;
+  overflow: hidden;
+  border: 1px solid rgba(170, 72, 255, 0.38);
+  border-radius: 16px;
+  background: #050507;
+  box-shadow:
+    0 30px 100px rgba(0, 0, 0, 0.95),
+    0 0 55px rgba(160, 50, 255, 0.16);
+}
+
+.game-trailer-header {
+  min-height: 82px;
+  padding: 15px 18px 14px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  background: #08080c;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.game-trailer-kicker {
+  display: block;
+  margin-bottom: 4px;
+  color: #b864ff;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+}
+
+.game-trailer-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.game-trailer-header p {
+  margin: 4px 0 0;
+  color: #858590;
+  font-size: 11px;
+}
+
+.game-trailer-close {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.045);
+  color: #fff;
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.game-trailer-close:hover {
+  background: rgba(170, 70, 255, 0.2);
+  border-color: rgba(195, 100, 255, 0.55);
+  transform: scale(1.04);
+}
+
+.game-trailer-frame {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+
+.game-trailer-frame iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+}
+
+.game-trailer-footer {
+  min-height: 64px;
+  padding: 11px 17px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: #09090d;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.game-trailer-footer strong {
+  display: block;
+  color: #efeff3;
+  font-size: 13px;
+}
+
+.game-trailer-footer span {
+  display: block;
+  margin-top: 3px;
+  color: #787883;
+  font-size: 10px;
+}
+
+.game-trailer-youtube {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: 0.2s ease;
+}
+
+.game-trailer-youtube:hover {
+  background: rgba(170, 70, 255, 0.14);
+  border-color: rgba(195, 100, 255, 0.45);
+}
+
+@media (max-width: 700px) {
+  .game-trailer-backdrop {
+    padding: 10px;
+  }
+
+  .game-trailer-modal {
+    width: 100%;
+  }
+
+  .game-trailer-header {
+    padding: 12px 14px;
+  }
+
+  .game-trailer-header h2 {
+    font-size: 17px;
+  }
+
+  .game-trailer-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .game-trailer-youtube {
+    width: 100%;
+  }
+}

@@ -836,7 +836,7 @@ function Profile() {
                   : "profile-tab"
               }
               type="button"
-              onClick={() => setActiveTab("collections")}
+              onClick={() => navigate("/games?view=collections")}
             >
               ▱ <span>Collections</span>
             </button>
