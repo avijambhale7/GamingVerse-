@@ -1615,22 +1615,21 @@ function Games() {
                     ? "All Games"
                     : `${activeCategory} Games`}
                 </strong>
-                <span>{filteredPosters.length} games available</span>
+                <span>
+                  {filteredPosters.length} games available
+                </span>
               </div>
 
               <div className="home-category-select-wrap">
-                <label htmlFor="home-game-category">Category</label>
+                <label htmlFor="home-game-category">
+                  Category
+                </label>
                 <select
                   id="home-game-category"
                   value={
-                    [
-                      "All",
-                      "Action",
-                      "Adventure",
-                      "RPG",
-                      "Racing",
-                      "Sports",
-                    ].includes(activeCategory)
+                    ["All", "Action", "Adventure", "RPG", "Racing", "Sports"].includes(
+                      activeCategory,
+                    )
                       ? activeCategory
                       : "All"
                   }
@@ -1638,10 +1637,12 @@ function Games() {
                     setActiveView("home");
                     setActiveCategory(e.target.value);
                     window.setTimeout(() => {
-                      document.querySelector(".games-content")?.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start",
-                      });
+                      document
+                        .querySelector(".games-content")
+                        ?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
                     }, 0);
                   }}
                   aria-label="Filter games by category"
