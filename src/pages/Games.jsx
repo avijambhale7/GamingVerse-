@@ -253,6 +253,274 @@ const gameDetails = {
   },
 };
 
+/* =========================================================
+   GAMINGVERSE AGE & SAFETY RULES
+   Ratings below are GamingVerse's access categories.
+========================================================= */
+const gameAgeRatings = {
+  "GTA V": "18+",
+  "Cyberpunk 2077": "18+",
+  "Assassin's Creed Shadows": "16+",
+  "Among Us": "7+",
+  "Black Myth Wukong": "16+",
+  "Counter Strike 2": "16+",
+  "Ghost of Tsushima": "16+",
+  "GTA VI": "18+",
+  "God of War Ragnarok": "16+",
+  "God of War": "16+",
+  "Hogwarts Legacy": "12+",
+  Minecraft: "7+",
+};
+
+/* Games that must never be available through the normal game catalogue. */
+const blockedGameNames = [
+  "blue whale",
+  "being a dik",
+  "acting lessons",
+  "toys 18+",
+  "rainy waifu",
+  "waifu gamers",
+  "holy waifu",
+  "hot holes",
+  "sex secret",
+  "love 2077",
+  "desktop companion: alt girl",
+];
+
+/* =========================================================
+   AUTOMATIC GAME CATALOGUE
+   RAWG supplies live PC + PlayStation + Xbox game data.
+   For this college/demo build the key is kept in this file.
+   NOTE: a client-side API key is visible in the browser bundle.
+========================================================= */
+const RAWG_API_KEY = "96ce35c844ec40458f1b56cc62037d3c";
+
+const RAWG_ALLOWED_PLATFORM_SLUGS = new Set([
+  "pc",
+  "playstation4",
+  "playstation5",
+  "xbox-one",
+  "xbox-series-x",
+  "xbox-series-s",
+]);
+
+const RAWG_BLOCKED_TERMS = [
+  "blue whale",
+  "self harm challenge",
+  "suicide challenge",
+  "dangerous challenge",
+  "being a dik",
+  "acting lessons",
+  "toys 18+",
+  "rainy waifu",
+  "waifu gamers",
+  "holy waifu",
+  "hot holes",
+  "sex secret",
+  "love 2077",
+  "desktop companion",
+  "alt girl",
+  "waifu",
+  "waifu game",
+  "hentai",
+  "ecchi",
+  "eroge",
+  "porn",
+  "pornographic",
+  "nsfw",
+  "adult only",
+  "adult game",
+  "sexual content",
+  "sexually explicit",
+  "explicit sexual",
+  "nudity",
+  "nude",
+  "fetish",
+  "foot fetish",
+  "lustful",
+  "lewd",
+  "uncensored",
+  "erotic",
+  "erotica",
+  "sexualized",
+  "sexualised",
+  "femboy",
+  "fembot",
+];
+
+const automaticGameDetailsCache = {};
+
+function rawgRatingToGamingVerse(rating) {
+  const slug = String(rating?.slug || "").toLowerCase();
+
+  if (slug === "adults-only") return "18+";
+  if (slug === "mature") return "18+";
+  if (slug === "teen") return "16+";
+  if (slug === "everyone-10-plus") return "12+";
+  if (slug === "everyone") return "7+";
+
+  // Unknown/unrated automatic games stay protected.
+  return "16+";
+}
+
+function rawgGameHasAllowedPlatform(game) {
+  return (
+    Array.isArray(game?.platforms) &&
+    game.platforms.some((entry) =>
+      RAWG_ALLOWED_PLATFORM_SLUGS.has(entry?.platform?.slug),
+    )
+  );
+}
+
+function getGameSafetyText(game) {
+  const rawgTags = Array.isArray(game?.tags)
+    ? game.tags.map((tag) => tag?.name)
+    : [];
+  const rawgGenres = Array.isArray(game?.genres)
+    ? game.genres.map((genre) => genre?.name)
+    : [];
+  const rawgStores = Array.isArray(game?.stores)
+    ? game.stores.map((store) => store?.store?.name)
+    : [];
+
+  return [
+    game?.name,
+    game?.slug,
+    game?.description,
+    game?.esrb_rating?.name,
+    game?.esrb_rating?.slug,
+    ...rawgTags,
+    ...rawgGenres,
+    ...rawgStores,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function isSexualizedGame(game) {
+  const text = getGameSafetyText(game);
+  return RAWG_BLOCKED_TERMS.some((term) => text.includes(term));
+}
+
+function rawgGameIsSafe(game) {
+  return !isSexualizedGame(game);
+}
+
+function mapRawgGame(game) {
+  const platformNames = Array.from(
+    new Set(
+      (game?.platforms || [])
+        .filter((entry) =>
+          RAWG_ALLOWED_PLATFORM_SLUGS.has(entry?.platform?.slug),
+        )
+        .map((entry) => entry?.platform?.name)
+        .filter(Boolean),
+    ),
+  );
+
+  const genre =
+    Array.isArray(game?.genres) && game.genres.length
+      ? game.genres
+          .map((item) => item?.name)
+          .filter(Boolean)
+          .slice(0, 2)
+          .join(" • ")
+      : "Game";
+
+  const ageRating = rawgRatingToGamingVerse(game?.esrb_rating);
+  const displayName = String(game?.name || "").trim();
+
+  return {
+    id: `rawg-${game.id}`,
+    rawgId: game.id,
+    name: displayName,
+    image: game.background_image || "",
+    ageRating,
+    genre,
+    rating: Number.isFinite(Number(game?.rating)) ? Number(game.rating) : 0,
+    releaseDate: game?.released || "",
+    platforms: platformNames.length
+      ? platformNames.join(" • ")
+      : "PC • Console",
+    source: "RAWG",
+  };
+}
+
+function calculateAgeFromDob(dob) {
+  if (!dob) return null;
+
+  const birthDate = new Date(`${dob}T00:00:00`);
+  if (Number.isNaN(birthDate.getTime())) return null;
+
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+
+  if (
+    today.getMonth() < birthDate.getMonth() ||
+    (today.getMonth() === birthDate.getMonth() &&
+      today.getDate() < birthDate.getDate())
+  ) {
+    age -= 1;
+  }
+
+  return age >= 0 && age <= 120 ? age : null;
+}
+
+function getRequiredGameAge(gameName) {
+  const rating = gameAgeRatings[gameName] || "16+";
+  return Number.parseInt(rating, 10) || 16;
+}
+
+function isBlockedGame(game) {
+  const details = getGameDetails(game?.name || "");
+  const text = [
+    game?.name,
+    details?.title,
+    details?.description,
+    details?.genre,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return blockedGameNames.some((blocked) => text.includes(blocked));
+}
+
+function isUnsafeCatalogueGame(game) {
+  if (!game) return true;
+  if (isBlockedGame(game)) return true;
+
+  const text = [
+    game?.name,
+    getGameDetails(game?.name || "")?.title,
+    getGameDetails(game?.name || "")?.description,
+    getGameDetails(game?.name || "")?.genre,
+    game?.source === "RAWG" ? getGameSafetyText(game) : "",
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+
+  return RAWG_BLOCKED_TERMS.some((term) => text.includes(term));
+}
+
+function canAccessGame(game, userAge) {
+  if (!game || isBlockedGame(game)) return false;
+
+  const requiredAge = getRequiredGameAge(game.name);
+
+  /*
+    No DOB = allow only games below 16.
+    This prevents an unverified account from opening 16+/18+ titles.
+  */
+  if (userAge === null || userAge === undefined) {
+    return requiredAge < 16;
+  }
+
+  return userAge >= requiredAge;
+}
+
 const currentGamingNews = [
   {
     id: "konami-press-start",
@@ -528,17 +796,18 @@ const richGameDetails = {
   },
 };
 function getGameDetails(gameName) {
-  const details = gameDetails[gameName] || {
-    title: gameName,
-    description:
-      "Explore the game, discover its world, gameplay, platforms and community verdict on GamingVerse.",
-    genre: "Game",
-    platforms: "PC • Console • Mobile",
-    releaseDate: "—",
-    developer: "—",
-    publisher: "—",
-    trailerUrl: "",
-  };
+  const details = gameDetails[gameName] ||
+    automaticGameDetailsCache[gameName] || {
+      title: gameName,
+      description:
+        "Explore the game, discover its world, gameplay, platforms and community verdict on GamingVerse.",
+      genre: "Game",
+      platforms: "PC • Console • Mobile",
+      releaseDate: "—",
+      developer: "—",
+      publisher: "—",
+      trailerUrl: "",
+    };
   const rich = richGameDetails[gameName] || {};
   const trailerSearchUrl =
     details.trailerSearchUrl ||
@@ -549,40 +818,6 @@ function getGameDetails(gameName) {
     ...rich,
     trailerSearchUrl,
   };
-}
-
-/* =========================================================
-   HOME CATEGORY FILTER
-   ========================================================= */
-function getGameCategory(gameName) {
-  const categoryMap = {
-    "GTA V": "Action",
-    "Cyberpunk 2077": "RPG",
-    "Assassin's Creed Shadows": "Action",
-    "Among Us": "Adventure",
-    "Black Myth Wukong": "RPG",
-    "Counter Strike 2": "Action",
-    "Ghost of Tsushima": "Adventure",
-    "GTA VI": "Action",
-    "God of War Ragnarok": "Adventure",
-    "God of War": "Adventure",
-    "Hogwarts Legacy": "RPG",
-    Minecraft: "Adventure",
-  };
-
-  if (categoryMap[gameName]) {
-    return categoryMap[gameName];
-  }
-
-  const genre = String(getGameDetails(gameName).genre || "").toLowerCase();
-
-  if (genre.includes("racing")) return "Racing";
-  if (genre.includes("sports")) return "Sports";
-  if (genre.includes("rpg")) return "RPG";
-  if (genre.includes("adventure")) return "Adventure";
-  if (genre.includes("action")) return "Action";
-
-  return "Action";
 }
 /* =========================================================
    GAMES PAGE
@@ -730,6 +965,273 @@ function Games() {
   const [gameComments, setGameComments] = useState([]);
   const [commentText, setCommentText] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
+  const [userAge, setUserAge] = useState(null);
+  const [ageLoading, setAgeLoading] = useState(true);
+  const [automaticGames, setAutomaticGames] = useState([]);
+  const [automaticGamesLoading, setAutomaticGamesLoading] = useState(true);
+  const [automaticGamesError, setAutomaticGamesError] = useState("");
+  const [automaticGamesExpanded, setAutomaticGamesExpanded] = useState(false);
+
+  /* =======================================================
+       LOAD USER AGE FROM FIREBASE
+  ======================================================= */
+  useEffect(() => {
+    if (!auth.currentUser) {
+      setUserAge(null);
+      setAgeLoading(false);
+      return undefined;
+    }
+
+    const userRef = ref(db, `users/${auth.currentUser.uid}`);
+
+    const unsubscribe = onValue(userRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      const calculatedAge = calculateAgeFromDob(data.dob);
+
+      setUserAge(
+        calculatedAge !== null
+          ? calculatedAge
+          : Number.isFinite(Number(data.age))
+            ? Number(data.age)
+            : null,
+      );
+      setAgeLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [auth.currentUser?.uid]);
+
+  /* =======================================================
+       AUTOMATIC GAME CATALOGUE
+       Fetches current PC / PlayStation / Xbox games from RAWG.
+     ======================================================= */
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchAutomaticGames = async () => {
+      if (!RAWG_API_KEY || RAWG_API_KEY === "PASTE_RAWG_API_KEY_HERE") {
+        setAutomaticGames([]);
+        setAutomaticGamesLoading(false);
+        setAutomaticGamesError(
+          "Add your RAWG API key in Games.jsx to enable automatic games.",
+        );
+        return;
+      }
+
+      try {
+        setAutomaticGamesLoading(true);
+        setAutomaticGamesError("");
+
+        // Ask RAWG separately for each supported platform. This produces a
+        // much richer catalogue than looking only at the global newest pages,
+        // where console titles can be diluted by other platforms.
+        const platformQueries = [
+          { slug: "pc", id: 4 },
+          { slug: "playstation4", id: 18 },
+          { slug: "playstation5", id: 187 },
+          { slug: "xbox-one", id: 1 },
+          { slug: "xbox-series-x", id: 186 },
+        ];
+        const pageNumbers = Array.from({ length: 6 }, (_, index) => index + 1);
+
+        const pageResults = await Promise.all(
+          platformQueries.flatMap((platform) =>
+            pageNumbers.map(async (page) => {
+              const endpoint =
+                `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_API_KEY)}` +
+                `&platforms=${platform.id}` +
+                `&ordering=-released` +
+                `&page=${page}` +
+                `&page_size=40`;
+
+              const response = await fetch(endpoint, {
+                method: "GET",
+                cache: "no-store",
+              });
+
+              if (!response.ok) {
+                throw new Error(
+                  `Automatic games request failed (${response.status}) on ${platform.slug} page ${page}`,
+                );
+              }
+
+              const data = await response.json();
+              return Array.isArray(data?.results) ? data.results : [];
+            }),
+          ),
+        );
+
+        const allRawgGames = pageResults.flat();
+        const seen = new Set();
+
+        const mapped = allRawgGames
+          .filter((game) => game?.name && game?.background_image)
+          .filter(rawgGameHasAllowedPlatform)
+          .filter(rawgGameIsSafe)
+          .map(mapRawgGame)
+          .filter((game) => {
+            const key = game.name.toLowerCase();
+            if (!key || seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          })
+          .filter((game) => !isBlockedGame(game))
+          .slice(0, 600);
+
+        mapped.forEach((game) => {
+          automaticGameDetailsCache[game.name] = {
+            title: game.name,
+            description: `Automatically added to GamingVerse from the live game catalogue. Discover ${game.name}, its platforms, release information and community verdict.`,
+            genre: game.genre,
+            platforms: game.platforms,
+            releaseDate: game.releaseDate || "—",
+            developer: "—",
+            publisher: "—",
+            trailerUrl: "",
+          };
+          gameAgeRatings[game.name] = game.ageRating;
+        });
+
+        if (!cancelled) {
+          setAutomaticGames(mapped);
+        }
+      } catch (error) {
+        console.error("Automatic games error:", error);
+        if (!cancelled) {
+          setAutomaticGames([]);
+          setAutomaticGamesError(
+            "Automatic game refresh failed. Your saved GamingVerse games are still available.",
+          );
+        }
+      } finally {
+        if (!cancelled) setAutomaticGamesLoading(false);
+      }
+    };
+
+    fetchAutomaticGames();
+
+    // Refresh once per 30 minutes so newly released games can appear automatically.
+    const interval = window.setInterval(fetchAutomaticGames, 30 * 60 * 1000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  /* =======================================================
+       LIVE GAMING NEWS
+       Uses Google News RSS through rss2json.
+       No API key is required in the React app.
+    ======================================================= */
+  const [liveNews, setLiveNews] = useState([]);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [newsUpdatedAt, setNewsUpdatedAt] = useState(null);
+  const [newsError, setNewsError] = useState("");
+
+  const cleanNewsText = (value = "") =>
+    String(value)
+      .replace(/<[^>]*>/g, "")
+      .replace(/&amp;/g, "&")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/\s+/g, " ")
+      .trim();
+
+  const fetchLiveGamingNews = async () => {
+    try {
+      setNewsLoading(true);
+      setNewsError("");
+
+      const googleNewsRss =
+        "https://news.google.com/rss/search?q=gaming+OR+videogames+OR+PlayStation+OR+Xbox+OR+Nintendo+OR+PC+gaming+when%3A1d&hl=en-IN&gl=IN&ceid=IN:en";
+
+      const endpoint = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(googleNewsRss)}`;
+
+      const response = await fetch(endpoint, {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Live news request failed (${response.status})`);
+      }
+
+      const data = await response.json();
+
+      if (data.status !== "ok" || !Array.isArray(data.items)) {
+        throw new Error(data.message || "Live news feed returned no items.");
+      }
+
+      const articles = data.items
+        .filter((item) => item?.title && item?.link)
+        .slice(0, 8)
+        .map((item, index) => {
+          const rawTitle = cleanNewsText(item.title);
+          const titleParts = rawTitle.split(" - ");
+          const source =
+            item.author?.trim() ||
+            (titleParts.length > 1
+              ? titleParts[titleParts.length - 1]
+              : "Gaming News");
+
+          const title =
+            titleParts.length > 1
+              ? titleParts.slice(0, -1).join(" - ")
+              : rawTitle;
+
+          return {
+            id: `live-${item.guid || item.link || index}`,
+            source,
+            time: item.pubDate
+              ? new Date(item.pubDate).toLocaleString([], {
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "Recently",
+            tag: "LIVE",
+            title,
+            summary:
+              cleanNewsText(item.description || item.content) ||
+              "Latest gaming news and industry updates.",
+            url: item.link,
+            image:
+              item.thumbnail ||
+              item.enclosure?.thumbnail ||
+              item.enclosure?.link ||
+              "",
+            imageGame: "",
+          };
+        });
+
+      if (!articles.length) {
+        throw new Error("No gaming stories found in the live feed.");
+      }
+
+      setLiveNews(articles);
+      setNewsUpdatedAt(new Date());
+      setNewsError("");
+    } catch (error) {
+      console.error("Live gaming news error:", error);
+      setNewsError("Live refresh failed. Showing saved news.");
+    } finally {
+      setNewsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveGamingNews();
+
+    const interval = window.setInterval(fetchLiveGamingNews, 10 * 60 * 1000);
+
+    return () => window.clearInterval(interval);
+  }, []);
+
+  const newsItems = liveNews.length ? liveNews : currentGamingNews;
   /* =======================================================
        LOAD GAME COMMENTS LIVE
     ======================================================= */
@@ -818,41 +1320,45 @@ function Games() {
       document.removeEventListener("keydown", handleEscape);
     };
   }, []);
-  const filterGamesByCategory = (games) => {
-    const searched = games.filter((game) =>
-      game.name.toLowerCase().includes(search.toLowerCase()),
+  const filteredPosters = useMemo(() => {
+    const results = posterGames.filter(
+      (game) =>
+        !isUnsafeCatalogueGame(game) &&
+        game.name.toLowerCase().includes(search.toLowerCase()),
     );
-
-    if (
-      activeCategory !== "All" &&
-      activeCategory !== "Popular" &&
-      activeCategory !== "New"
-    ) {
-      return searched.filter(
-        (game) => getGameCategory(game.name) === activeCategory,
-      );
-    }
-
     if (activeCategory === "Popular") {
-      return searched.slice(0, 12);
+      return results.slice(0, 12);
     }
-
     if (activeCategory === "New") {
-      return searched.slice(-12);
+      return results.slice(-12);
     }
-
-    return searched;
-  };
-
-  const filteredPosters = useMemo(
-    () => filterGamesByCategory(posterGames),
-    [search, activeCategory],
-  );
-
-  const filteredHorizontal = useMemo(
-    () => filterGamesByCategory(horizontalGames),
-    [search, activeCategory],
-  );
+    return results;
+  }, [search, activeCategory]);
+  const filteredHorizontal = useMemo(() => {
+    const results = horizontalGames.filter(
+      (game) =>
+        !isUnsafeCatalogueGame(game) &&
+        game.name.toLowerCase().includes(search.toLowerCase()),
+    );
+    if (activeCategory === "Popular") {
+      return results.slice(0, 6);
+    }
+    if (activeCategory === "New") {
+      return results.slice(-6);
+    }
+    return results;
+  }, [search, activeCategory]);
+  const filteredAutomaticGames = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const results = automaticGames.filter(
+      (game) =>
+        !isUnsafeCatalogueGame(game) && game.name.toLowerCase().includes(query),
+    );
+    return results.slice(
+      0,
+      automaticGamesExpanded ? automaticGames.length : 12,
+    );
+  }, [automaticGames, search, automaticGamesExpanded]);
   const searchResults = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -860,7 +1366,11 @@ function Games() {
       return [];
     }
 
-    const combined = [...horizontalGames, ...posterGames];
+    const combined = [
+      ...automaticGames,
+      ...horizontalGames,
+      ...posterGames,
+    ].filter((game) => !isUnsafeCatalogueGame(game));
     const seen = new Set();
 
     return combined.filter((game) => {
@@ -873,7 +1383,7 @@ function Games() {
       seen.add(key);
       return true;
     });
-  }, [search]);
+  }, [search, automaticGames]);
 
   const heroGames = useMemo(() => {
     const preferred = [
@@ -987,12 +1497,46 @@ function Games() {
   /* =======================================================
        OPEN / CLOSE METER
     ======================================================= */
+  const handleRestrictedGame = (game) => {
+    const rating = gameAgeRatings[game?.name] || "16+";
+    const requiredAge = getRequiredGameAge(game?.name);
+
+    if (isBlockedGame(game)) {
+      setReviewMessage(
+        "This game is unavailable on GamingVerse because it has been blocked by the platform safety system.",
+      );
+      return;
+    }
+
+    if (userAge === null) {
+      setReviewMessage(
+        `Age verification required. Add your Date of Birth in Profile to access ${rating} games.`,
+      );
+      return;
+    }
+
+    setReviewMessage(
+      `Age restricted: this game requires ${requiredAge}+. Your GamingVerse age is ${userAge}.`,
+    );
+  };
+
   const openMeter = (game) => {
+    if (!canAccessGame(game, userAge)) {
+      handleRestrictedGame(game);
+      return;
+    }
+
     setSelectedGame(game);
     setShowDetails(false);
     setReviewMessage("");
   };
+
   const openDetails = (game) => {
+    if (!canAccessGame(game, userAge)) {
+      handleRestrictedGame(game);
+      return;
+    }
+
     setSelectedGame(game);
     setShowDetails(true);
     setReviewMessage("");
@@ -1005,6 +1549,11 @@ function Games() {
     setSelectedReview(null);
   };
   const openTrailer = (game) => {
+    if (!canAccessGame(game, userAge)) {
+      handleRestrictedGame(game);
+      return;
+    }
+
     const trailer = getGameDetails(game?.name || "").trailerUrl;
 
     if (!trailer) {
@@ -1232,6 +1781,20 @@ function Games() {
           >
             <GVIcon name="cart" />
             <span className="nav-icon-label">Marketplace</span>
+          </button>
+
+          {/* GAMING CAFÉ BOOKING */}
+          <button
+            className="nav-icon-link cafe-nav-button"
+            type="button"
+            title="Gaming Café Booking"
+            aria-label="Gaming Café Booking"
+            onClick={() => navigate("/cafe")}
+          >
+            <span className="cafe-navbar-icon" aria-hidden="true">
+              🎮
+            </span>
+            <span className="nav-icon-label">Café</span>
           </button>
 
           <button
@@ -1607,61 +2170,25 @@ function Games() {
         =================================================== */}
 
           <main className="games-content">
-            <div className="home-category-toolbar">
-              <div className="home-category-copy">
-                <span className="home-category-label">BROWSE BY GENRE</span>
-                <strong>
-                  {activeCategory === "All"
-                    ? "All Games"
-                    : `${activeCategory} Games`}
-                </strong>
-                <span>
-                  {filteredPosters.length} games available
-                </span>
-              </div>
-
-              <div className="home-category-select-wrap">
-                <label htmlFor="home-game-category">
-                  Category
-                </label>
-                <select
-                  id="home-game-category"
-                  value={
-                    ["All", "Action", "Adventure", "RPG", "Racing", "Sports"].includes(
-                      activeCategory,
-                    )
-                      ? activeCategory
-                      : "All"
-                  }
-                  onChange={(e) => {
-                    setActiveView("home");
-                    setActiveCategory(e.target.value);
-                    window.setTimeout(() => {
-                      document
-                        .querySelector(".games-content")
-                        ?.scrollIntoView({
-                          behavior: "smooth",
-                          block: "start",
-                        });
-                    }, 0);
-                  }}
-                  aria-label="Filter games by category"
-                >
-                  <option value="All">All Categories</option>
-                  <option value="Action">Action</option>
-                  <option value="Adventure">Adventure</option>
-                  <option value="RPG">RPG</option>
-                  <option value="Racing">Racing</option>
-                  <option value="Sports">Sports</option>
-                </select>
-              </div>
-            </div>
-
             <section className="game-section">
               <div className="section-heading">
                 <div>
                   <span className="section-label">DISCOVER</span>
                   <h2>Featured Games</h2>
+                </div>
+
+                <div
+                  style={{
+                    color: "rgba(255,255,255,0.62)",
+                    fontSize: "11px",
+                    textAlign: "right",
+                  }}
+                >
+                  {ageLoading
+                    ? "Checking age access..."
+                    : userAge === null
+                      ? "Age access: add DOB in Profile"
+                      : `Age access: ${userAge}+`}
                 </div>
 
                 <button
@@ -1674,37 +2201,207 @@ function Games() {
               </div>
 
               <div className="horizontal-grid">
-                {filteredHorizontal.map((game, index) => (
-                  <div
-                    className="horizontal-card"
-                    key={`${game.name}-${index}`}
-                    onClick={() => openDetails(game)}
-                  >
-                    <img src={game.image} alt={game.name} />
+                {filteredHorizontal.map((game, index) => {
+                  const requiredAge = getRequiredGameAge(game.name);
+                  const accessible = canAccessGame(game, userAge);
+                  const blocked = isBlockedGame(game);
 
-                    <div className="card-gradient"></div>
+                  return (
+                    <div
+                      className={`horizontal-card ${
+                        !accessible ? "age-restricted-card" : ""
+                      }`}
+                      key={`${game.name}-${index}`}
+                      onClick={() => openDetails(game)}
+                      title={
+                        !accessible
+                          ? blocked
+                            ? "Unavailable: blocked by GamingVerse safety system"
+                            : `Requires ${requiredAge}+`
+                          : game.name
+                      }
+                    >
+                      <img src={game.image} alt={game.name} />
 
-                    <div className="horizontal-info">
-                      <h3>{game.name}</h3>
+                      <div className="card-gradient"></div>
 
-                      <div className="game-meta">
-                        <span>⭐ 4.8</span>
-                        <span>🎮 {getGameCategory(game.name)}</span>
+                      {!accessible && (
+                        <div
+                          style={{
+                            position: "absolute",
+                            inset: 0,
+                            zIndex: 4,
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "6px",
+                            background: "rgba(0,0,0,0.56)",
+                            backdropFilter: "blur(2px)",
+                            textAlign: "center",
+                            pointerEvents: "none",
+                          }}
+                        >
+                          <span style={{ fontSize: "30px" }}>🔒</span>
+                          <strong style={{ fontSize: "15px" }}>
+                            {blocked ? "Unavailable" : `${requiredAge}+`}
+                          </strong>
+                          <small style={{ color: "rgba(255,255,255,0.72)" }}>
+                            {blocked ? "Safety restricted" : "Age restricted"}
+                          </small>
+                        </div>
+                      )}
+
+                      <div className="horizontal-info">
+                        <h3>{game.name}</h3>
+
+                        <div className="game-meta">
+                          <span>⭐ 4.8</span>
+                          <span>🎮 Action</span>
+                          <span>{gameAgeRatings[game.name] || "16+"}</span>
+                        </div>
+
+                        <button
+                          className="card-details-button"
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openDetails(game);
+                          }}
+                        >
+                          {accessible ? "View Details" : "Age Restricted"}
+                        </button>
                       </div>
-
-                      <button
-                        className="card-details-button"
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openDetails(game);
-                        }}
-                      >
-                        View Details
-                      </button>
                     </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* =================================================
+            AUTOMATIC GAME CATALOGUE
+            Same visual language as Featured Games.
+            ================================================= */}
+            <section className="game-section automatic-games-section">
+              <div className="section-heading automatic-games-heading">
+                <div>
+                  <span className="section-label">LIVE CATALOGUE</span>
+                  <h2>Latest PC & Console Games</h2>
+                </div>
+
+                <div className="automatic-games-heading-actions">
+                  {!automaticGamesError && automaticGames.length > 0 && (
+                    <button
+                      className="view-all automatic-view-all"
+                      type="button"
+                      onClick={() => {
+                        setAutomaticGamesExpanded((current) => !current);
+                      }}
+                    >
+                      {automaticGamesExpanded
+                        ? "Show Less ↑"
+                        : "View All Games →"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {automaticGamesError ? (
+                <div className="automatic-games-message">
+                  <span>⚠️</span>
+                  <div>
+                    <strong>Automatic games are not connected yet.</strong>
+                    <p>{automaticGamesError}</p>
                   </div>
-                ))}
+                </div>
+              ) : filteredAutomaticGames.length > 0 ? (
+                <div className="horizontal-grid automatic-games-unified-grid">
+                  {filteredAutomaticGames.map((game) => {
+                    const requiredAge = getRequiredGameAge(game.name);
+                    const accessible = canAccessGame(game, userAge);
+                    const blocked = isBlockedGame(game);
+
+                    return (
+                      <article
+                        className={`automatic-unified-card horizontal-card ${
+                          !accessible ? "age-restricted-card" : ""
+                        }`}
+                        key={`automatic-${game.rawgId || game.name}`}
+                        onClick={() => openDetails(game)}
+                        title={
+                          !accessible
+                            ? blocked
+                              ? "Unavailable: blocked by GamingVerse safety system"
+                              : `Requires ${requiredAge}+`
+                            : game.name
+                        }
+                      >
+                        <img src={game.image} alt={game.name} loading="lazy" />
+                        <div className="card-gradient"></div>
+
+                        <div className="auto-catalogue-badges">
+                          <span className="game-source-badge">AUTO</span>
+                          <span className="game-age-badge">{requiredAge}+</span>
+                        </div>
+
+                        {!accessible && (
+                          <div className="game-access-overlay">
+                            <span>🔒</span>
+                            <strong>
+                              {blocked ? "Unavailable" : `${requiredAge}+`}
+                            </strong>
+                            <small>
+                              {blocked ? "Safety restricted" : "Age restricted"}
+                            </small>
+                          </div>
+                        )}
+
+                        <div className="horizontal-info automatic-horizontal-info">
+                          <h3>{game.name}</h3>
+                          <div className="game-meta">
+                            <span>
+                              ⭐ {game.rating ? game.rating.toFixed(1) : "New"}
+                            </span>
+                            <span>🎮 {game.genre}</span>
+                            <span>{requiredAge}+</span>
+                          </div>
+                          <div className="automatic-platform-line">
+                            {game.platforms}
+                          </div>
+                          <button
+                            className="card-details-button"
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              openDetails(game);
+                            }}
+                          >
+                            {accessible ? "View Details" : "View Access"}
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="automatic-games-message">
+                  <span>🎮</span>
+                  <div>
+                    <strong>No automatic games found</strong>
+                    <p>
+                      Try clearing the search or refresh the GamingVerse
+                      catalogue.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="rawg-attribution">
+                Automatic game data & images provided by{" "}
+                <a href="https://rawg.io/" target="_blank" rel="noreferrer">
+                  RAWG
+                </a>
+                .
               </div>
             </section>
 
@@ -1733,56 +2430,101 @@ function Games() {
               </div>
 
               <div className="poster-grid">
-                {filteredPosters.map((game, index) => (
-                  <div className="poster-card" key={`${game.name}-${index}`}>
+                {filteredPosters.map((game, index) => {
+                  const requiredAge = getRequiredGameAge(game.name);
+                  const accessible = canAccessGame(game, userAge);
+                  const blocked = isBlockedGame(game);
+
+                  return (
                     <div
-                      className="poster-image-wrapper"
-                      onClick={() => openDetails(game)}
+                      className={`poster-card ${
+                        !accessible ? "age-restricted-card" : ""
+                      }`}
+                      key={`${game.name}-${index}`}
                     >
-                      <img src={game.image} alt={game.name} />
+                      <div
+                        className="poster-image-wrapper"
+                        onClick={() => openDetails(game)}
+                        title={
+                          !accessible
+                            ? blocked
+                              ? "Unavailable: blocked by GamingVerse safety system"
+                              : `Requires ${requiredAge}+`
+                            : game.name
+                        }
+                      >
+                        <img src={game.image} alt={game.name} />
 
-                      <div className="poster-overlay">
-                        <button
-                          className="quick-play"
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openDetails(game);
-                          }}
-                        >
-                          ◉
-                        </button>
+                        {!accessible && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              zIndex: 3,
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "4px",
+                              background: "rgba(0,0,0,0.52)",
+                              textAlign: "center",
+                              borderRadius: "inherit",
+                              pointerEvents: "none",
+                            }}
+                          >
+                            <span style={{ fontSize: "25px" }}>🔒</span>
+                            <strong style={{ fontSize: "13px" }}>
+                              {blocked ? "Unavailable" : `${requiredAge}+`}
+                            </strong>
+                            <small style={{ color: "rgba(255,255,255,0.72)" }}>
+                              {blocked ? "Safety restricted" : "Age restricted"}
+                            </small>
+                          </div>
+                        )}
+
+                        <div className="poster-overlay">
+                          <button
+                            className="quick-play"
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDetails(game);
+                            }}
+                          >
+                            ◉
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="poster-info">
+                        <h3>{game.name}</h3>
+
+                        <div className="poster-meta">
+                          <span>⭐ 4.7</span>
+                          <span className="genre">Action</span>
+                        </div>
+
+                        <div className="poster-actions">
+                          <button
+                            className="meter-button"
+                            type="button"
+                            onClick={() => openMeter(game)}
+                          >
+                            {accessible ? "GamingVerse Meter" : "🔒 Restricted"}
+                          </button>
+
+                          <button
+                            className="details-button-small"
+                            type="button"
+                            onClick={() => openDetails(game)}
+                          >
+                            {accessible ? "Details" : "View Access"}
+                          </button>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="poster-info">
-                      <h3>{game.name}</h3>
-
-                      <div className="poster-meta">
-                        <span>⭐ 4.7</span>
-                        <span className="genre">Action</span>
-                      </div>
-
-                      <div className="poster-actions">
-                        <button
-                          className="meter-button"
-                          type="button"
-                          onClick={() => openMeter(game)}
-                        >
-                          GamingVerse Meter
-                        </button>
-
-                        <button
-                          className="details-button-small"
-                          type="button"
-                          onClick={() => openDetails(game)}
-                        >
-                          Details
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {filteredHorizontal.length === 0 &&
@@ -1826,6 +2568,7 @@ function Games() {
                 <div className="collection-library-list">
                   {collectionGames.map((gameName) => {
                     const game =
+                      automaticGames.find((item) => item.name === gameName) ||
                       horizontalGames.find((item) => item.name === gameName) ||
                       posterGames.find((item) => item.name === gameName);
                     if (!game) return null;
@@ -1868,6 +2611,7 @@ function Games() {
                 <div className="collection-library-list">
                   {watchedGames.map((gameName) => {
                     const game =
+                      automaticGames.find((item) => item.name === gameName) ||
                       horizontalGames.find((item) => item.name === gameName) ||
                       posterGames.find((item) => item.name === gameName);
                     if (!game) return null;
@@ -1910,6 +2654,7 @@ function Games() {
                 <div className="collection-library-list">
                   {watchLaterGames.map((gameName) => {
                     const game =
+                      automaticGames.find((item) => item.name === gameName) ||
                       horizontalGames.find((item) => item.name === gameName) ||
                       posterGames.find((item) => item.name === gameName);
                     if (!game) return null;
@@ -1981,15 +2726,46 @@ function Games() {
                     <h1>Gaming News</h1>
                     <p>Fresh gaming headlines and industry updates.</p>
                   </div>
-                  <div className="news-date-pill">
-                    <span>●</span>
-                    <span>Updated 1 Sep 2026</span>
-                  </div>
+                  <button
+                    type="button"
+                    className={`news-date-pill ${newsLoading ? "is-loading" : ""}`}
+                    onClick={fetchLiveGamingNews}
+                    disabled={newsLoading}
+                    title="Refresh live gaming news"
+                  >
+                    <span
+                      className={
+                        newsLoading ? "news-live-dot loading" : "news-live-dot"
+                      }
+                    >
+                      ●
+                    </span>
+                    <span>
+                      {newsLoading
+                        ? "Updating live news..."
+                        : newsUpdatedAt
+                          ? `Live • Updated ${newsUpdatedAt.toLocaleTimeString(
+                              [],
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}`
+                          : "Live news • Click to refresh"}
+                    </span>
+                    <span className="news-refresh-button" aria-hidden="true">
+                      ↻
+                    </span>
+                  </button>
+
+                  {newsError && (
+                    <div className="news-live-note">{newsError}</div>
+                  )}
                 </div>
 
                 <div className="news-layout">
                   <div className="news-main-grid">
-                    {currentGamingNews.slice(0, 6).map((news, index) => {
+                    {newsItems.slice(0, 6).map((news, index) => {
                       const game =
                         horizontalGames.find(
                           (item) =>
@@ -2008,7 +2784,9 @@ function Games() {
                           key={news.id}
                         >
                           <div className="news-card-image">
-                            {game?.image && <img src={game.image} alt="" />}
+                            {(news.image || game?.image) && (
+                              <img src={news.image || game.image} alt="" />
+                            )}
                             <span className="news-card-tag">{news.tag}</span>
                           </div>
 
@@ -2043,7 +2821,7 @@ function Games() {
                     </div>
 
                     <div className="news-top-list">
-                      {currentGamingNews.slice(6, 8).map((news, index) => {
+                      {newsItems.slice(6, 8).map((news, index) => {
                         const game =
                           horizontalGames.find(
                             (item) =>
@@ -2062,7 +2840,9 @@ function Games() {
                             rel="noreferrer"
                             className="news-top-item"
                           >
-                            {game?.image && <img src={game.image} alt="" />}
+                            {(news.image || game?.image) && (
+                              <img src={news.image || game.image} alt="" />
+                            )}
                             <span>
                               <small>{news.tag}</small>
                               <strong>{news.title}</strong>
@@ -2074,10 +2854,13 @@ function Games() {
                     </div>
 
                     <div className="news-source-note">
-                      <strong>Current sources</strong>
+                      <strong>
+                        {liveNews.length ? "Live sources" : "Saved sources"}
+                      </strong>
                       <p>
-                        News links open the original publisher or reporting
-                        source.
+                        {liveNews.length
+                          ? "Headlines are fetched automatically and refreshed every 10 minutes."
+                          : "News links open the original publisher or reporting source."}
                       </p>
                     </div>
                   </aside>
@@ -2597,25 +3380,6 @@ function Games() {
                   <div>
                     <span className="community-review-eyebrow">COMMUNITY</span>
                     <h3>Write a Review</h3>
-                  </div>
-
-                  <div className="community-review-summary">
-                    <span>
-                      <span className="community-dot skip"></span>
-                      Skip
-                    </span>
-                    <span>
-                      <span className="community-dot timepass"></span>
-                      Timepass
-                    </span>
-                    <span>
-                      <span className="community-dot go-for-it"></span>
-                      Go for it
-                    </span>
-                    <span>
-                      <span className="community-dot perfection"></span>
-                      Perfection
-                    </span>
                   </div>
                 </div>
 

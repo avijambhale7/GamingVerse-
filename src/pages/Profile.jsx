@@ -401,6 +401,29 @@ function Profile() {
     skip: "SKIP",
   };
 
+  const calculateAge = (dob) => {
+    if (!dob) return null;
+
+    const birthDate = new Date(`${dob}T00:00:00`);
+    if (Number.isNaN(birthDate.getTime())) return null;
+
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+
+    const beforeBirthday =
+      today.getMonth() < birthDate.getMonth() ||
+      (today.getMonth() === birthDate.getMonth() &&
+        today.getDate() < birthDate.getDate());
+
+    if (beforeBirthday) {
+      age -= 1;
+    }
+
+    return age;
+  };
+
+  const profileAge = calculateAge(profile.dob);
+
   const handleEditChange = (event) => {
     const { name, value } = event.target;
 
@@ -456,6 +479,20 @@ function Profile() {
       return;
     }
 
+    if (!profile.dob) {
+      setMessage(
+        "Please add your date of birth for GamingVerse age restrictions.",
+      );
+      return;
+    }
+
+    const age = calculateAge(profile.dob);
+
+    if (age === null || age < 0 || age > 120) {
+      setMessage("Please enter a valid date of birth.");
+      return;
+    }
+
     setSaving(true);
     setMessage("");
 
@@ -479,6 +516,7 @@ function Profile() {
         lastName: profile.lastName.trim(),
         username: cleanUsername,
         dob: profile.dob,
+        age,
         bio: profile.bio.trim(),
         instagram: profile.instagram.trim(),
         twitter: profile.twitter.trim(),
@@ -681,6 +719,42 @@ function Profile() {
                     value={profile.dob}
                     onChange={handleEditChange}
                   />
+                </div>
+
+                <div className="edit-field full-field age-status-field">
+                  <label>GamingVerse Age Access</label>
+                  <div className="age-status-card">
+                    {profileAge === null ? (
+                      <>
+                        <strong>Age not set</strong>
+                        <span>
+                          Add your date of birth to enable game age
+                          restrictions.
+                        </span>
+                      </>
+                    ) : profileAge < 16 ? (
+                      <>
+                        <strong>Under 16 · Protected Access</strong>
+                        <span>16+ and 18+ games will be restricted.</span>
+                      </>
+                    ) : profileAge < 18 ? (
+                      <>
+                        <strong>16–17 · 16+ Access</strong>
+                        <span>
+                          Games rated 16+ are available; 18+ games remain
+                          restricted.
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <strong>18+ · Full Age Access</strong>
+                        <span>
+                          Access is based on each game's age rating and safety
+                          status.
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 <div className="edit-field full-field">

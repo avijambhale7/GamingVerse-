@@ -911,3 +911,24 @@ body {
   opacity: 0.5;
   cursor: not-allowed;
 }
+.signup-dob-field {
+  display: grid;
+  gap: 7px;
+  margin-top: 2px;
+}
+
+.signup-dob-field label {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.signup-dob-field input[type="date"] {
+  width: 100%;
+}
+
+.signup-dob-field small {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 11px;
+  line-height: 1.4;
+}

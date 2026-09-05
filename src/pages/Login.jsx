@@ -39,6 +39,7 @@ function Login() {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
+  const [signupDob, setSignupDob] = useState("");
 
   const [resetEmail, setResetEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -92,6 +93,27 @@ function Login() {
     }
   };
 
+  const calculateAge = (dob) => {
+    if (!dob) return null;
+
+    const birthDate = new Date(`${dob}T00:00:00`);
+    if (Number.isNaN(birthDate.getTime())) return null;
+
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+
+    const beforeBirthday =
+      today.getMonth() < birthDate.getMonth() ||
+      (today.getMonth() === birthDate.getMonth() &&
+        today.getDate() < birthDate.getDate());
+
+    if (beforeBirthday) {
+      age -= 1;
+    }
+
+    return age;
+  };
+
   const handleCreateAccount = async (e) => {
     e.preventDefault();
 
@@ -115,6 +137,18 @@ function Login() {
       return;
     }
 
+    if (!signupDob) {
+      alert("Please select your date of birth.");
+      return;
+    }
+
+    const signupAge = calculateAge(signupDob);
+
+    if (signupAge === null || signupAge < 0 || signupAge > 120) {
+      alert("Please enter a valid date of birth.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -128,12 +162,26 @@ function Login() {
         displayName: signupName.trim(),
       });
 
+      // Save DOB so GamingVerse can enforce age-based game access.
+      const { ref, set } = await import("firebase/database");
+      const { db } = await import("../firebase");
+
+      await set(ref(db, `users/${result.user.uid}`), {
+        firstName: signupName.trim().split(" ")[0] || signupName.trim(),
+        lastName: signupName.trim().split(" ").slice(1).join(" "),
+        username: signupName.trim(),
+        dob: signupDob,
+        age: signupAge,
+        createdAt: Date.now(),
+      });
+
       alert("Account created successfully!");
 
       setSignupName("");
       setSignupEmail("");
       setSignupPassword("");
       setSignupConfirmPassword("");
+      setSignupDob("");
       setModal(null);
 
       navigate("/games");
@@ -656,6 +704,19 @@ function Login() {
                 minLength={6}
                 required
               />
+
+              <div className="signup-dob-field">
+                <label htmlFor="signup-dob">Date of Birth</label>
+                <input
+                  id="signup-dob"
+                  type="date"
+                  value={signupDob}
+                  onChange={(e) => setSignupDob(e.target.value)}
+                  max={new Date().toISOString().split("T")[0]}
+                  required
+                />
+                <small>Used only to apply GamingVerse age restrictions.</small>
+              </div>
 
               <button type="submit" className="modal-submit" disabled={loading}>
                 {loading ? "Creating..." : "Create Account"}

@@ -221,6 +221,79 @@
   font-size: 12px;
 }
 
+/* MARKET TYPE TABS */
+
+.market-type-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 14px;
+  margin: 22px 0 14px;
+}
+
+.market-type-tabs button {
+  min-height: 84px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 14px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: #101016;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: 0.22s ease;
+}
+
+.market-type-tabs button:hover {
+  border-color: rgba(167, 93, 255, 0.34);
+  background: rgba(151, 76, 255, 0.06);
+  transform: translateY(-1px);
+}
+
+.market-type-tabs button.active {
+  border-color: rgba(191, 129, 255, 0.65);
+  background: linear-gradient(
+    120deg,
+    rgba(116, 51, 186, 0.14),
+    rgba(255, 255, 255, 0.025)
+  );
+  box-shadow: 0 0 0 1px rgba(179, 102, 255, 0.04) inset;
+}
+
+.market-type-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: rgba(115, 51, 181, 0.18);
+  font-size: 23px;
+}
+
+.market-type-tabs button > span:last-child {
+  min-width: 0;
+}
+
+.market-type-tabs strong,
+.market-type-tabs small {
+  display: block;
+}
+
+.market-type-tabs strong {
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.market-type-tabs small {
+  margin-top: 4px;
+  color: #73717e;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
 /* FILTERS */
 
 .market-filters {
@@ -325,7 +398,11 @@
   background: #15151e;
 }
 
+/* Keep the product photo visible while badges/buttons sit above it. */
 .product-image img {
+  position: relative;
+  z-index: 1;
+
   width: 100%;
   height: 100%;
   display: block;
@@ -337,7 +414,7 @@
   transform: scale(1.04);
 }
 
-.product-image > span {
+.product-image > span:not(.condition-badge) {
   width: 100%;
   height: 100%;
   display: flex;
@@ -369,14 +446,22 @@
 
 .condition-badge {
   position: absolute;
-  bottom: 11px;
   left: 11px;
+  bottom: 11px;
+  z-index: 4;
+  width: auto;
+  height: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 6px 9px;
   border-radius: 7px;
-  background: rgba(5, 5, 9, 0.7);
+  background: rgba(5, 5, 9, 0.78);
   color: #fff;
   font-size: 10px;
+  line-height: 1;
   font-weight: 850;
+  white-space: nowrap;
 }
 
 .product-content {
@@ -427,6 +512,59 @@
   margin-top: 3px;
   color: #6f6d78;
   font-size: 10px;
+}
+
+.online-shopping-links {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.online-shopping-links a,
+.detail-shopping-links a {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 850;
+  transition: 0.2s ease;
+}
+
+.amazon-link {
+  border: 1px solid rgba(255, 173, 48, 0.28);
+  background: rgba(255, 173, 48, 0.08);
+  color: #ffd07a;
+}
+
+.amazon-link:hover {
+  background: rgba(255, 173, 48, 0.15);
+}
+
+.flipkart-link {
+  border: 1px solid rgba(55, 145, 255, 0.28);
+  background: rgba(55, 145, 255, 0.08);
+  color: #8cc5ff;
+}
+
+.flipkart-link:hover {
+  background: rgba(55, 145, 255, 0.15);
+}
+
+.detail-shopping-links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.detail-shopping-links a {
+  min-height: 42px;
+  font-size: 12px;
 }
 
 .primary-btn,
@@ -1111,6 +1249,10 @@
 /* RESPONSIVE */
 
 @media (max-width: 1150px) {
+  .market-type-tabs {
+    grid-template-columns: 1fr;
+  }
+
   .products-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -1178,6 +1320,23 @@
 }
 
 @media (max-width: 600px) {
+  .market-type-tabs button {
+    min-height: 76px;
+    padding: 12px 14px;
+  }
+
+  .market-type-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+    font-size: 20px;
+  }
+
+  .online-shopping-links,
+  .detail-shopping-links {
+    grid-template-columns: 1fr;
+  }
+
   .market-header,
   .market-main {
     width: min(100% - 24px, 1400px);
@@ -1264,4 +1423,40 @@
   .seller-order button {
     justify-self: start;
   }
+}
+
+/* =========================================================
+   ACCESSORY IMAGE FALLBACK
+========================================================= */
+
+.product-image.image-fallback-active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(
+      circle at 50% 40%,
+      rgba(157, 83, 255, 0.28),
+      transparent 48%
+    ),
+    linear-gradient(145deg, #171220, #0d0d13);
+}
+
+.product-image.image-fallback-active::before {
+  content: "🖱️";
+  font-size: 68px;
+  opacity: 0.95;
+}
+
+/* Give real accessory images more visual presence. */
+.market-type-card + .market-type-card {
+  min-width: 0;
+}
+
+.product-card .product-image {
+  height: 240px;
+}
+
+.product-card .product-image img {
+  object-fit: cover;
 }

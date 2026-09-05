@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
 
 import Login from "./pages/Login";
 import Games from "./pages/Games";
 import Profile from "./pages/Profile";
-import Marketplace from "./pages/Marketplace";
-import Cafe from "./pages/Cafe";
 
 import "./App.css";
 
 /* =====================================================
    PROTECTED ROUTE
 ===================================================== */
+
 function ProtectedRoute({ user, loading, children }) {
   if (loading) {
     return (
@@ -43,6 +43,7 @@ function ProtectedRoute({ user, loading, children }) {
 /* =====================================================
    APP
 ===================================================== */
+
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -62,6 +63,7 @@ function App() {
         {/* =================================================
             HOME / ROOT
         ================================================= */}
+
         <Route
           path="/"
           element={<Navigate to={user ? "/games" : "/login"} replace />}
@@ -70,11 +72,13 @@ function App() {
         {/* =================================================
             LOGIN
         ================================================= */}
+
         <Route path="/login" element={<Login />} />
 
         {/* =================================================
             GAMINGVERSE / GAMES
         ================================================= */}
+
         <Route
           path="/games"
           element={
@@ -85,32 +89,9 @@ function App() {
         />
 
         {/* =================================================
-            GAMING CAFE BOOKING
-        ================================================= */}
-        <Route
-          path="/cafe"
-          element={
-            <ProtectedRoute user={user} loading={loading}>
-              <Cafe />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* =================================================
-            CD MARKETPLACE
-        ================================================= */}
-        <Route
-          path="/marketplace"
-          element={
-            <ProtectedRoute user={user} loading={loading}>
-              <Marketplace />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* =================================================
             PROFILE
         ================================================= */}
+
         <Route
           path="/profile"
           element={
@@ -123,6 +104,7 @@ function App() {
         {/* =================================================
             UNKNOWN URL
         ================================================= */}
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

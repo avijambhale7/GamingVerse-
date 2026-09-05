@@ -104,6 +104,355 @@ const DEMO_PRODUCTS = [
   },
 ];
 
+const ACCESSORY_PRODUCTS = [
+  {
+    id: "acc1",
+    productType: "accessory",
+    accessoryType: "Mouse",
+    name: "Logitech G102 LIGHTSYNC Gaming Mouse",
+    platform: "PC",
+    category: "Mouse",
+    condition: "New",
+    price: 1299,
+    mrp: 1799,
+    stock: 8,
+    rating: 4.6,
+    sellerId: "gamingverse-accessories",
+    sellerName: "GamingVerse Store",
+    image:
+      "https://images.unsplash.com/photo-1527814050087-3793815479db?auto=format&fit=crop&w=1000&q=85",
+    description:
+      "Wired RGB gaming mouse with high-precision tracking for PC gaming.",
+    amazonUrl: "https://www.amazon.in/s?k=Logitech+G102+LIGHTSYNC+gaming+mouse",
+    flipkartUrl:
+      "https://www.flipkart.com/search?q=Logitech+G102+LIGHTSYNC+gaming+mouse",
+    demo: true,
+  },
+  {
+    id: "acc2",
+    productType: "accessory",
+    accessoryType: "Keyboard",
+    name: "Redragon K552 Mechanical Gaming Keyboard",
+    platform: "PC",
+    category: "Keyboard",
+    condition: "New",
+    price: 2499,
+    mrp: 3499,
+    stock: 6,
+    rating: 4.5,
+    sellerId: "gamingverse-accessories",
+    sellerName: "GamingVerse Store",
+    image:
+      "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=1000&q=85",
+    description: "Mechanical RGB gaming keyboard with tactile switches.",
+    amazonUrl:
+      "https://www.amazon.in/s?k=Redragon+K552+mechanical+gaming+keyboard",
+    flipkartUrl:
+      "https://www.flipkart.com/search?q=Redragon+K552+mechanical+gaming+keyboard",
+    demo: true,
+  },
+  {
+    id: "acc3",
+    productType: "accessory",
+    accessoryType: "Headset",
+    name: "HyperX Cloud Stinger 2 Gaming Headset",
+    platform: "PC",
+    category: "Headset",
+    condition: "New",
+    price: 2999,
+    mrp: 3999,
+    stock: 7,
+    rating: 4.4,
+    sellerId: "gamingverse-accessories",
+    sellerName: "GamingVerse Store",
+    image:
+      "https://images.unsplash.com/photo-1599669454699-248893623440?auto=format&fit=crop&w=1000&q=85",
+    description:
+      "Comfortable gaming headset with clear audio and flexible microphone.",
+    amazonUrl:
+      "https://www.amazon.in/s?k=HyperX+Cloud+Stinger+2+gaming+headset",
+    flipkartUrl:
+      "https://www.flipkart.com/search?q=HyperX+Cloud+Stinger+2+gaming+headset",
+    demo: true,
+  },
+  {
+    id: "acc4",
+    productType: "accessory",
+    accessoryType: "Controller",
+    name: "Xbox Wireless Controller",
+    platform: "Xbox",
+    category: "Controller",
+    condition: "New",
+    price: 5199,
+    mrp: 5999,
+    stock: 4,
+    rating: 4.7,
+    sellerId: "gamingverse-accessories",
+    sellerName: "GamingVerse Store",
+    image:
+      "https://images.unsplash.com/photo-1600080972464-8e5f35f63d08?auto=format&fit=crop&w=1000&q=85",
+    description:
+      "Wireless Xbox controller for Xbox and compatible Windows PCs.",
+    amazonUrl: "https://www.amazon.in/s?k=Xbox+wireless+controller",
+    flipkartUrl: "https://www.flipkart.com/search?q=Xbox+wireless+controller",
+    demo: true,
+  },
+  {
+    id: "acc5",
+    productType: "accessory",
+    accessoryType: "Mouse Pad",
+    name: "RGB Extended Gaming Mouse Pad",
+    platform: "PC",
+    category: "Mouse Pad",
+    condition: "New",
+    price: 999,
+    mrp: 1499,
+    stock: 12,
+    rating: 4.5,
+    sellerId: "gamingverse-accessories",
+    sellerName: "GamingVerse Store",
+    image:
+      "https://images.unsplash.com/photo-1613141411244-0e4ac259d217?auto=format&fit=crop&w=1000&q=85",
+    description: "Large desk-sized RGB mouse pad with smooth tracking surface.",
+    amazonUrl: "https://www.amazon.in/s?k=RGB+extended+gaming+mouse+pad",
+    flipkartUrl:
+      "https://www.flipkart.com/search?q=RGB+extended+gaming+mouse+pad",
+    demo: true,
+  },
+  {
+    id: "acc6",
+    productType: "accessory",
+    accessoryType: "Webcam",
+    name: "Logitech C920 HD Pro Webcam",
+    platform: "PC",
+    category: "Webcam",
+    condition: "New",
+    price: 5499,
+    mrp: 6999,
+    stock: 5,
+    rating: 4.6,
+    sellerId: "gamingverse-accessories",
+    sellerName: "GamingVerse Store",
+    image:
+      "https://images.unsplash.com/photo-1587826080692-f439cd0b70da?auto=format&fit=crop&w=1000&q=85",
+    description:
+      "Full HD webcam for streaming, gaming calls and content creation.",
+    amazonUrl: "https://www.amazon.in/s?k=Logitech+C920+webcam",
+    flipkartUrl: "https://www.flipkart.com/search?q=Logitech+C920+webcam",
+    demo: true,
+  },
+  {
+    id: "acc7",
+    productType: "accessory",
+    accessoryType: "Microphone",
+    name: "USB RGB Gaming Microphone",
+    platform: "PC",
+    category: "Microphone",
+    condition: "New",
+    price: 3499,
+    mrp: 4999,
+    stock: 6,
+    rating: 4.3,
+    sellerId: "gamingverse-accessories",
+    sellerName: "GamingVerse Store",
+    image:
+      "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?auto=format&fit=crop&w=1000&q=85",
+    description:
+      "USB condenser microphone for streaming, voice chat and recording.",
+    amazonUrl: "https://www.amazon.in/s?k=USB+RGB+gaming+microphone",
+    flipkartUrl: "https://www.flipkart.com/search?q=USB+RGB+gaming+microphone",
+    demo: true,
+  },
+  {
+    id: "acc8",
+    productType: "accessory",
+    accessoryType: "Monitor",
+    name: "24-inch 180Hz Gaming Monitor",
+    platform: "PC",
+    category: "Monitor",
+    condition: "New",
+    price: 8999,
+    mrp: 11999,
+    stock: 3,
+    rating: 4.5,
+    sellerId: "gamingverse-accessories",
+    sellerName: "GamingVerse Store",
+    image:
+      "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=1000&q=85",
+    description: "Fast-refresh gaming monitor for smooth competitive gameplay.",
+    amazonUrl: "https://www.amazon.in/s?k=24+inch+180Hz+gaming+monitor",
+    flipkartUrl:
+      "https://www.flipkart.com/search?q=24+inch+180Hz+gaming+monitor",
+    demo: true,
+  },
+  {
+    id: "acc9",
+    productType: "accessory",
+    accessoryType: "Speakers",
+    name: "RGB 2.1 Gaming Speakers",
+    platform: "PC",
+    category: "Speakers",
+    condition: "New",
+    price: 2199,
+    mrp: 2999,
+    stock: 9,
+    rating: 4.2,
+    sellerId: "gamingverse-accessories",
+    sellerName: "GamingVerse Store",
+    image:
+      "https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=1000&q=85",
+    description: "Compact 2.1 desktop speakers with gaming RGB lighting.",
+    amazonUrl: "https://www.amazon.in/s?k=RGB+2.1+gaming+speakers",
+    flipkartUrl: "https://www.flipkart.com/search?q=RGB+2.1+gaming+speakers",
+    demo: true,
+  },
+  {
+    id: "acc10",
+    productType: "accessory",
+    accessoryType: "Cooling Pad",
+    name: "Dual Fan RGB Laptop Cooling Pad",
+    platform: "Laptop",
+    category: "Cooling Pad",
+    condition: "New",
+    price: 1499,
+    mrp: 2299,
+    stock: 10,
+    rating: 4.1,
+    sellerId: "gamingverse-accessories",
+    sellerName: "GamingVerse Store",
+    image:
+      "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=1000&q=85",
+    description:
+      "Dual-fan cooling pad for gaming laptops with adjustable stand.",
+    amazonUrl: "https://www.amazon.in/s?k=RGB+laptop+cooling+pad+dual+fan",
+    flipkartUrl:
+      "https://www.flipkart.com/search?q=RGB+laptop+cooling+pad+dual+fan",
+    demo: true,
+  },
+  {
+    id: "acc11",
+    productType: "accessory",
+    accessoryType: "Gamepad",
+    name: "8BitDo Ultimate 2C Wireless Gamepad",
+    platform: "PC",
+    category: "Gamepad",
+    condition: "New",
+    price: 3499,
+    mrp: 4499,
+    stock: 5,
+    rating: 4.6,
+    sellerId: "gamingverse-accessories",
+    sellerName: "GamingVerse Store",
+    image:
+      "https://images.unsplash.com/photo-1593118247619-e2d6f056869e?auto=format&fit=crop&w=1000&q=85",
+    description:
+      "Wireless PC gamepad designed for comfortable long gaming sessions.",
+    amazonUrl: "https://www.amazon.in/s?k=8BitDo+Ultimate+wireless+gamepad",
+    flipkartUrl: "https://www.flipkart.com/search?q=wireless+gaming+gamepad",
+    demo: true,
+  },
+  {
+    id: "acc12",
+    productType: "accessory",
+    accessoryType: "USB Hub",
+    name: "7-Port RGB USB Gaming Hub",
+    platform: "PC",
+    category: "USB Hub",
+    condition: "New",
+    price: 1299,
+    mrp: 1799,
+    stock: 11,
+    rating: 4.2,
+    sellerId: "gamingverse-accessories",
+    sellerName: "GamingVerse Store",
+    image:
+      "https://images.unsplash.com/photo-1625842268584-8f3296236761?auto=format&fit=crop&w=1000&q=85",
+    description:
+      "Multi-port USB hub for connecting gaming peripherals and devices.",
+    amazonUrl: "https://www.amazon.in/s?k=7+port+RGB+USB+gaming+hub",
+    flipkartUrl: "https://www.flipkart.com/search?q=7+port+RGB+USB+gaming+hub",
+    demo: true,
+  },
+  {
+    id: "acc13",
+    productType: "accessory",
+    accessoryType: "Headset Stand",
+    name: "RGB Gaming Headset Stand",
+    platform: "PC",
+    category: "Headset Stand",
+    condition: "New",
+    price: 899,
+    mrp: 1299,
+    stock: 14,
+    rating: 4.3,
+    sellerId: "gamingverse-accessories",
+    sellerName: "GamingVerse Store",
+    image:
+      "https://images.unsplash.com/photo-1616763355548-1b606f439f86?auto=format&fit=crop&w=1000&q=85",
+    description: "RGB desktop stand that keeps your gaming headset organized.",
+    amazonUrl: "https://www.amazon.in/s?k=RGB+gaming+headset+stand",
+    flipkartUrl: "https://www.flipkart.com/search?q=RGB+gaming+headset+stand",
+    demo: true,
+  },
+  {
+    id: "acc14",
+    productType: "accessory",
+    accessoryType: "Cable",
+    name: "Braided Gaming Cable Kit",
+    platform: "PC",
+    category: "Cable",
+    condition: "New",
+    price: 699,
+    mrp: 999,
+    stock: 20,
+    rating: 4.0,
+    sellerId: "gamingverse-accessories",
+    sellerName: "GamingVerse Store",
+    image:
+      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1000&q=85",
+    description:
+      "Braided cable kit for cleaner gaming desk and accessory connections.",
+    amazonUrl: "https://www.amazon.in/s?k=braided+gaming+cable+kit",
+    flipkartUrl: "https://www.flipkart.com/search?q=braided+gaming+cable+kit",
+    demo: true,
+  },
+];
+
+const MARKET_TABS = [
+  {
+    id: "games",
+    icon: "🎮",
+    label: "Games / CDs",
+    subtitle: "PS5 • PS4 • Xbox • PC",
+  },
+  {
+    id: "accessories",
+    icon: "🖱️",
+    label: "Computer & Gaming Accessories",
+    subtitle: "Mouse • Keyboard • Headset • Monitor & more",
+  },
+];
+
+const ACCESSORY_CATEGORIES = [
+  "All",
+  "Mouse",
+  "Keyboard",
+  "Headset",
+  "Controller",
+  "Mouse Pad",
+  "Webcam",
+  "Microphone",
+  "Monitor",
+];
+
+function getOnlineSearchUrl(platform, productName) {
+  const query = encodeURIComponent(productName);
+  if (platform === "Amazon") {
+    return `https://www.amazon.in/s?k=${query}`;
+  }
+  return `https://www.flipkart.com/search?q=${query}`;
+}
+
 const ORDER_STEPS = ["Placed", "Confirmed", "Packed", "Shipped", "Delivered"];
 
 const EMPTY_PRODUCT = {
@@ -125,12 +474,16 @@ export default function Marketplace() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState([
+    ...DEMO_PRODUCTS,
+    ...ACCESSORY_PRODUCTS,
+  ]);
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [orders, setOrders] = useState([]);
 
   const [page, setPage] = useState("products");
+  const [marketType, setMarketType] = useState("accessories");
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   const [search, setSearch] = useState("");
@@ -197,22 +550,36 @@ export default function Marketplace() {
     try {
       const productsSnap = await get(ref(db, "products"));
 
-      let loadedProducts = [];
+      // Always keep the built-in marketplace catalog available.
+      // Firebase products are added on top of it when present.
+      let firebaseProducts = [];
 
       if (productsSnap.exists()) {
         const data = productsSnap.val();
 
-        loadedProducts = Object.entries(data)
+        firebaseProducts = Object.entries(data)
           .map(([id, product]) => ({
             id,
             ...product,
+            productType: product.productType || "game",
           }))
           .filter((product) => product.status !== "blocked");
       }
 
-      if (loadedProducts.length === 0) {
-        loadedProducts = DEMO_PRODUCTS;
-      }
+      const firebaseGameProducts = firebaseProducts.filter(
+        (product) => product.productType !== "accessory",
+      );
+
+      const firebaseAccessoryProducts = firebaseProducts.filter(
+        (product) => product.productType === "accessory",
+      );
+
+      const loadedProducts = [
+        ...DEMO_PRODUCTS,
+        ...firebaseGameProducts,
+        ...ACCESSORY_PRODUCTS,
+        ...firebaseAccessoryProducts,
+      ];
 
       setProducts(loadedProducts);
 
@@ -254,15 +621,40 @@ export default function Marketplace() {
         setOrders([]);
       }
     } catch (error) {
-      console.error(error);
-      notify("Could not load marketplace.");
+      console.error("Marketplace load error:", error);
+
+      // Keep both marketplace sections usable even if Firebase is
+      // unavailable or the database node/rules are not configured yet.
+      setProducts([...DEMO_PRODUCTS, ...ACCESSORY_PRODUCTS]);
+
+      if (currentUser) {
+        setCart([]);
+        setWishlist([]);
+        setOrders([]);
+      }
+
+      notify("Showing GamingVerse marketplace catalog.");
     } finally {
       setLoading(false);
     }
   };
 
   const filteredProducts = useMemo(() => {
-    let result = [...products];
+    const sourceProducts =
+      marketType === "accessories" ? ACCESSORY_PRODUCTS : DEMO_PRODUCTS;
+
+    let result = [...sourceProducts];
+
+    // Include seller-added Firebase products for the matching section.
+    const firebaseMatches = products.filter((product) =>
+      marketType === "accessories"
+        ? product.productType === "accessory" &&
+          !sourceProducts.some((demo) => demo.id === product.id)
+        : product.productType !== "accessory" &&
+          !sourceProducts.some((demo) => demo.id === product.id),
+    );
+
+    result = [...result, ...firebaseMatches];
 
     const text = search.trim().toLowerCase();
 
@@ -274,6 +666,7 @@ export default function Marketplace() {
           product.category,
           product.condition,
           product.sellerName,
+          product.accessoryType,
         ]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(text)),
@@ -285,7 +678,10 @@ export default function Marketplace() {
     }
 
     if (category !== "All") {
-      result = result.filter((product) => product.category === category);
+      result = result.filter(
+        (product) =>
+          product.category === category || product.accessoryType === category,
+      );
     }
 
     if (condition !== "All") {
@@ -305,7 +701,7 @@ export default function Marketplace() {
     }
 
     return result;
-  }, [products, search, platform, category, condition, sortBy]);
+  }, [products, marketType, search, platform, category, condition, sortBy]);
 
   const cartCount = cart.reduce(
     (sum, item) => sum + Number(item.quantity || 0),
@@ -812,9 +1208,9 @@ export default function Marketplace() {
       <div>
         <span className="market-kicker">GAMINGVERSE MARKETPLACE</span>
 
-        <h1>Gaming CD Marketplace</h1>
+        <h1>Gaming Marketplace</h1>
 
-        <p>Buy, sell and discover gaming CDs.</p>
+        <p>Buy games, CDs and computer & gaming accessories.</p>
       </div>
 
       <div className="market-nav">
@@ -860,29 +1256,83 @@ export default function Marketplace() {
     </div>
   );
 
+  const renderMarketTabs = () => (
+    <div className="market-type-tabs">
+      {MARKET_TABS.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          className={marketType === tab.id ? "active" : ""}
+          onClick={() => {
+            setMarketType(tab.id);
+            setSearch("");
+            setPlatform("All");
+            setCategory("All");
+            setCondition("All");
+            setSortBy("featured");
+            setSelectedProduct(null);
+            navigate("products");
+          }}
+        >
+          <span className="market-type-icon">{tab.icon}</span>
+          <span>
+            <strong>{tab.label}</strong>
+            <small>{tab.subtitle}</small>
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+
   const renderFilters = () => (
     <div className="market-filters">
       <input
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search gaming CDs..."
+        placeholder={
+          marketType === "accessories"
+            ? "Search mouse, keyboard, headset..."
+            : "Search gaming CDs..."
+        }
       />
 
       <select value={platform} onChange={(e) => setPlatform(e.target.value)}>
-        <option value="All">All Platforms</option>
-        <option value="PS5">PS5</option>
-        <option value="PS4">PS4</option>
-        <option value="Xbox">Xbox</option>
-        <option value="PC">PC</option>
+        {marketType === "accessories" ? (
+          <>
+            <option value="All">All Compatibility</option>
+            <option value="PC">PC</option>
+            <option value="Xbox">Xbox</option>
+            <option value="PlayStation">PlayStation</option>
+            <option value="Universal">Universal</option>
+          </>
+        ) : (
+          <>
+            <option value="All">All Platforms</option>
+            <option value="PS5">PS5</option>
+            <option value="PS4">PS4</option>
+            <option value="Xbox">Xbox</option>
+            <option value="PC">PC</option>
+          </>
+        )}
       </select>
 
       <select value={category} onChange={(e) => setCategory(e.target.value)}>
-        <option value="All">All Categories</option>
-        <option value="Action">Action</option>
-        <option value="Adventure">Adventure</option>
-        <option value="RPG">RPG</option>
-        <option value="Racing">Racing</option>
-        <option value="Sports">Sports</option>
+        {marketType === "accessories" ? (
+          ACCESSORY_CATEGORIES.map((item) => (
+            <option key={item} value={item}>
+              {item === "All" ? "All Categories" : item}
+            </option>
+          ))
+        ) : (
+          <>
+            <option value="All">All Categories</option>
+            <option value="Action">Action</option>
+            <option value="Adventure">Adventure</option>
+            <option value="RPG">RPG</option>
+            <option value="Racing">Racing</option>
+            <option value="Sports">Sports</option>
+          </>
+        )}
       </select>
 
       <select value={condition} onChange={(e) => setCondition(e.target.value)}>
@@ -907,7 +1357,16 @@ export default function Marketplace() {
       <div className="product-card" key={product.id}>
         <div className="product-image">
           {product.image ? (
-            <img src={product.image} alt={product.name} />
+            <img
+              src={product.image}
+              alt={product.name}
+              onError={(event) => {
+                event.currentTarget.style.display = "none";
+                event.currentTarget.parentElement.classList.add(
+                  "image-fallback-active",
+                );
+              }}
+            />
           ) : (
             <span>🎮</span>
           )}
@@ -952,6 +1411,29 @@ export default function Marketplace() {
             >
               View Details
             </button>
+
+            {product.productType === "accessory" && (
+              <div className="online-shopping-links">
+                <a
+                  href={getOnlineSearchUrl("Amazon", product.name)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="amazon-link"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  🛒 Amazon
+                </a>
+                <a
+                  href={getOnlineSearchUrl("Flipkart", product.name)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flipkart-link"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  🛍 Flipkart
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -962,35 +1444,54 @@ export default function Marketplace() {
     <>
       <section className="market-hero">
         <div>
-          <span className="hero-badge">VERIFIED GAMING MARKET</span>
+          <span className="hero-badge">
+            {marketType === "accessories"
+              ? "COMPUTER & GAMING ACCESSORIES"
+              : "VERIFIED GAMING MARKET"}
+          </span>
 
           <h2>
-            Build your
-            <span> gaming collection.</span>
+            {marketType === "accessories" ? "Complete your" : "Build your"}
+            <span>
+              {marketType === "accessories"
+                ? " gaming setup."
+                : " gaming collection."}
+            </span>
           </h2>
 
-          <p>Discover original and pre-owned gaming CDs at GamingVerse.</p>
+          <p>
+            {marketType === "accessories"
+              ? "Find gaming and computer accessories for a complete gaming setup."
+              : "Discover original and pre-owned gaming CDs at GamingVerse."}
+          </p>
         </div>
 
         <div className="hero-stat">
-          <strong>{products.length}</strong>
+          <strong>{filteredProducts.length}</strong>
 
-          <span>Products</span>
+          <span>
+            {marketType === "accessories" ? "Accessories" : "Products"}
+          </span>
         </div>
       </section>
 
+      {renderMarketTabs()}
       {renderFilters()}
 
       <div className="results-heading">
         <div>
-          <h2>Gaming CDs</h2>
+          <h2>
+            {marketType === "accessories"
+              ? "Computer & Gaming Accessories"
+              : "Gaming CDs"}
+          </h2>
           <p>{filteredProducts.length} result(s)</p>
         </div>
       </div>
 
       {filteredProducts.length === 0 ? (
         <div className="empty-state">
-          <div>🎮</div>
+          <div>{marketType === "accessories" ? "🖱️" : "🎮"}</div>
           <h3>No products found</h3>
           <p>Try another search or filter.</p>
         </div>
@@ -1090,6 +1591,25 @@ export default function Marketplace() {
                 Buy Now
               </button>
             </div>
+
+            {selectedProduct.productType === "accessory" && (
+              <div className="detail-shopping-links">
+                <a
+                  href={getOnlineSearchUrl("Amazon", selectedProduct.name)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  🛒 Shop on Amazon
+                </a>
+                <a
+                  href={getOnlineSearchUrl("Flipkart", selectedProduct.name)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  🛍 Shop on Flipkart
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </section>
