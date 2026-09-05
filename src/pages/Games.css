@@ -635,6 +635,96 @@ body {
 }
 
 /* =====================================================
+   HOME CATEGORY FILTER
+===================================================== */
+
+.home-category-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 0 28px;
+  padding: 16px 18px;
+  border: 1px solid rgba(169, 50, 255, 0.2);
+  border-radius: 14px;
+  background: linear-gradient(
+    120deg,
+    rgba(145, 40, 255, 0.09),
+    rgba(255, 255, 255, 0.025)
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 12px 32px rgba(0, 0, 0, 0.18);
+}
+
+.home-category-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.home-category-copy strong {
+  color: #ffffff;
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+.home-category-copy > span:last-child {
+  color: #777783;
+  font-size: 11px;
+}
+
+.home-category-label {
+  color: #a832ff;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+}
+
+.home-category-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.home-category-select-wrap label {
+  color: #888793;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.home-category-select-wrap select {
+  min-width: 205px;
+  height: 44px;
+  padding: 0 36px 0 14px;
+  border: 1px solid rgba(175, 78, 255, 0.55);
+  border-radius: 11px;
+  outline: none;
+  background: #101016;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.home-category-select-wrap select:hover {
+  border-color: #b85bff;
+  box-shadow: 0 0 20px rgba(169, 50, 255, 0.1);
+}
+
+.home-category-select-wrap select:focus {
+  border-color: #c160ff;
+  box-shadow: 0 0 0 3px rgba(169, 50, 255, 0.12);
+}
+
+.home-category-select-wrap option {
+  background: #101016;
+  color: #ffffff;
+}
+
+/* =====================================================
    SECTION HEADING
 ===================================================== */
 
@@ -998,6 +1088,14 @@ body {
     padding: 12px 25px;
   }
 
+  .home-category-toolbar {
+    align-items: stretch;
+  }
+
+  .home-category-select-wrap {
+    justify-content: space-between;
+  }
+
   .navbar-right {
     gap: 10px;
   }
@@ -1068,6 +1166,22 @@ body {
 
   .games-content {
     padding: 40px 18px 60px;
+  }
+
+  .home-category-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 13px;
+  }
+
+  .home-category-select-wrap {
+    width: 100%;
+  }
+
+  .home-category-select-wrap select {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
   }
 
   .horizontal-grid {

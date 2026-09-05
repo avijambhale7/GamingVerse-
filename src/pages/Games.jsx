@@ -550,6 +550,40 @@ function getGameDetails(gameName) {
     trailerSearchUrl,
   };
 }
+
+/* =========================================================
+   HOME CATEGORY FILTER
+   ========================================================= */
+function getGameCategory(gameName) {
+  const categoryMap = {
+    "GTA V": "Action",
+    "Cyberpunk 2077": "RPG",
+    "Assassin's Creed Shadows": "Action",
+    "Among Us": "Adventure",
+    "Black Myth Wukong": "RPG",
+    "Counter Strike 2": "Action",
+    "Ghost of Tsushima": "Adventure",
+    "GTA VI": "Action",
+    "God of War Ragnarok": "Adventure",
+    "God of War": "Adventure",
+    "Hogwarts Legacy": "RPG",
+    Minecraft: "Adventure",
+  };
+
+  if (categoryMap[gameName]) {
+    return categoryMap[gameName];
+  }
+
+  const genre = String(getGameDetails(gameName).genre || "").toLowerCase();
+
+  if (genre.includes("racing")) return "Racing";
+  if (genre.includes("sports")) return "Sports";
+  if (genre.includes("rpg")) return "RPG";
+  if (genre.includes("adventure")) return "Adventure";
+  if (genre.includes("action")) return "Action";
+
+  return "Action";
+}
 /* =========================================================
    GAMES PAGE
 ========================================================= */
@@ -590,6 +624,13 @@ function GVIcon({ name, size = 21 }) {
     bookmark: (
       <>
         <path d="M6 3.5h12v17l-6-3.7-6 3.7z" />
+      </>
+    ),
+    cart: (
+      <>
+        <path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 1.9-1.4L21 8H7" />
+        <circle cx="10" cy="19" r="1.4" />
+        <circle cx="18" cy="19" r="1.4" />
       </>
     ),
     grid: (
@@ -777,30 +818,41 @@ function Games() {
       document.removeEventListener("keydown", handleEscape);
     };
   }, []);
-  const filteredPosters = useMemo(() => {
-    const results = posterGames.filter((game) =>
+  const filterGamesByCategory = (games) => {
+    const searched = games.filter((game) =>
       game.name.toLowerCase().includes(search.toLowerCase()),
     );
+
+    if (
+      activeCategory !== "All" &&
+      activeCategory !== "Popular" &&
+      activeCategory !== "New"
+    ) {
+      return searched.filter(
+        (game) => getGameCategory(game.name) === activeCategory,
+      );
+    }
+
     if (activeCategory === "Popular") {
-      return results.slice(0, 12);
+      return searched.slice(0, 12);
     }
+
     if (activeCategory === "New") {
-      return results.slice(-12);
+      return searched.slice(-12);
     }
-    return results;
-  }, [search, activeCategory]);
-  const filteredHorizontal = useMemo(() => {
-    const results = horizontalGames.filter((game) =>
-      game.name.toLowerCase().includes(search.toLowerCase()),
-    );
-    if (activeCategory === "Popular") {
-      return results.slice(0, 6);
-    }
-    if (activeCategory === "New") {
-      return results.slice(-6);
-    }
-    return results;
-  }, [search, activeCategory]);
+
+    return searched;
+  };
+
+  const filteredPosters = useMemo(
+    () => filterGamesByCategory(posterGames),
+    [search, activeCategory],
+  );
+
+  const filteredHorizontal = useMemo(
+    () => filterGamesByCategory(horizontalGames),
+    [search, activeCategory],
+  );
   const searchResults = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -1168,6 +1220,18 @@ function Games() {
           >
             <GVIcon name="spaces" />
             <span className="nav-icon-label">Spaces</span>
+          </button>
+
+          {/* CD MARKETPLACE */}
+          <button
+            className="nav-icon-link marketplace-nav-button"
+            type="button"
+            title="CD Marketplace"
+            aria-label="CD Marketplace"
+            onClick={() => navigate("/marketplace")}
+          >
+            <GVIcon name="cart" />
+            <span className="nav-icon-label">Marketplace</span>
           </button>
 
           <button
@@ -1543,6 +1607,55 @@ function Games() {
         =================================================== */}
 
           <main className="games-content">
+            <div className="home-category-toolbar">
+              <div className="home-category-copy">
+                <span className="home-category-label">BROWSE BY GENRE</span>
+                <strong>
+                  {activeCategory === "All"
+                    ? "All Games"
+                    : `${activeCategory} Games`}
+                </strong>
+                <span>{filteredPosters.length} games available</span>
+              </div>
+
+              <div className="home-category-select-wrap">
+                <label htmlFor="home-game-category">Category</label>
+                <select
+                  id="home-game-category"
+                  value={
+                    [
+                      "All",
+                      "Action",
+                      "Adventure",
+                      "RPG",
+                      "Racing",
+                      "Sports",
+                    ].includes(activeCategory)
+                      ? activeCategory
+                      : "All"
+                  }
+                  onChange={(e) => {
+                    setActiveView("home");
+                    setActiveCategory(e.target.value);
+                    window.setTimeout(() => {
+                      document.querySelector(".games-content")?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                    }, 0);
+                  }}
+                  aria-label="Filter games by category"
+                >
+                  <option value="All">All Categories</option>
+                  <option value="Action">Action</option>
+                  <option value="Adventure">Adventure</option>
+                  <option value="RPG">RPG</option>
+                  <option value="Racing">Racing</option>
+                  <option value="Sports">Sports</option>
+                </select>
+              </div>
+            </div>
+
             <section className="game-section">
               <div className="section-heading">
                 <div>
@@ -1575,7 +1688,7 @@ function Games() {
 
                       <div className="game-meta">
                         <span>⭐ 4.8</span>
-                        <span>🎮 Action</span>
+                        <span>🎮 {getGameCategory(game.name)}</span>
                       </div>
 
                       <button
