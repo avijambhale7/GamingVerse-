@@ -40,6 +40,87 @@ const posterImages = import.meta.glob(
   },
 );
 /* =========================================================
+   HOME CATALOGUE SAFETY / CATEGORY HELPERS
+========================================================= */
+const RAWG_BLOCKED_TERMS = [
+  "blue whale",
+  "self harm challenge",
+  "suicide challenge",
+  "dangerous challenge",
+  "being a dik",
+  "acting lessons",
+  "toys 18+",
+  "rainy waifu",
+  "waifu gamers",
+  "holy waifu",
+  "hot holes",
+  "hot foots",
+  "hot feet",
+  "sex secret",
+  "love 2077",
+  "desktop companion",
+  "alt girl",
+  "waifu",
+  "hentai",
+  "ecchi",
+  "eroge",
+  "porn",
+  "pornographic",
+  "nsfw",
+  "adult only",
+  "adult game",
+  "adult visual novel",
+  "sexual content",
+  "sexual themes",
+  "sexually explicit",
+  "explicit sexual",
+  "nudity",
+  "nude",
+  "naked",
+  "fetish",
+  "foot fetish",
+  "lustful",
+  "lewd",
+  "uncensored",
+  "erotic",
+  "erotica",
+  "sexualized",
+  "sexualised",
+  "femboy",
+  "fembot",
+];
+
+function normalizeGameSearchText(value = "") {
+  return String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9+]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function containsBlockedGameTerm(value = "") {
+  const text = normalizeGameSearchText(value);
+  return RAWG_BLOCKED_TERMS.some((term) =>
+    text.includes(normalizeGameSearchText(term)),
+  );
+}
+
+function getGameCategory(game) {
+  const genre = String(game?.genre || game?.genres || "").toLowerCase();
+  if (genre.includes("racing")) return "Racing";
+  if (genre.includes("sport")) return "Sports";
+  if (genre.includes("rpg")) return "RPG";
+  if (genre.includes("adventure")) return "Adventure";
+  if (genre.includes("action")) return "Action";
+  return "Other";
+}
+
+function matchesHomeCategory(game, category) {
+  if (category === "All") return true;
+  return getGameCategory(game) === category;
+}
+
+/* =========================================================
    GAME NAME
 ========================================================= */
 function getGameName(path) {
@@ -59,16 +140,19 @@ function getGameName(path) {
     .replace(/^CS2$/i, "Counter Strike 2")
     .replace(/^Wukong$/i, "Black Myth Wukong");
 }
-const horizontalGames = Object.entries(horizontalImages).map(
-  ([path, image]) => ({
+const horizontalGames = Object.entries(horizontalImages)
+  .map(([path, image]) => ({
     name: getGameName(path),
     image,
-  }),
-);
-const posterGames = Object.entries(posterImages).map(([path, image]) => ({
-  name: getGameName(path),
-  image,
-}));
+  }))
+  .filter((game) => !containsBlockedGameTerm(game.name));
+
+const posterGames = Object.entries(posterImages)
+  .map(([path, image]) => ({
+    name: getGameName(path),
+    image,
+  }))
+  .filter((game) => !containsBlockedGameTerm(game.name));
 /* =========================================================
    REVIEW OPTIONS
 ========================================================= */
@@ -273,19 +357,7 @@ const gameAgeRatings = {
 };
 
 /* Games that must never be available through the normal game catalogue. */
-const blockedGameNames = [
-  "blue whale",
-  "being a dik",
-  "acting lessons",
-  "toys 18+",
-  "rainy waifu",
-  "waifu gamers",
-  "holy waifu",
-  "hot holes",
-  "sex secret",
-  "love 2077",
-  "desktop companion: alt girl",
-];
+const blockedGameNames = ["blue whale"];
 
 /* =========================================================
    AUTOMATIC GAME CATALOGUE
@@ -303,50 +375,6 @@ const RAWG_ALLOWED_PLATFORM_SLUGS = new Set([
   "xbox-series-x",
   "xbox-series-s",
 ]);
-
-const RAWG_BLOCKED_TERMS = [
-  "blue whale",
-  "self harm challenge",
-  "suicide challenge",
-  "dangerous challenge",
-  "being a dik",
-  "acting lessons",
-  "toys 18+",
-  "rainy waifu",
-  "waifu gamers",
-  "holy waifu",
-  "hot holes",
-  "sex secret",
-  "love 2077",
-  "desktop companion",
-  "alt girl",
-  "waifu",
-  "waifu game",
-  "hentai",
-  "ecchi",
-  "eroge",
-  "porn",
-  "pornographic",
-  "nsfw",
-  "adult only",
-  "adult game",
-  "sexual content",
-  "sexually explicit",
-  "explicit sexual",
-  "nudity",
-  "nude",
-  "fetish",
-  "foot fetish",
-  "lustful",
-  "lewd",
-  "uncensored",
-  "erotic",
-  "erotica",
-  "sexualized",
-  "sexualised",
-  "femboy",
-  "fembot",
-];
 
 const automaticGameDetailsCache = {};
 
@@ -372,39 +400,19 @@ function rawgGameHasAllowedPlatform(game) {
   );
 }
 
-function getGameSafetyText(game) {
-  const rawgTags = Array.isArray(game?.tags)
-    ? game.tags.map((tag) => tag?.name)
-    : [];
-  const rawgGenres = Array.isArray(game?.genres)
-    ? game.genres.map((genre) => genre?.name)
-    : [];
-  const rawgStores = Array.isArray(game?.stores)
-    ? game.stores.map((store) => store?.store?.name)
-    : [];
-
-  return [
+function rawgGameIsSafe(game) {
+  const text = [
     game?.name,
     game?.slug,
     game?.description,
     game?.esrb_rating?.name,
     game?.esrb_rating?.slug,
-    ...rawgTags,
-    ...rawgGenres,
-    ...rawgStores,
+    ...(Array.isArray(game?.tags) ? game.tags.map((tag) => tag?.name) : []),
   ]
     .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-}
+    .join(" ");
 
-function isSexualizedGame(game) {
-  const text = getGameSafetyText(game);
-  return RAWG_BLOCKED_TERMS.some((term) => text.includes(term));
-}
-
-function rawgGameIsSafe(game) {
-  return !isSexualizedGame(game);
+  return !containsBlockedGameTerm(text);
 }
 
 function mapRawgGame(game) {
@@ -487,24 +495,6 @@ function isBlockedGame(game) {
   return blockedGameNames.some((blocked) => text.includes(blocked));
 }
 
-function isUnsafeCatalogueGame(game) {
-  if (!game) return true;
-  if (isBlockedGame(game)) return true;
-
-  const text = [
-    game?.name,
-    getGameDetails(game?.name || "")?.title,
-    getGameDetails(game?.name || "")?.description,
-    getGameDetails(game?.name || "")?.genre,
-    game?.source === "RAWG" ? getGameSafetyText(game) : "",
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-
-  return RAWG_BLOCKED_TERMS.some((term) => text.includes(term));
-}
-
 function canAccessGame(game, userAge) {
   if (!game || isBlockedGame(game)) return false;
 
@@ -520,6 +510,109 @@ function canAccessGame(game, userAge) {
 
   return userAge >= requiredAge;
 }
+
+/* =========================================================
+   GAMING CLUBS
+   Client-side prototype data. Club membership, new clubs and
+   discussions are saved in localStorage for this build.
+========================================================= */
+const DEFAULT_GAMING_CLUBS = [
+  {
+    id: "action-adventure",
+    name: "Action & Adventure",
+    interest: "Action",
+    description:
+      "Talk about open-world adventures, story campaigns and action games.",
+    members: 128,
+    accent: "#a832ff",
+  },
+  {
+    id: "fps-arena",
+    name: "FPS Arena",
+    interest: "FPS",
+    description:
+      "Competitive FPS players, strategies, loadouts and match discussions.",
+    members: 96,
+    accent: "#b04cff",
+  },
+  {
+    id: "rpg-world",
+    name: "RPG World",
+    interest: "RPG",
+    description: "Builds, quests, characters, lore and everything RPG.",
+    members: 84,
+    accent: "#c15cff",
+  },
+  {
+    id: "playstation-hub",
+    name: "PlayStation Hub",
+    interest: "PlayStation",
+    description:
+      "PS4 and PS5 gamers sharing releases, tips and co-op sessions.",
+    members: 112,
+    accent: "#8f2df0",
+  },
+  {
+    id: "xbox-zone",
+    name: "Xbox Zone",
+    interest: "Xbox",
+    description:
+      "Xbox One and Xbox Series X|S gamers connecting and playing together.",
+    members: 77,
+    accent: "#9f3cff",
+  },
+  {
+    id: "pc-gamers",
+    name: "PC Gamers",
+    interest: "PC",
+    description:
+      "PC gaming hardware, performance, builds and multiplayer sessions.",
+    members: 143,
+    accent: "#b43dff",
+  },
+];
+
+const DEFAULT_CLUB_DISCUSSIONS = [
+  {
+    id: "club-discussion-1",
+    clubId: "action-adventure",
+    title: "What should I play after finishing Ghost of Tsushima?",
+    author: "Gamer",
+    meta: "2h ago • 12 replies",
+  },
+  {
+    id: "club-discussion-2",
+    clubId: "fps-arena",
+    title: "Best competitive FPS settings for a smoother aim?",
+    author: "ShadowX",
+    meta: "5h ago • 8 replies",
+  },
+  {
+    id: "club-discussion-3",
+    clubId: "rpg-world",
+    title: "Which RPG has the best world design?",
+    author: "Arjun",
+    meta: "Yesterday • 19 replies",
+  },
+];
+
+const DEFAULT_CLUB_EVENTS = [
+  {
+    id: "club-event-1",
+    title: "Friday Night FPS",
+    meta: "Friday • 8:00 PM • 16 gamers",
+  },
+  {
+    id: "club-event-2",
+    title: "PS5 Co-op Session",
+    meta: "Saturday • 7:30 PM • 11 gamers",
+  },
+  {
+    id: "club-event-3",
+    title: "PC Gaming Community Night",
+    meta: "Sunday • 6:00 PM • 24 gamers",
+  },
+];
 
 const currentGamingNews = [
   {
@@ -905,16 +998,22 @@ function Games() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeView, setActiveView] = useState("home");
+  const [showAllAutomaticGames, setShowAllAutomaticGames] = useState(false);
 
   useEffect(() => {
     const view = searchParams.get("view");
     setActiveView(
       view === "collections"
         ? "collections"
-        : view === "spaces"
+        : view === "spaces" || view === "clubs"
           ? "trailers"
           : "home",
     );
+    if (view === "clubs") {
+      setSpacesSection("clubs");
+    } else if (view === "spaces") {
+      setSpacesSection("feed");
+    }
   }, [searchParams]);
   const [heroIndex, setHeroIndex] = useState(0);
   const [spacesSection, setSpacesSection] = useState("feed");
@@ -970,7 +1069,55 @@ function Games() {
   const [automaticGames, setAutomaticGames] = useState([]);
   const [automaticGamesLoading, setAutomaticGamesLoading] = useState(true);
   const [automaticGamesError, setAutomaticGamesError] = useState("");
-  const [automaticGamesExpanded, setAutomaticGamesExpanded] = useState(false);
+  const [gamingClubs, setGamingClubs] = useState(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("gamingverse_clubs") || "null",
+      );
+      return Array.isArray(saved) && saved.length
+        ? saved
+        : DEFAULT_GAMING_CLUBS;
+    } catch {
+      return DEFAULT_GAMING_CLUBS;
+    }
+  });
+  const [joinedClubIds, setJoinedClubIds] = useState(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("gamingverse_joined_clubs") || "[]",
+      );
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  });
+  const [clubInterest, setClubInterest] = useState("All");
+  const [clubSearch, setClubSearch] = useState("");
+  const [showCreateClub, setShowCreateClub] = useState(false);
+  const [newClubName, setNewClubName] = useState("");
+  const [newClubInterest, setNewClubInterest] = useState("Action");
+  const [newClubDescription, setNewClubDescription] = useState("");
+  const [clubPost, setClubPost] = useState("");
+  const [clubDiscussions, setClubDiscussions] = useState(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("gamingverse_club_discussions") || "null",
+      );
+      return Array.isArray(saved) ? saved : DEFAULT_CLUB_DISCUSSIONS;
+    } catch {
+      return DEFAULT_CLUB_DISCUSSIONS;
+    }
+  });
+  const [joinedEventIds, setJoinedEventIds] = useState(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("gamingverse_club_events") || "[]",
+      );
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  });
 
   /* =======================================================
        LOAD USER AGE FROM FIREBASE
@@ -1003,7 +1150,7 @@ function Games() {
 
   /* =======================================================
        AUTOMATIC GAME CATALOGUE
-       Fetches current PC / PlayStation / Xbox games from RAWG.
+       Fetches 500+ current PC / PlayStation / Xbox games from RAWG.
      ======================================================= */
   useEffect(() => {
     let cancelled = false;
@@ -1022,61 +1169,74 @@ function Games() {
         setAutomaticGamesLoading(true);
         setAutomaticGamesError("");
 
-        // Ask RAWG separately for each supported platform. This produces a
-        // much richer catalogue than looking only at the global newest pages,
-        // where console titles can be diluted by other platforms.
-        const platformQueries = [
-          { slug: "pc", id: 4 },
-          { slug: "playstation4", id: 18 },
-          { slug: "playstation5", id: 187 },
-          { slug: "xbox-one", id: 1 },
-          { slug: "xbox-series-x", id: 186 },
-        ];
-        const pageNumbers = Array.from({ length: 6 }, (_, index) => index + 1);
+        const today = new Date();
+        const endDate = today.toISOString().slice(0, 10);
+        const startDate = new Date(today);
+        startDate.setDate(today.getDate() - 365);
+        const startDateValue = startDate.toISOString().slice(0, 10);
 
-        const pageResults = await Promise.all(
-          platformQueries.flatMap((platform) =>
-            pageNumbers.map(async (page) => {
-              const endpoint =
-                `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_API_KEY)}` +
-                `&platforms=${platform.id}` +
-                `&ordering=-released` +
-                `&page=${page}` +
-                `&page_size=40`;
-
-              const response = await fetch(endpoint, {
-                method: "GET",
-                cache: "no-store",
-              });
-
-              if (!response.ok) {
-                throw new Error(
-                  `Automatic games request failed (${response.status}) on ${platform.slug} page ${page}`,
-                );
-              }
-
-              const data = await response.json();
-              return Array.isArray(data?.results) ? data.results : [];
-            }),
-          ),
-        );
-
-        const allRawgGames = pageResults.flat();
+        /*
+         * Load enough RAWG pages to build a real 500+ game catalogue.
+         * RAWG returns a maximum of 40 games per page here, so we keep
+         * requesting pages until we have at least 600 safe/allowed games
+         * (or the API runs out of pages).
+         */
+        const TARGET_GAMES = 600;
+        const PAGE_SIZE = 40;
+        const MAX_PAGES = 20;
         const seen = new Set();
+        const allResults = [];
 
-        const mapped = allRawgGames
-          .filter((game) => game?.name && game?.background_image)
-          .filter(rawgGameHasAllowedPlatform)
-          .filter(rawgGameIsSafe)
-          .map(mapRawgGame)
-          .filter((game) => {
-            const key = game.name.toLowerCase();
-            if (!key || seen.has(key)) return false;
-            seen.add(key);
-            return true;
-          })
-          .filter((game) => !isBlockedGame(game))
-          .slice(0, 600);
+        for (
+          let page = 1;
+          page <= MAX_PAGES && allResults.length < TARGET_GAMES;
+          page += 1
+        ) {
+          const endpoint =
+            `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_API_KEY)}` +
+            `&dates=${startDateValue},${endDate}` +
+            `&ordering=-released` +
+            `&page_size=${PAGE_SIZE}` +
+            `&page=${page}`;
+
+          const response = await fetch(endpoint, {
+            method: "GET",
+            cache: "no-store",
+          });
+
+          if (!response.ok) {
+            throw new Error(
+              `Automatic games request failed (${response.status}) on page ${page}`,
+            );
+          }
+
+          const data = await response.json();
+          const pageResults = Array.isArray(data?.results) ? data.results : [];
+
+          if (!pageResults.length) break;
+
+          pageResults
+            .filter((game) => game?.name && game?.background_image)
+            .filter(rawgGameHasAllowedPlatform)
+            .filter(rawgGameIsSafe)
+            .map(mapRawgGame)
+            .filter((game) => {
+              const key = game.name
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, " ")
+                .trim();
+
+              if (!key || seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            })
+            .filter((game) => !isBlockedGame(game))
+            .forEach((game) => allResults.push(game));
+
+          if (pageResults.length < PAGE_SIZE) break;
+        }
+
+        const mapped = allResults;
 
         mapped.forEach((game) => {
           automaticGameDetailsCache[game.name] = {
@@ -1232,6 +1392,101 @@ function Games() {
   }, []);
 
   const newsItems = liveNews.length ? liveNews : currentGamingNews;
+  const toggleClubMembership = (clubId) => {
+    setJoinedClubIds((current) => {
+      const next = current.includes(clubId)
+        ? current.filter((id) => id !== clubId)
+        : [...current, clubId];
+      localStorage.setItem("gamingverse_joined_clubs", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const createGamingClub = () => {
+    const name = newClubName.trim();
+    const description = newClubDescription.trim();
+
+    if (!name || !description) {
+      return;
+    }
+
+    const club = {
+      id: `club-${Date.now()}`,
+      name,
+      interest: newClubInterest,
+      description,
+      members: 1,
+      accent: "#b04cff",
+    };
+
+    setGamingClubs((current) => {
+      const next = [club, ...current];
+      localStorage.setItem("gamingverse_clubs", JSON.stringify(next));
+      return next;
+    });
+
+    setJoinedClubIds((current) => {
+      const next = [...current, club.id];
+      localStorage.setItem("gamingverse_joined_clubs", JSON.stringify(next));
+      return next;
+    });
+
+    setNewClubName("");
+    setNewClubInterest("Action");
+    setNewClubDescription("");
+    setShowCreateClub(false);
+  };
+
+  const postClubDiscussion = () => {
+    const text = clubPost.trim();
+    if (!text) return;
+
+    const discussion = {
+      id: `club-discussion-${Date.now()}`,
+      clubId: joinedClubIds[0] || "action-adventure",
+      title: text,
+      author:
+        auth.currentUser?.displayName ||
+        auth.currentUser?.email?.split("@")[0] ||
+        "Gamer",
+      meta: "Just now • 0 replies",
+    };
+
+    setClubDiscussions((current) => {
+      const next = [discussion, ...current];
+      localStorage.setItem(
+        "gamingverse_club_discussions",
+        JSON.stringify(next),
+      );
+      return next;
+    });
+    setClubPost("");
+  };
+
+  const toggleClubEvent = (eventId) => {
+    setJoinedEventIds((current) => {
+      const next = current.includes(eventId)
+        ? current.filter((id) => id !== eventId)
+        : [...current, eventId];
+      localStorage.setItem("gamingverse_club_events", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const filteredGamingClubs = useMemo(() => {
+    const query = clubSearch.trim().toLowerCase();
+
+    return gamingClubs.filter((club) => {
+      const matchesInterest =
+        clubInterest === "All" || club.interest === clubInterest;
+      const matchesSearch =
+        !query ||
+        club.name.toLowerCase().includes(query) ||
+        club.description.toLowerCase().includes(query);
+      return matchesInterest && matchesSearch;
+    });
+  }, [gamingClubs, clubInterest, clubSearch]);
+
   /* =======================================================
        LOAD GAME COMMENTS LIVE
     ======================================================= */
@@ -1321,44 +1576,39 @@ function Games() {
     };
   }, []);
   const filteredPosters = useMemo(() => {
-    const results = posterGames.filter(
+    const query = search.trim().toLowerCase();
+    return posterGames.filter(
       (game) =>
-        !isUnsafeCatalogueGame(game) &&
-        game.name.toLowerCase().includes(search.toLowerCase()),
+        game.name.toLowerCase().includes(query) &&
+        matchesHomeCategory(game, activeCategory),
     );
-    if (activeCategory === "Popular") {
-      return results.slice(0, 12);
-    }
-    if (activeCategory === "New") {
-      return results.slice(-12);
-    }
-    return results;
   }, [search, activeCategory]);
+
   const filteredHorizontal = useMemo(() => {
-    const results = horizontalGames.filter(
+    const query = search.trim().toLowerCase();
+    return horizontalGames.filter(
       (game) =>
-        !isUnsafeCatalogueGame(game) &&
-        game.name.toLowerCase().includes(search.toLowerCase()),
+        game.name.toLowerCase().includes(query) &&
+        matchesHomeCategory(game, activeCategory),
     );
-    if (activeCategory === "Popular") {
-      return results.slice(0, 6);
-    }
-    if (activeCategory === "New") {
-      return results.slice(-6);
-    }
-    return results;
   }, [search, activeCategory]);
+
   const filteredAutomaticGames = useMemo(() => {
     const query = search.trim().toLowerCase();
-    const results = automaticGames.filter(
+    return automaticGames.filter(
       (game) =>
-        !isUnsafeCatalogueGame(game) && game.name.toLowerCase().includes(query),
+        game.name.toLowerCase().includes(query) &&
+        matchesHomeCategory(game, activeCategory) &&
+        !containsBlockedGameTerm(game.name),
     );
-    return results.slice(
-      0,
-      automaticGamesExpanded ? automaticGames.length : 12,
-    );
-  }, [automaticGames, search, automaticGamesExpanded]);
+  }, [automaticGames, search, activeCategory]);
+
+  const visibleAutomaticGames = useMemo(() => {
+    return showAllAutomaticGames
+      ? filteredAutomaticGames
+      : filteredAutomaticGames.slice(0, 24);
+  }, [filteredAutomaticGames, showAllAutomaticGames]);
+
   const searchResults = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -1366,11 +1616,7 @@ function Games() {
       return [];
     }
 
-    const combined = [
-      ...automaticGames,
-      ...horizontalGames,
-      ...posterGames,
-    ].filter((game) => !isUnsafeCatalogueGame(game));
+    const combined = [...automaticGames, ...horizontalGames, ...posterGames];
     const seen = new Set();
 
     return combined.filter((game) => {
@@ -2171,116 +2417,123 @@ function Games() {
 
           <main className="games-content">
             <section className="game-section">
-              <div className="section-heading">
+              <div className="section-heading featured-games-heading">
                 <div>
                   <span className="section-label">DISCOVER</span>
                   <h2>Featured Games</h2>
                 </div>
 
-                <div
-                  style={{
-                    color: "rgba(255,255,255,0.62)",
-                    fontSize: "11px",
-                    textAlign: "right",
-                  }}
-                >
-                  {ageLoading
-                    ? "Checking age access..."
-                    : userAge === null
-                      ? "Age access: add DOB in Profile"
-                      : `Age access: ${userAge}+`}
-                </div>
+                <div className="featured-games-actions">
+                  <label className="home-category-select">
+                    <span>Category</span>
+                    <select
+                      value={activeCategory}
+                      onChange={(event) =>
+                        setActiveCategory(event.target.value)
+                      }
+                      aria-label="Featured games category"
+                    >
+                      <option value="All">All Categories</option>
+                      <option value="Action">Action</option>
+                      <option value="Adventure">Adventure</option>
+                      <option value="RPG">RPG</option>
+                      <option value="Racing">Racing</option>
+                      <option value="Sports">Sports</option>
+                    </select>
+                  </label>
 
-                <button
-                  className="view-all"
-                  type="button"
-                  onClick={() => setActiveCategory("All")}
-                >
-                  View All →
-                </button>
+                  <button
+                    className="view-all"
+                    type="button"
+                    onClick={() => setActiveCategory("All")}
+                  >
+                    View All →
+                  </button>
+                </div>
               </div>
 
               <div className="horizontal-grid">
-                {filteredHorizontal.map((game, index) => {
-                  const requiredAge = getRequiredGameAge(game.name);
-                  const accessible = canAccessGame(game, userAge);
-                  const blocked = isBlockedGame(game);
+                {filteredHorizontal
+                  .filter((game) => !containsBlockedGameTerm(game.name))
+                  .map((game, index) => {
+                    const requiredAge = getRequiredGameAge(game.name);
+                    const accessible = canAccessGame(game, userAge);
+                    const blocked = isBlockedGame(game);
 
-                  return (
-                    <div
-                      className={`horizontal-card ${
-                        !accessible ? "age-restricted-card" : ""
-                      }`}
-                      key={`${game.name}-${index}`}
-                      onClick={() => openDetails(game)}
-                      title={
-                        !accessible
-                          ? blocked
-                            ? "Unavailable: blocked by GamingVerse safety system"
-                            : `Requires ${requiredAge}+`
-                          : game.name
-                      }
-                    >
-                      <img src={game.image} alt={game.name} />
+                    return (
+                      <div
+                        className={`horizontal-card ${
+                          !accessible ? "age-restricted-card" : ""
+                        }`}
+                        key={`${game.name}-${index}`}
+                        onClick={() => openDetails(game)}
+                        title={
+                          !accessible
+                            ? blocked
+                              ? "Unavailable: blocked by GamingVerse safety system"
+                              : `Requires ${requiredAge}+`
+                            : game.name
+                        }
+                      >
+                        <img src={game.image} alt={game.name} />
 
-                      <div className="card-gradient"></div>
+                        <div className="card-gradient"></div>
 
-                      {!accessible && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            inset: 0,
-                            zIndex: 4,
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: "6px",
-                            background: "rgba(0,0,0,0.56)",
-                            backdropFilter: "blur(2px)",
-                            textAlign: "center",
-                            pointerEvents: "none",
-                          }}
-                        >
-                          <span style={{ fontSize: "30px" }}>🔒</span>
-                          <strong style={{ fontSize: "15px" }}>
-                            {blocked ? "Unavailable" : `${requiredAge}+`}
-                          </strong>
-                          <small style={{ color: "rgba(255,255,255,0.72)" }}>
-                            {blocked ? "Safety restricted" : "Age restricted"}
-                          </small>
+                        {!accessible && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              zIndex: 4,
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "6px",
+                              background: "rgba(0,0,0,0.56)",
+                              backdropFilter: "blur(2px)",
+                              textAlign: "center",
+                              pointerEvents: "none",
+                            }}
+                          >
+                            <span style={{ fontSize: "30px" }}>🔒</span>
+                            <strong style={{ fontSize: "15px" }}>
+                              {blocked ? "Unavailable" : `${requiredAge}+`}
+                            </strong>
+                            <small style={{ color: "rgba(255,255,255,0.72)" }}>
+                              {blocked ? "Safety restricted" : "Age restricted"}
+                            </small>
+                          </div>
+                        )}
+
+                        <div className="horizontal-info">
+                          <h3>{game.name}</h3>
+
+                          <div className="game-meta">
+                            <span>⭐ 4.8</span>
+                            <span>🎮 Action</span>
+                            <span>{gameAgeRatings[game.name] || "16+"}</span>
+                          </div>
+
+                          <button
+                            className="card-details-button"
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDetails(game);
+                            }}
+                          >
+                            {accessible ? "View Details" : "Age Restricted"}
+                          </button>
                         </div>
-                      )}
-
-                      <div className="horizontal-info">
-                        <h3>{game.name}</h3>
-
-                        <div className="game-meta">
-                          <span>⭐ 4.8</span>
-                          <span>🎮 Action</span>
-                          <span>{gameAgeRatings[game.name] || "16+"}</span>
-                        </div>
-
-                        <button
-                          className="card-details-button"
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openDetails(game);
-                          }}
-                        >
-                          {accessible ? "View Details" : "Age Restricted"}
-                        </button>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             </section>
 
             {/* =================================================
             AUTOMATIC GAME CATALOGUE
-            Same visual language as Featured Games.
             ================================================= */}
             <section className="game-section automatic-games-section">
               <div className="section-heading automatic-games-heading">
@@ -2289,21 +2542,28 @@ function Games() {
                   <h2>Latest PC & Console Games</h2>
                 </div>
 
-                <div className="automatic-games-heading-actions">
-                  {!automaticGamesError && automaticGames.length > 0 && (
-                    <button
-                      className="view-all automatic-view-all"
-                      type="button"
-                      onClick={() => {
-                        setAutomaticGamesExpanded((current) => !current);
-                      }}
-                    >
-                      {automaticGamesExpanded
-                        ? "Show Less ↑"
-                        : "View All Games →"}
-                    </button>
-                  )}
-                </div>
+                <button
+                  className="view-all automatic-view-all"
+                  type="button"
+                  onClick={() => {
+                    const nextShowAll = !showAllAutomaticGames;
+                    setShowAllAutomaticGames(nextShowAll);
+                    if (nextShowAll) {
+                      setSearch("");
+                      setActiveCategory("All");
+                    }
+                    requestAnimationFrame(() => {
+                      document
+                        .querySelector(".automatic-games-section")
+                        ?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                    });
+                  }}
+                >
+                  {showAllAutomaticGames ? "Show Less ↑" : "View All →"}
+                </button>
               </div>
 
               {automaticGamesError ? (
@@ -2315,69 +2575,70 @@ function Games() {
                   </div>
                 </div>
               ) : filteredAutomaticGames.length > 0 ? (
-                <div className="horizontal-grid automatic-games-unified-grid">
-                  {filteredAutomaticGames.map((game) => {
+                <div className="automatic-games-grid">
+                  {visibleAutomaticGames.map((game) => {
                     const requiredAge = getRequiredGameAge(game.name);
                     const accessible = canAccessGame(game, userAge);
-                    const blocked = isBlockedGame(game);
 
                     return (
                       <article
-                        className={`automatic-unified-card horizontal-card ${
+                        className={`automatic-game-card ${
                           !accessible ? "age-restricted-card" : ""
                         }`}
                         key={`automatic-${game.rawgId || game.name}`}
                         onClick={() => openDetails(game)}
                         title={
-                          !accessible
-                            ? blocked
-                              ? "Unavailable: blocked by GamingVerse safety system"
-                              : `Requires ${requiredAge}+`
-                            : game.name
+                          !accessible ? `Requires ${requiredAge}+` : game.name
                         }
                       >
-                        <img src={game.image} alt={game.name} loading="lazy" />
-                        <div className="card-gradient"></div>
+                        <div className="automatic-game-image-wrap">
+                          <img
+                            src={game.image}
+                            alt={game.name}
+                            loading="lazy"
+                          />
+                          <div className="automatic-game-image-gradient"></div>
 
-                        <div className="auto-catalogue-badges">
-                          <span className="game-source-badge">AUTO</span>
-                          <span className="game-age-badge">{requiredAge}+</span>
+                          <div className="automatic-game-source-badge">
+                            AUTO
+                          </div>
+                          <div className="automatic-game-age-badge">
+                            {requiredAge}+
+                          </div>
+
+                          {!accessible && (
+                            <div className="automatic-game-lock">
+                              <span>🔒</span>
+                              <strong>{requiredAge}+</strong>
+                              <small>Age restricted</small>
+                            </div>
+                          )}
                         </div>
 
-                        {!accessible && (
-                          <div className="game-access-overlay">
-                            <span>🔒</span>
-                            <strong>
-                              {blocked ? "Unavailable" : `${requiredAge}+`}
-                            </strong>
-                            <small>
-                              {blocked ? "Safety restricted" : "Age restricted"}
-                            </small>
-                          </div>
-                        )}
-
-                        <div className="horizontal-info automatic-horizontal-info">
+                        <div className="automatic-game-info">
                           <h3>{game.name}</h3>
-                          <div className="game-meta">
+                          <div className="automatic-game-meta">
                             <span>
                               ⭐ {game.rating ? game.rating.toFixed(1) : "New"}
                             </span>
-                            <span>🎮 {game.genre}</span>
-                            <span>{requiredAge}+</span>
+                            <span>{game.genre}</span>
                           </div>
-                          <div className="automatic-platform-line">
-                            {game.platforms}
+                          <div className="automatic-game-platforms">
+                            🎮 {game.platforms}
                           </div>
-                          <button
-                            className="card-details-button"
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              openDetails(game);
-                            }}
-                          >
-                            {accessible ? "View Details" : "View Access"}
-                          </button>
+                          <div className="automatic-game-footer">
+                            <span>{game.releaseDate || "Release TBA"}</span>
+                            <button
+                              type="button"
+                              className="details-button-small"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                openDetails(game);
+                              }}
+                            >
+                              {accessible ? "Details" : "View Access"}
+                            </button>
+                          </div>
                         </div>
                       </article>
                     );
@@ -2430,101 +2691,109 @@ function Games() {
               </div>
 
               <div className="poster-grid">
-                {filteredPosters.map((game, index) => {
-                  const requiredAge = getRequiredGameAge(game.name);
-                  const accessible = canAccessGame(game, userAge);
-                  const blocked = isBlockedGame(game);
+                {filteredPosters
+                  .filter((game) => !containsBlockedGameTerm(game.name))
+                  .map((game, index) => {
+                    const requiredAge = getRequiredGameAge(game.name);
+                    const accessible = canAccessGame(game, userAge);
+                    const blocked = isBlockedGame(game);
 
-                  return (
-                    <div
-                      className={`poster-card ${
-                        !accessible ? "age-restricted-card" : ""
-                      }`}
-                      key={`${game.name}-${index}`}
-                    >
+                    return (
                       <div
-                        className="poster-image-wrapper"
-                        onClick={() => openDetails(game)}
-                        title={
-                          !accessible
-                            ? blocked
-                              ? "Unavailable: blocked by GamingVerse safety system"
-                              : `Requires ${requiredAge}+`
-                            : game.name
-                        }
+                        className={`poster-card ${
+                          !accessible ? "age-restricted-card" : ""
+                        }`}
+                        key={`${game.name}-${index}`}
                       >
-                        <img src={game.image} alt={game.name} />
+                        <div
+                          className="poster-image-wrapper"
+                          onClick={() => openDetails(game)}
+                          title={
+                            !accessible
+                              ? blocked
+                                ? "Unavailable: blocked by GamingVerse safety system"
+                                : `Requires ${requiredAge}+`
+                              : game.name
+                          }
+                        >
+                          <img src={game.image} alt={game.name} />
 
-                        {!accessible && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              inset: 0,
-                              zIndex: 3,
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "4px",
-                              background: "rgba(0,0,0,0.52)",
-                              textAlign: "center",
-                              borderRadius: "inherit",
-                              pointerEvents: "none",
-                            }}
-                          >
-                            <span style={{ fontSize: "25px" }}>🔒</span>
-                            <strong style={{ fontSize: "13px" }}>
-                              {blocked ? "Unavailable" : `${requiredAge}+`}
-                            </strong>
-                            <small style={{ color: "rgba(255,255,255,0.72)" }}>
-                              {blocked ? "Safety restricted" : "Age restricted"}
-                            </small>
+                          {!accessible && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                inset: 0,
+                                zIndex: 3,
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                gap: "4px",
+                                background: "rgba(0,0,0,0.52)",
+                                textAlign: "center",
+                                borderRadius: "inherit",
+                                pointerEvents: "none",
+                              }}
+                            >
+                              <span style={{ fontSize: "25px" }}>🔒</span>
+                              <strong style={{ fontSize: "13px" }}>
+                                {blocked ? "Unavailable" : `${requiredAge}+`}
+                              </strong>
+                              <small
+                                style={{ color: "rgba(255,255,255,0.72)" }}
+                              >
+                                {blocked
+                                  ? "Safety restricted"
+                                  : "Age restricted"}
+                              </small>
+                            </div>
+                          )}
+
+                          <div className="poster-overlay">
+                            <button
+                              className="quick-play"
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openDetails(game);
+                              }}
+                            >
+                              ◉
+                            </button>
                           </div>
-                        )}
+                        </div>
 
-                        <div className="poster-overlay">
-                          <button
-                            className="quick-play"
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openDetails(game);
-                            }}
-                          >
-                            ◉
-                          </button>
+                        <div className="poster-info">
+                          <h3>{game.name}</h3>
+
+                          <div className="poster-meta">
+                            <span>⭐ 4.7</span>
+                            <span className="genre">Action</span>
+                          </div>
+
+                          <div className="poster-actions">
+                            <button
+                              className="meter-button"
+                              type="button"
+                              onClick={() => openMeter(game)}
+                            >
+                              {accessible
+                                ? "GamingVerse Meter"
+                                : "🔒 Restricted"}
+                            </button>
+
+                            <button
+                              className="details-button-small"
+                              type="button"
+                              onClick={() => openDetails(game)}
+                            >
+                              {accessible ? "Details" : "View Access"}
+                            </button>
+                          </div>
                         </div>
                       </div>
-
-                      <div className="poster-info">
-                        <h3>{game.name}</h3>
-
-                        <div className="poster-meta">
-                          <span>⭐ 4.7</span>
-                          <span className="genre">Action</span>
-                        </div>
-
-                        <div className="poster-actions">
-                          <button
-                            className="meter-button"
-                            type="button"
-                            onClick={() => openMeter(game)}
-                          >
-                            {accessible ? "GamingVerse Meter" : "🔒 Restricted"}
-                          </button>
-
-                          <button
-                            className="details-button-small"
-                            type="button"
-                            onClick={() => openDetails(game)}
-                          >
-                            {accessible ? "Details" : "View Access"}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
 
               {filteredHorizontal.length === 0 &&
@@ -2716,6 +2985,22 @@ function Games() {
                 <span className="sidebar-nav-icon">▤</span>
                 <span>News</span>
               </button>
+
+              <button
+                className={`trailers-side-item ${
+                  spacesSection === "clubs" && activeView === "trailers"
+                    ? "active"
+                    : ""
+                }`}
+                type="button"
+                onClick={() => {
+                  setActiveView("trailers");
+                  setSpacesSection("clubs");
+                }}
+              >
+                <span className="sidebar-nav-icon">♣</span>
+                <span>Gaming Clubs</span>
+              </button>
             </aside>
 
             {activeView === "news" ? (
@@ -2864,6 +3149,259 @@ function Games() {
                       </p>
                     </div>
                   </aside>
+                </div>
+              </main>
+            ) : spacesSection === "clubs" ? (
+              <main className="clubs-feed">
+                <div className="clubs-feed-head">
+                  <div>
+                    <span className="section-label">COMMUNITY</span>
+                    <h1>Gaming Clubs</h1>
+                    <p>
+                      Create and join gaming clubs, share gaming interests,
+                      discuss your favourite games and meet other gamers.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="clubs-create-button"
+                    onClick={() => setShowCreateClub((current) => !current)}
+                  >
+                    {showCreateClub ? "Close" : "+ Create Club"}
+                  </button>
+                </div>
+
+                {showCreateClub && (
+                  <section className="club-create-panel">
+                    <div className="club-create-grid">
+                      <label>
+                        Club Name
+                        <input
+                          value={newClubName}
+                          onChange={(event) =>
+                            setNewClubName(event.target.value)
+                          }
+                          placeholder="e.g. Open World Legends"
+                          maxLength={50}
+                        />
+                      </label>
+
+                      <label>
+                        Interest
+                        <select
+                          value={newClubInterest}
+                          onChange={(event) =>
+                            setNewClubInterest(event.target.value)
+                          }
+                        >
+                          {[
+                            "Action",
+                            "Adventure",
+                            "RPG",
+                            "FPS",
+                            "PlayStation",
+                            "Xbox",
+                            "PC",
+                          ].map((interest) => (
+                            <option key={interest} value={interest}>
+                              {interest}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    <label className="club-create-description">
+                      Description
+                      <textarea
+                        value={newClubDescription}
+                        onChange={(event) =>
+                          setNewClubDescription(event.target.value)
+                        }
+                        placeholder="Tell gamers what your club is about..."
+                        maxLength={180}
+                      />
+                    </label>
+
+                    <button
+                      type="button"
+                      className="clubs-create-submit"
+                      onClick={createGamingClub}
+                    >
+                      Create & Join Club
+                    </button>
+                  </section>
+                )}
+
+                <div className="clubs-toolbar">
+                  <div className="club-interest-filters">
+                    {[
+                      "All",
+                      "Action",
+                      "Adventure",
+                      "RPG",
+                      "FPS",
+                      "PlayStation",
+                      "Xbox",
+                      "PC",
+                    ].map((interest) => (
+                      <button
+                        key={interest}
+                        type="button"
+                        className={clubInterest === interest ? "active" : ""}
+                        onClick={() => setClubInterest(interest)}
+                      >
+                        {interest}
+                      </button>
+                    ))}
+                  </div>
+
+                  <label className="club-search">
+                    <span>⌕</span>
+                    <input
+                      value={clubSearch}
+                      onChange={(event) => setClubSearch(event.target.value)}
+                      placeholder="Search clubs..."
+                    />
+                  </label>
+                </div>
+
+                <section className="clubs-block">
+                  <div className="clubs-block-heading">
+                    <div>
+                      <span className="section-label">FIND YOUR COMMUNITY</span>
+                      <h2>Clubs for Gamers</h2>
+                    </div>
+                    <span>{filteredGamingClubs.length} clubs</span>
+                  </div>
+
+                  <div className="clubs-grid">
+                    {filteredGamingClubs.map((club) => {
+                      const joined = joinedClubIds.includes(club.id);
+                      return (
+                        <article className="gaming-club-card" key={club.id}>
+                          <div
+                            className="gaming-club-card-top"
+                            style={{ "--club-accent": club.accent }}
+                          >
+                            <div className="gaming-club-icon">♣</div>
+                            <span>{club.interest}</span>
+                          </div>
+
+                          <div className="gaming-club-card-body">
+                            <h3>{club.name}</h3>
+                            <p>{club.description}</p>
+
+                            <div className="gaming-club-card-footer">
+                              <span>
+                                ♟{" "}
+                                {club.members +
+                                  (joined && !club.membersAdded ? 1 : 0)}{" "}
+                                members
+                              </span>
+                              <button
+                                type="button"
+                                className={joined ? "joined" : ""}
+                                onClick={() => toggleClubMembership(club.id)}
+                              >
+                                {joined ? "Joined ✓" : "Join Club"}
+                              </button>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+
+                  {!filteredGamingClubs.length && (
+                    <div className="clubs-feature-note">
+                      <strong>No clubs found</strong>
+                      <span>Try another interest or search term.</span>
+                    </div>
+                  )}
+                </section>
+
+                <div className="clubs-two-column">
+                  <section className="club-panel">
+                    <div className="club-panel-heading">
+                      <div>
+                        <span className="section-label">DISCUSSIONS</span>
+                        <h2>Community Talks</h2>
+                      </div>
+                      <span>💬</span>
+                    </div>
+
+                    <div className="club-post-row">
+                      <input
+                        value={clubPost}
+                        onChange={(event) => setClubPost(event.target.value)}
+                        placeholder="Start a discussion..."
+                        maxLength={140}
+                      />
+                      <button type="button" onClick={postClubDiscussion}>
+                        Post
+                      </button>
+                    </div>
+
+                    <div className="club-discussions-list">
+                      {clubDiscussions.slice(0, 6).map((discussion) => (
+                        <article
+                          className="club-discussion-item"
+                          key={discussion.id}
+                        >
+                          <div className="club-discussion-avatar">
+                            {(discussion.author || "G").charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <strong>{discussion.title}</strong>
+                            <span>
+                              @{discussion.author} • {discussion.meta}
+                            </span>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="club-panel">
+                    <div className="club-panel-heading">
+                      <div>
+                        <span className="section-label">EVENTS</span>
+                        <h2>Gaming Events</h2>
+                      </div>
+                      <span>▦</span>
+                    </div>
+
+                    <div className="club-events-list">
+                      {DEFAULT_CLUB_EVENTS.map((event) => {
+                        const going = joinedEventIds.includes(event.id);
+                        return (
+                          <div className="club-event-item" key={event.id}>
+                            <div className="club-event-icon">🎮</div>
+                            <div>
+                              <strong>{event.title}</strong>
+                              <span>{event.meta}</span>
+                            </div>
+                            <button
+                              type="button"
+                              className={going ? "joined" : ""}
+                              onClick={() => toggleClubEvent(event.id)}
+                            >
+                              {going ? "Going ✓" : "Join"}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </section>
+                </div>
+
+                <div className="clubs-feature-note">
+                  <strong>Gaming Clubs</strong>
+                  <span>
+                    Connect with other gamers based on shared interests,
+                    participate in discussions and join gaming events.
+                  </span>
                 </div>
               </main>
             ) : (
@@ -3380,6 +3918,25 @@ function Games() {
                   <div>
                     <span className="community-review-eyebrow">COMMUNITY</span>
                     <h3>Write a Review</h3>
+                  </div>
+
+                  <div className="community-review-summary">
+                    <span>
+                      <span className="community-dot skip"></span>
+                      Skip
+                    </span>
+                    <span>
+                      <span className="community-dot timepass"></span>
+                      Timepass
+                    </span>
+                    <span>
+                      <span className="community-dot go-for-it"></span>
+                      Go for it
+                    </span>
+                    <span>
+                      <span className="community-dot perfection"></span>
+                      Perfection
+                    </span>
                   </div>
                 </div>
 

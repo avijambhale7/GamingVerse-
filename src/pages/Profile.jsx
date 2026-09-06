@@ -239,7 +239,9 @@ function Profile() {
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(
+    () => new URLSearchParams(window.location.search).get("edit") === "true",
+  );
 
   const [profile, setProfile] = useState({
     firstName: "",
