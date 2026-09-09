@@ -106,17 +106,64 @@ function containsBlockedGameTerm(value = "") {
 }
 
 function getGameCategory(game) {
-  const genre = String(game?.genre || game?.genres || "").toLowerCase();
-  if (genre.includes("racing")) return "Racing";
-  if (genre.includes("sport")) return "Sports";
+  const details = game?.name ? gameDetails?.[game.name] : null;
+  const genre = String(
+    game?.genre || game?.genres || details?.genre || details?.genres || "",
+  ).toLowerCase();
+  const name = String(game?.name || "").toLowerCase();
+
+  if (genre.includes("racing") || /forza|need for speed|f1/.test(name)) {
+    return "Racing";
+  }
+  if (
+    genre.includes("sport") ||
+    /ea sports|fc 2\d|nba 2k|fifa|madden|nhl/.test(name)
+  ) {
+    return "Sports";
+  }
   if (genre.includes("rpg")) return "RPG";
   if (genre.includes("adventure")) return "Adventure";
   if (genre.includes("action")) return "Action";
-  return "Other";
+
+  if (
+    /elden ring|witcher|cyberpunk|hogwarts|diablo|baldur|persona|dragon age|fallout/.test(
+      name,
+    )
+  ) {
+    return "RPG";
+  }
+  if (
+    /tomb raider|uncharted|last of us|god of war|ghost of tsushima|assassin|adventure|life is strange|little nightmares/.test(
+      name,
+    )
+  ) {
+    return "Adventure";
+  }
+  if (
+    /resident evil|silent hill|dead space|alan wake|phasmophobia|forest|sons of the forest|outlast/.test(
+      name,
+    )
+  ) {
+    return "Action";
+  }
+
+  return "Action";
 }
 
 function matchesHomeCategory(game, category) {
   if (category === "All") return true;
+
+  const details = game?.name ? gameDetails?.[game.name] : null;
+  const genre = String(
+    game?.genre || game?.genres || details?.genre || details?.genres || "",
+  ).toLowerCase();
+
+  if (category === "Action" && genre.includes("action")) return true;
+  if (category === "Adventure" && genre.includes("adventure")) return true;
+  if (category === "RPG" && genre.includes("rpg")) return true;
+  if (category === "Racing" && genre.includes("racing")) return true;
+  if (category === "Sports" && genre.includes("sport")) return true;
+
   return getGameCategory(game) === category;
 }
 
@@ -376,6 +423,104 @@ const RAWG_ALLOWED_PLATFORM_SLUGS = new Set([
   "xbox-series-s",
 ]);
 
+const PRIORITY_GAME_NAMES = [
+  "Assassin's Creed Shadows",
+  "Among Us",
+  "Black Myth: Wukong",
+  "Counter-Strike 2",
+  "Cyberpunk 2077",
+  "Ghost of Tsushima",
+  "Grand Theft Auto VI",
+  "Grand Theft Auto V",
+  "God of War Ragnarök",
+  "God of War",
+  "Hogwarts Legacy",
+  "Minecraft",
+  "Red Dead Redemption 2",
+  "Red Dead Redemption",
+  "The Witcher 3: Wild Hunt",
+  "Elden Ring",
+  "Elden Ring Nightreign",
+  "Assassin's Creed Valhalla",
+  "Assassin's Creed Odyssey",
+  "Assassin's Creed Origins",
+  "Far Cry 6",
+  "Far Cry 5",
+  "Watch Dogs 2",
+  "Mafia III",
+  "Sleeping Dogs",
+  "Just Cause 4",
+  "Marvel's Spider-Man Remastered",
+  "Marvel's Spider-Man: Miles Morales",
+  "Marvel's Spider-Man 2",
+  "The Last of Us Part I",
+  "The Last of Us Part II",
+  "Uncharted 4: A Thief's End",
+  "Tomb Raider",
+  "Rise of the Tomb Raider",
+  "Shadow of the Tomb Raider",
+  "Sekiro: Shadows Die Twice",
+  "Devil May Cry 5",
+  "Star Wars Jedi: Fallen Order",
+  "Star Wars Jedi: Survivor",
+  "Resident Evil 4",
+  "Resident Evil Village",
+  "Resident Evil 2",
+  "Silent Hill 2",
+  "Dead Space",
+  "Alan Wake 2",
+  "Phasmophobia",
+  "The Forest",
+  "Sons of the Forest",
+  "VALORANT",
+  "Fortnite",
+  "Call of Duty: Warzone",
+  "Apex Legends",
+  "Tom Clancy's Rainbow Six Siege",
+  "PUBG: Battlegrounds",
+  "Rocket League",
+  "Overwatch 2",
+  "Dota 2",
+  "League of Legends",
+  "Forza Horizon 5",
+  "Need for Speed Heat",
+  "Need for Speed Unbound",
+  "EA Sports FC 26",
+  "NBA 2K26",
+  "EA Sports F1 25",
+  "Terraria",
+  "Stardew Valley",
+  "Hollow Knight",
+  "Hollow Knight: Silksong",
+  "Hades",
+  "Hades II",
+  "Dead Cells",
+  "Palworld",
+  "Rust",
+  "ARK: Survival Evolved",
+  "Garry's Mod",
+  "Left 4 Dead 2",
+];
+
+const normalizePriorityGameName = (value = "") =>
+  String(value).toLowerCase().replace(/[:'’]/g, "").replace(/\s+/g, " ").trim();
+
+const priorityGameRank = new Map(
+  PRIORITY_GAME_NAMES.map((name, index) => [
+    normalizePriorityGameName(name),
+    index,
+  ]),
+);
+
+// Prevent the automatic catalogue from repeating games that already
+// exist in GamingVerse's curated catalogue, including the requested
+// priority titles. This keeps the Home sections visually unique.
+const CURATED_GAME_NAME_KEYS = new Set([
+  ...horizontalGames.map((game) => normalizePriorityGameName(game.name)),
+  ...posterGames.map((game) => normalizePriorityGameName(game.name)),
+  ...PRIORITY_GAME_NAMES.map((name) => normalizePriorityGameName(name)),
+]);
+
 const automaticGameDetailsCache = {};
 
 function rawgRatingToGamingVerse(rating) {
@@ -438,6 +583,22 @@ function mapRawgGame(game) {
 
   const ageRating = rawgRatingToGamingVerse(game?.esrb_rating);
   const displayName = String(game?.name || "").trim();
+  const developerName =
+    Array.isArray(game?.developers) && game.developers.length
+      ? game.developers
+          .map((item) => item?.name)
+          .filter(Boolean)
+          .slice(0, 2)
+          .join(" • ")
+      : "—";
+  const publisherName =
+    Array.isArray(game?.publishers) && game.publishers.length
+      ? game.publishers
+          .map((item) => item?.name)
+          .filter(Boolean)
+          .slice(0, 2)
+          .join(" • ")
+      : "—";
 
   return {
     id: `rawg-${game.id}`,
@@ -447,10 +608,15 @@ function mapRawgGame(game) {
     ageRating,
     genre,
     rating: Number.isFinite(Number(game?.rating)) ? Number(game.rating) : 0,
+    ratingCount: Number.isFinite(Number(game?.ratings_count))
+      ? Number(game.ratings_count)
+      : 0,
     releaseDate: game?.released || "",
     platforms: platformNames.length
       ? platformNames.join(" • ")
       : "PC • Console",
+    developer: developerName,
+    publisher: publisherName,
     source: "RAWG",
   };
 }
@@ -992,6 +1158,21 @@ function GVIcon({ name, size = 21 }) {
   return <svg {...common}>{paths[name]}</svg>;
 }
 
+function formatActivityDate(timestamp) {
+  const diff = Math.max(0, Date.now() - Number(timestamp || 0));
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days} days ago`;
+  return new Date(timestamp).toLocaleDateString("en-US", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
 function Games() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -999,15 +1180,31 @@ function Games() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeView, setActiveView] = useState("home");
   const [showAllAutomaticGames, setShowAllAutomaticGames] = useState(false);
+  const [activityFilter, setActivityFilter] = useState("All");
+  const [activitySort, setActivitySort] = useState("Recent");
+  const [activityType, setActivityType] = useState("All");
+  const [activityReviews, setActivityReviews] = useState([]);
+  const [top100Filter, setTop100Filter] = useState("All");
+  const [top100Sort, setTop100Sort] = useState("Game");
+  const [gamingVerseRatings, setGamingVerseRatings] = useState({});
+  const [discoverSort, setDiscoverSort] = useState("Newest Releases");
+  const [discoverPlatform, setDiscoverPlatform] = useState("All Platforms");
+  const [discoverGenre, setDiscoverGenre] = useState("All Genres");
+  const [discoverRelease, setDiscoverRelease] = useState("All Releases");
+  const [discoverPreset, setDiscoverPreset] = useState("");
 
   useEffect(() => {
     const view = searchParams.get("view");
     setActiveView(
       view === "collections"
         ? "collections"
-        : view === "spaces" || view === "clubs"
-          ? "trailers"
-          : "home",
+        : view === "following"
+          ? "following"
+          : view === "top100"
+            ? "top100"
+            : view === "spaces" || view === "clubs"
+              ? "trailers"
+              : "home",
     );
     if (view === "clubs") {
       setSpacesSection("clubs");
@@ -1015,11 +1212,88 @@ function Games() {
       setSpacesSection("feed");
     }
   }, [searchParams]);
+
+  // Discover has its own game-focused landing/filter page.
+  useEffect(() => {
+    if (searchParams.get("view") === "discover") {
+      setActiveView("discover");
+      setSearch("");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [searchParams]);
+
+  // A browser reload always starts GamingVerse on the Home page.
+  useEffect(() => {
+    const navigationEntry = performance.getEntriesByType("navigation")[0];
+    if (navigationEntry?.type === "reload") {
+      setActiveView("home");
+      setActiveCategory("All");
+      if (searchParams.get("view")) {
+        navigate("/games", { replace: true });
+      }
+      window.scrollTo({ top: 0, behavior: "auto" });
+    }
+  }, []);
+
   const [heroIndex, setHeroIndex] = useState(0);
   const [spacesSection, setSpacesSection] = useState("feed");
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showDiscoverMenu, setShowDiscoverMenu] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [notificationTab, setNotificationTab] = useState("all");
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("gamingverse_notifications") || "[]",
+      );
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const addGamingVerseNotification = (title, message, type = "activity") => {
+    const notification = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      title,
+      message,
+      type,
+      createdAt: Date.now(),
+      read: false,
+    };
+    setNotifications((current) => {
+      const next = [notification, ...current].slice(0, 100);
+      localStorage.setItem("gamingverse_notifications", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const loadNotifications = () => {
+      try {
+        const saved = JSON.parse(
+          localStorage.getItem("gamingverse_notifications") || "[]",
+        );
+        setNotifications(Array.isArray(saved) ? saved : []);
+      } catch {
+        setNotifications([]);
+      }
+    };
+    loadNotifications();
+    const handleNotificationUpdate = () => loadNotifications();
+    window.addEventListener(
+      "gamingverse-notification",
+      handleNotificationUpdate,
+    );
+    window.addEventListener("storage", handleNotificationUpdate);
+    return () => {
+      window.removeEventListener(
+        "gamingverse-notification",
+        handleNotificationUpdate,
+      );
+      window.removeEventListener("storage", handleNotificationUpdate);
+    };
+  }, []);
   const profileMenuRef = useRef(null);
   const searchInputRef = useRef(null);
   const [selectedGame, setSelectedGame] = useState(null);
@@ -1069,6 +1343,9 @@ function Games() {
   const [automaticGames, setAutomaticGames] = useState([]);
   const [automaticGamesLoading, setAutomaticGamesLoading] = useState(true);
   const [automaticGamesError, setAutomaticGamesError] = useState("");
+  const [upcomingGames, setUpcomingGames] = useState([]);
+  const [upcomingGamesLoading, setUpcomingGamesLoading] = useState(true);
+  const [upcomingGamesError, setUpcomingGamesError] = useState("");
   const [gamingClubs, setGamingClubs] = useState(() => {
     try {
       const saved = JSON.parse(
@@ -1081,6 +1358,7 @@ function Games() {
       return DEFAULT_GAMING_CLUBS;
     }
   });
+  const [selectedClubId, setSelectedClubId] = useState(null);
   const [joinedClubIds, setJoinedClubIds] = useState(() => {
     try {
       const saved = JSON.parse(
@@ -1098,6 +1376,17 @@ function Games() {
   const [newClubInterest, setNewClubInterest] = useState("Action");
   const [newClubDescription, setNewClubDescription] = useState("");
   const [clubPost, setClubPost] = useState("");
+  const [communityTalkPost, setCommunityTalkPost] = useState("");
+  const [communityTalks, setCommunityTalks] = useState(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("gamingverse_community_talks") || "[]",
+      );
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  });
   const [clubDiscussions, setClubDiscussions] = useState(() => {
     try {
       const saved = JSON.parse(
@@ -1149,8 +1438,50 @@ function Games() {
   }, [auth.currentUser?.uid]);
 
   /* =======================================================
-       AUTOMATIC GAME CATALOGUE
-       Fetches 500+ current PC / PlayStation / Xbox games from RAWG.
+       FOLLOWING ACTIVITY
+       Reads the existing community-review storage so the
+       Following Activity view uses real GamingVerse reviews.
+  ======================================================= */
+  useEffect(() => {
+    if (activeView !== "following") return undefined;
+
+    const loadActivity = () => {
+      const reviews = [];
+      for (let i = 0; i < localStorage.length; i += 1) {
+        const key = localStorage.key(i);
+        if (!key?.startsWith("gamingverse_community_reviews_")) continue;
+
+        const gameId = key.replace("gamingverse_community_reviews_", "");
+        try {
+          const saved = JSON.parse(localStorage.getItem(key) || "[]");
+          if (!Array.isArray(saved)) continue;
+          saved.forEach((review) => {
+            if (!review?.text) return;
+            reviews.push({
+              ...review,
+              gameId,
+              gameName: review.gameName || gameId,
+              gameImage: review.gameImage || "",
+            });
+          });
+        } catch (error) {
+          console.error("Could not load following activity:", error);
+        }
+      }
+
+      reviews.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      setActivityReviews(reviews);
+    };
+
+    loadActivity();
+    window.addEventListener("storage", loadActivity);
+    return () => window.removeEventListener("storage", loadActivity);
+  }, [activeView]);
+
+  /* =======================================================
+       AUTOMATIC GAME CATALOGUE + UPCOMING GAMES
+       Fetches the full PC / PlayStation / Xbox catalogue and
+       a separate future-release catalogue from RAWG.
      ======================================================= */
   useEffect(() => {
     let cancelled = false;
@@ -1158,32 +1489,29 @@ function Games() {
     const fetchAutomaticGames = async () => {
       if (!RAWG_API_KEY || RAWG_API_KEY === "PASTE_RAWG_API_KEY_HERE") {
         setAutomaticGames([]);
+        setUpcomingGames([]);
         setAutomaticGamesLoading(false);
+        setUpcomingGamesLoading(false);
         setAutomaticGamesError(
           "Add your RAWG API key in Games.jsx to enable automatic games.",
+        );
+        setUpcomingGamesError(
+          "Add your RAWG API key in Games.jsx to enable upcoming games.",
         );
         return;
       }
 
       try {
         setAutomaticGamesLoading(true);
+        setUpcomingGamesLoading(true);
         setAutomaticGamesError("");
+        setUpcomingGamesError("");
 
-        const today = new Date();
-        const endDate = today.toISOString().slice(0, 10);
-        const startDate = new Date(today);
-        startDate.setDate(today.getDate() - 365);
-        const startDateValue = startDate.toISOString().slice(0, 10);
-
-        /*
-         * Load enough RAWG pages to build a real 500+ game catalogue.
-         * RAWG returns a maximum of 40 games per page here, so we keep
-         * requesting pages until we have at least 600 safe/allowed games
-         * (or the API runs out of pages).
-         */
+        /* Full catalogue: old + recent + current PC/PlayStation/Xbox games. */
         const TARGET_GAMES = 600;
         const PAGE_SIZE = 40;
-        const MAX_PAGES = 20;
+        const MAX_PAGES = 45;
+        const catalogueToday = new Date().toISOString().slice(0, 10);
         const seen = new Set();
         const allResults = [];
 
@@ -1194,8 +1522,7 @@ function Games() {
         ) {
           const endpoint =
             `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_API_KEY)}` +
-            `&dates=${startDateValue},${endDate}` +
-            `&ordering=-released` +
+            `&ordering=-rating` +
             `&page_size=${PAGE_SIZE}` +
             `&page=${page}`;
 
@@ -1217,16 +1544,20 @@ function Games() {
 
           pageResults
             .filter((game) => game?.name && game?.background_image)
+            .filter(
+              (game) => !game?.released || game.released <= catalogueToday,
+            )
             .filter(rawgGameHasAllowedPlatform)
             .filter(rawgGameIsSafe)
             .map(mapRawgGame)
             .filter((game) => {
-              const key = game.name
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, " ")
-                .trim();
+              const key = normalizePriorityGameName(game.name);
 
-              if (!key || seen.has(key)) return false;
+              // Skip anything already present in the curated local catalogue.
+              if (!key || CURATED_GAME_NAME_KEYS.has(key) || seen.has(key)) {
+                return false;
+              }
+
               seen.add(key);
               return true;
             })
@@ -1236,7 +1567,17 @@ function Games() {
           if (pageResults.length < PAGE_SIZE) break;
         }
 
-        const mapped = allResults;
+        const mapped = allResults.sort((a, b) => {
+          const aRank = priorityGameRank.get(normalizePriorityGameName(a.name));
+          const bRank = priorityGameRank.get(normalizePriorityGameName(b.name));
+          const aHasRank = Number.isInteger(aRank);
+          const bHasRank = Number.isInteger(bRank);
+
+          if (aHasRank && bHasRank) return aRank - bRank;
+          if (aHasRank) return -1;
+          if (bHasRank) return 1;
+          return (Number(b.rating) || 0) - (Number(a.rating) || 0);
+        });
 
         mapped.forEach((game) => {
           automaticGameDetailsCache[game.name] = {
@@ -1245,8 +1586,8 @@ function Games() {
             genre: game.genre,
             platforms: game.platforms,
             releaseDate: game.releaseDate || "—",
-            developer: "—",
-            publisher: "—",
+            developer: game.developer || "—",
+            publisher: game.publisher || "—",
             trailerUrl: "",
           };
           gameAgeRatings[game.name] = game.ageRating;
@@ -1255,22 +1596,117 @@ function Games() {
         if (!cancelled) {
           setAutomaticGames(mapped);
         }
-      } catch (error) {
-        console.error("Automatic games error:", error);
+
+        /* Future releases only: today through the next 2 years. */
+        const today = new Date();
+        const todayValue = today.toISOString().slice(0, 10);
+        const futureDate = new Date(today);
+        futureDate.setFullYear(futureDate.getFullYear() + 2);
+        const futureDateValue = futureDate.toISOString().slice(0, 10);
+
+        const upcomingSeen = new Set();
+        const upcomingResults = [];
+
+        for (
+          let page = 1;
+          page <= 5 && upcomingResults.length < 120;
+          page += 1
+        ) {
+          const upcomingEndpoint =
+            `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_API_KEY)}` +
+            `&dates=${todayValue},${futureDateValue}` +
+            `&ordering=released` +
+            `&page_size=${PAGE_SIZE}` +
+            `&page=${page}`;
+
+          const upcomingResponse = await fetch(upcomingEndpoint, {
+            method: "GET",
+            cache: "no-store",
+          });
+
+          if (!upcomingResponse.ok) {
+            throw new Error(
+              `Upcoming games request failed (${upcomingResponse.status}) on page ${page}`,
+            );
+          }
+
+          const upcomingData = await upcomingResponse.json();
+          const pageResults = Array.isArray(upcomingData?.results)
+            ? upcomingData.results
+            : [];
+
+          if (!pageResults.length) break;
+
+          pageResults
+            .filter(
+              (game) =>
+                game?.name &&
+                game?.background_image &&
+                game?.released &&
+                game.released > todayValue,
+            )
+            .filter(rawgGameHasAllowedPlatform)
+            .filter(rawgGameIsSafe)
+            .map(mapRawgGame)
+            .filter((game) => {
+              const key = game.name
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, " ")
+                .trim();
+
+              if (!key || upcomingSeen.has(key)) return false;
+              upcomingSeen.add(key);
+              return true;
+            })
+            .filter((game) => !isBlockedGame(game))
+            .forEach((game) => upcomingResults.push(game));
+
+          if (pageResults.length < PAGE_SIZE) break;
+        }
+
+        const sortedUpcoming = upcomingResults.sort((a, b) =>
+          String(a.releaseDate || "").localeCompare(
+            String(b.releaseDate || ""),
+          ),
+        );
+
+        sortedUpcoming.forEach((game) => {
+          automaticGameDetailsCache[game.name] = {
+            title: game.name,
+            description: `Upcoming game in the GamingVerse release catalogue. Discover ${game.name}, its planned release date, platforms and community information.`,
+            genre: game.genre,
+            platforms: game.platforms,
+            releaseDate: game.releaseDate || "TBA",
+            developer: game.developer || "—",
+            publisher: game.publisher || "—",
+            trailerUrl: "",
+          };
+          gameAgeRatings[game.name] = game.ageRating;
+        });
+
         if (!cancelled) {
-          setAutomaticGames([]);
+          setUpcomingGames(sortedUpcoming);
+        }
+      } catch (error) {
+        console.error("Automatic/upcoming games error:", error);
+        if (!cancelled) {
           setAutomaticGamesError(
             "Automatic game refresh failed. Your saved GamingVerse games are still available.",
           );
+          setUpcomingGamesError(
+            "Upcoming games could not be loaded right now.",
+          );
         }
       } finally {
-        if (!cancelled) setAutomaticGamesLoading(false);
+        if (!cancelled) {
+          setAutomaticGamesLoading(false);
+          setUpcomingGamesLoading(false);
+        }
       }
     };
 
     fetchAutomaticGames();
 
-    // Refresh once per 30 minutes so newly released games can appear automatically.
     const interval = window.setInterval(fetchAutomaticGames, 30 * 60 * 1000);
     return () => {
       cancelled = true;
@@ -1392,21 +1828,41 @@ function Games() {
   }, []);
 
   const newsItems = liveNews.length ? liveNews : currentGamingNews;
+  const openClub = (clubId) => {
+    setSelectedClubId(clubId);
+    setShowCreateClub(false);
+    setClubPost("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const toggleClubMembership = (clubId) => {
     setJoinedClubIds((current) => {
-      const next = current.includes(clubId)
-        ? current.filter((id) => id !== clubId)
-        : [...current, clubId];
+      const alreadyJoined = current.includes(clubId);
+      // The card's Joined button is an OPEN action. Leaving a club is only
+      // possible from inside the opened club, so it can never close by accident.
+      if (alreadyJoined) {
+        openClub(clubId);
+        return current;
+      }
+
+      const next = [...current, clubId];
       localStorage.setItem("gamingverse_joined_clubs", JSON.stringify(next));
+      openClub(clubId);
       return next;
     });
   };
 
+  const closeClub = () => {
+    setSelectedClubId(null);
+  };
+
   const createGamingClub = () => {
     const name = newClubName.trim();
-    const description = newClubDescription.trim();
+    const description =
+      newClubDescription.trim() ||
+      `A GamingVerse community for ${newClubInterest} gamers.`;
 
-    if (!name || !description) {
+    if (!name) {
       return;
     }
 
@@ -1430,6 +1886,7 @@ function Games() {
       localStorage.setItem("gamingverse_joined_clubs", JSON.stringify(next));
       return next;
     });
+    setSelectedClubId(club.id);
 
     setNewClubName("");
     setNewClubInterest("Action");
@@ -1443,7 +1900,7 @@ function Games() {
 
     const discussion = {
       id: `club-discussion-${Date.now()}`,
-      clubId: joinedClubIds[0] || "action-adventure",
+      clubId: selectedClubId || joinedClubIds[0] || "action-adventure",
       title: text,
       author:
         auth.currentUser?.displayName ||
@@ -1461,6 +1918,28 @@ function Games() {
       return next;
     });
     setClubPost("");
+  };
+
+  const postCommunityTalk = () => {
+    const text = communityTalkPost.trim();
+    if (!text) return;
+
+    const talk = {
+      id: `community-talk-${Date.now()}`,
+      title: text,
+      author:
+        auth.currentUser?.displayName ||
+        auth.currentUser?.email?.split("@")[0] ||
+        "Gamer",
+      meta: "Just now • 0 replies",
+    };
+
+    setCommunityTalks((current) => {
+      const next = [talk, ...current];
+      localStorage.setItem("gamingverse_community_talks", JSON.stringify(next));
+      return next;
+    });
+    setCommunityTalkPost("");
   };
 
   const toggleClubEvent = (eventId) => {
@@ -1560,12 +2039,14 @@ function Games() {
       if (profileMenuRef.current && !profileMenuRef.current.contains(target)) {
         setShowProfileMenu(false);
         setShowNotifications(false);
+        setShowDiscoverMenu(false);
       }
     };
     const handleEscape = (event) => {
       if (event.key === "Escape") {
         setShowProfileMenu(false);
         setShowNotifications(false);
+        setShowDiscoverMenu(false);
       }
     };
     document.addEventListener("mousedown", handleDocumentClick);
@@ -1608,6 +2089,18 @@ function Games() {
       ? filteredAutomaticGames
       : filteredAutomaticGames.slice(0, 24);
   }, [filteredAutomaticGames, showAllAutomaticGames]);
+
+  const filteredUpcomingGames = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return upcomingGames.filter(
+      (game) =>
+        game.name.toLowerCase().includes(query) &&
+        matchesHomeCategory(game, activeCategory) &&
+        !containsBlockedGameTerm(game.name) &&
+        game.releaseDate &&
+        game.releaseDate > new Date().toISOString().slice(0, 10),
+    );
+  }, [upcomingGames, search, activeCategory]);
 
   const searchResults = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -1717,6 +2210,18 @@ function Games() {
         ? current.filter((name) => name !== gameName)
         : [...current, gameName];
       localStorage.setItem(listName, JSON.stringify(next));
+      addGamingVerseNotification(
+        next.includes(gameName) ? "GamingVerse" : "GamingVerse",
+        `${gameName} ${next.includes(gameName) ? "was added to" : "was removed from"} ${
+          listName === "gamingverse_watched"
+            ? "Watched"
+            : listName === "gamingverse_collections"
+              ? "Collections"
+              : "Play Later"
+        }.`,
+        "activity",
+      );
+      window.dispatchEvent(new Event("gamingverse-notification"));
       return next;
     });
   };
@@ -1851,6 +2356,12 @@ function Games() {
     );
     setReviewText("");
     setReviewMessage("✓ Review posted successfully.");
+    addGamingVerseNotification(
+      "GamingVerse Review",
+      `Your ${composerVerdict.replace("-", " ")} review for ${selectedGame.name} was posted.`,
+      "activity",
+    );
+    window.dispatchEvent(new Event("gamingverse-notification"));
     // Keep the existing GamingVerse Meter vote in sync with the review.
     submitReview(composerVerdict);
   };
@@ -1948,6 +2459,284 @@ function Games() {
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 0);
   };
+
+  /* =======================================================
+       TOP 100 GAMES
+       Ranked by the GamingVerse Meter, not RAWG rating.
+       A game gets its score from real GamingVerse verdicts saved
+       in Firebase: Perfection + Go For It = positive votes.
+  ======================================================= */
+  useEffect(() => {
+    const reviewsRef = ref(db, "gameReviews");
+    const unsubscribe = onValue(reviewsRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      const nextRatings = {};
+
+      Object.entries(data).forEach(([gameId, gameReviews]) => {
+        const counts = {
+          perfection: 0,
+          "go-for-it": 0,
+          timepass: 0,
+          skip: 0,
+        };
+
+        Object.values(gameReviews || {}).forEach((userReview) => {
+          const verdict = userReview?.review;
+          if (counts[verdict] !== undefined) {
+            counts[verdict] += 1;
+          }
+        });
+
+        const total = Object.values(counts).reduce(
+          (sum, value) => sum + value,
+          0,
+        );
+        const positive = counts.perfection + counts["go-for-it"];
+
+        nextRatings[gameId] = {
+          ...counts,
+          total,
+          positive,
+          percent: total ? Math.round((positive / total) * 100) : 0,
+        };
+      });
+
+      setGamingVerseRatings(nextRatings);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const discoverGames = useMemo(() => {
+    const source = [...automaticGames, ...horizontalGames, ...posterGames];
+    const seen = new Set();
+    const unique = source.filter((game) => {
+      const key = String(game?.name || "")
+        .trim()
+        .toLowerCase();
+      if (!key || seen.has(key) || isBlockedGame(game)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    const awardWinnerNames = new Set([
+      "Portal",
+      "BioShock",
+      "BioShock: The Collection",
+      "The Witcher 3: Wild Hunt",
+      "Elden Ring",
+      "God of War",
+      "God of War Ragnarök",
+      "Red Dead Redemption 2",
+      "The Last of Us",
+      "Baldur's Gate 3",
+    ]);
+
+    const familyFriendly = (game) => getRequiredGameAge(game?.name || "") <= 12;
+
+    // Discover must work for both live RAWG games and GamingVerse's local games.
+    // Local games often keep their platform/release/genre data inside gameDetails,
+    // so the filter reads from both places instead of returning false too early.
+    const getDiscoverData = (game) => {
+      const details = getGameDetails(game?.name || "");
+      const name = String(game?.name || "");
+      const genre = String(game?.genre || details?.genre || "");
+      const platforms = String(game?.platforms || details?.platforms || "");
+      const releaseDate = String(
+        game?.releaseDate || details?.releaseDate || "",
+      );
+      const text = `${name} ${genre} ${platforms}`.toLowerCase();
+      const category = getGameCategory({ ...game, genre: `${genre} ${name}` });
+
+      return { details, name, genre, platforms, releaseDate, text, category };
+    };
+
+    const isPc = (game) => /\bpc\b/i.test(getDiscoverData(game).platforms);
+    const isConsole = (game) =>
+      /(playstation|xbox|nintendo|switch)/i.test(
+        getDiscoverData(game).platforms,
+      );
+
+    const matchesDiscoverGenre = (game, selectedGenre) => {
+      if (selectedGenre === "All Genres") return true;
+      const { name, genre, text, category } = getDiscoverData(game);
+      const wanted = selectedGenre.toLowerCase();
+
+      if (genre.toLowerCase().includes(wanted)) return true;
+      if (category.toLowerCase() === wanted) return true;
+
+      const genreAliases = {
+        strategy:
+          /strategy|tactics|turn-based|civilization|age of empires|total war|xcom|starcraft|warcraft|company of heroes|command & conquer|dota|league of legends/i,
+        shooter:
+          /shooter|fps|first-person|third-person shooter|call of duty|counter-strike|valorant|apex legends|fortnite|overwatch|rainbow six|pubg/i,
+        racing: /racing|forza|need for speed|f1|gran turismo|the crew/i,
+        sports:
+          /sports|football|soccer|basketball|nba|fifa|fc 2|madden|nhl|mlb/i,
+        adventure:
+          /adventure|tomb raider|uncharted|last of us|god of war|ghost of tsushima|assassin/i,
+        rpg: /rpg|role-playing|elden ring|witcher|cyberpunk|hogwarts|diablo|baldur|persona|dragon age|fallout/i,
+        action:
+          /action|resident evil|silent hill|dead space|alan wake|phasmophobia|outlast/i,
+      };
+
+      return Boolean(genreAliases[wanted]?.test(`${text} ${name}`));
+    };
+
+    let filtered = unique.filter((game) => {
+      const { name, text, releaseDate } = getDiscoverData(game);
+      const today = new Date().toISOString().slice(0, 10);
+
+      if (discoverPlatform === "PC" && !isPc(game)) return false;
+      if (discoverPlatform === "Console" && !isConsole(game)) return false;
+      if (!matchesDiscoverGenre(game, discoverGenre)) return false;
+      if (
+        discoverRelease === "Released" &&
+        (!releaseDate || releaseDate > today)
+      )
+        return false;
+      if (
+        discoverRelease === "Upcoming" &&
+        (!releaseDate || releaseDate <= today)
+      )
+        return false;
+
+      if (
+        discoverPreset === "Popular RPGs" &&
+        !matchesDiscoverGenre(game, "RPG")
+      )
+        return false;
+      if (
+        discoverPreset === "Top Rated Action" &&
+        !matchesDiscoverGenre(game, "Action")
+      )
+        return false;
+      if (discoverPreset === "Family Friendly" && !familyFriendly(game))
+        return false;
+      if (discoverPreset === "Award Winners" && !awardWinnerNames.has(name))
+        return false;
+      if (
+        discoverPreset === "Multiplayer" &&
+        !/(multiplayer|online|co-op|coop)/i.test(text)
+      )
+        return false;
+      if (
+        discoverPreset === "Open World" &&
+        !/(open world|open-world)/i.test(text)
+      )
+        return false;
+
+      return true;
+    });
+
+    filtered = [...filtered].sort((a, b) => {
+      if (discoverSort === "Highest Rated") {
+        const aMeter = gamingVerseRatings[createGameId(a?.name || "")];
+        const bMeter = gamingVerseRatings[createGameId(b?.name || "")];
+        const meterDifference =
+          (Number(bMeter?.percent) || 0) - (Number(aMeter?.percent) || 0);
+        if (meterDifference !== 0) return meterDifference;
+        return (Number(bMeter?.total) || 0) - (Number(aMeter?.total) || 0);
+      }
+      if (discoverSort === "Most GamingVerse Voted") {
+        const av =
+          Number(gamingVerseRatings[createGameId(a?.name || "")]?.total) || 0;
+        const bv =
+          Number(gamingVerseRatings[createGameId(b?.name || "")]?.total) || 0;
+        return bv - av;
+      }
+      return String(b?.releaseDate || "").localeCompare(
+        String(a?.releaseDate || ""),
+      );
+    });
+
+    return filtered.slice(0, 24);
+  }, [
+    automaticGames,
+    horizontalGames,
+    posterGames,
+    discoverSort,
+    discoverPlatform,
+    discoverGenre,
+    discoverRelease,
+    discoverPreset,
+    gamingVerseRatings,
+  ]);
+
+  const discoverHasSelection =
+    Boolean(discoverPreset) ||
+    discoverPlatform !== "All Platforms" ||
+    discoverGenre !== "All Genres" ||
+    discoverRelease !== "All Releases";
+
+  const top100Games = useMemo(() => {
+    const source = [...automaticGames, ...horizontalGames, ...posterGames];
+    const seen = new Set();
+
+    const unique = source.filter((game) => {
+      const key = String(game?.name || "")
+        .trim()
+        .toLowerCase();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    const filtered = unique.filter((game) => {
+      const gameId = createGameId(game?.name || "");
+      const meter = gamingVerseRatings[gameId];
+      const platforms = String(game?.platforms || "").toLowerCase();
+
+      if (top100Sort === "PC" && !platforms.includes("pc")) return false;
+      if (top100Sort === "Console" && !/(playstation|xbox)/i.test(platforms))
+        return false;
+
+      // GamingVerse filters only use real GamingVerse votes.
+      if (!meter || meter.total === 0) return top100Filter === "All";
+      if (top100Filter === "Perfection") return meter.percent >= 90;
+      if (top100Filter === "Go For It")
+        return meter.percent >= 70 && meter.percent < 90;
+      if (top100Filter === "Timepass")
+        return meter.percent >= 40 && meter.percent < 70;
+      if (top100Filter === "Skip") return meter.percent < 40;
+      return true;
+    });
+
+    return [...filtered]
+      .sort((a, b) => {
+        const aMeter = gamingVerseRatings[createGameId(a?.name || "")];
+        const bMeter = gamingVerseRatings[createGameId(b?.name || "")];
+        const ratingDifference =
+          (Number(bMeter?.percent) || 0) - (Number(aMeter?.percent) || 0);
+        if (ratingDifference !== 0) return ratingDifference;
+
+        const voteDifference =
+          (Number(bMeter?.total) || 0) - (Number(aMeter?.total) || 0);
+        if (voteDifference !== 0) return voteDifference;
+
+        return String(a?.name || "").localeCompare(String(b?.name || ""));
+      })
+      .slice(0, 100);
+  }, [
+    automaticGames,
+    horizontalGames,
+    posterGames,
+    gamingVerseRatings,
+    top100Filter,
+    top100Sort,
+  ]);
+
+  const top100FormatVotes = (count) => {
+    const value = Number(count) || 0;
+    if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
+    return String(value);
+  };
+
+  const top100Year = (releaseDate) => {
+    const match = String(releaseDate || "").match(/(\d{4})/);
+    return match ? match[1] : "—";
+  };
   return (
     <div className="games-page">
       {/* ===================================================
@@ -1988,18 +2777,19 @@ function Games() {
 
           <button
             className={`nav-icon-link ${
-              activeView === "home" && activeCategory === "New" ? "active" : ""
+              activeView === "upcomings" ? "active" : ""
             }`}
-            title="New Releases"
-            aria-label="New Releases"
+            title="Upcomings"
+            aria-label="Upcomings"
             onClick={() => {
-              setActiveView("home");
-              setActiveCategory("New");
+              setActiveView("upcomings");
+              setActiveCategory("All");
+              setSearch("");
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
           >
             <GVIcon name="calendar" />
-            <span className="nav-icon-label">New Releases</span>
+            <span className="nav-icon-label">Upcomings</span>
           </button>
 
           <button
@@ -2159,6 +2949,23 @@ function Games() {
             <div className="navbar-icon-actions">
               <button
                 type="button"
+                className={`navbar-icon-button discover-menu-button ${showDiscoverMenu ? "active" : ""}`}
+                onClick={() => {
+                  setShowDiscoverMenu((current) => !current);
+                  setShowNotifications(false);
+                  setShowProfileMenu(false);
+                }}
+                aria-label="Discover menu"
+                aria-expanded={showDiscoverMenu}
+                title="Discover"
+              >
+                <span className="navbar-icon">
+                  <GVIcon name="grid" size={19} />
+                </span>
+              </button>
+
+              <button
+                type="button"
                 className={`navbar-icon-button ${showNotifications ? "active" : ""}`}
                 onClick={() => {
                   setShowNotifications((current) => !current);
@@ -2170,7 +2977,7 @@ function Games() {
                 <span className="navbar-icon">
                   <GVIcon name="bell" size={19} />
                 </span>
-                <span className="notification-dot"></span>
+                <span className="notification-dot" aria-hidden="true"></span>
               </button>
 
               <button
@@ -2188,6 +2995,44 @@ function Games() {
                 </span>
               </button>
             </div>
+
+            {showDiscoverMenu && (
+              <div className="navbar-popover discover-popover">
+                <div className="discover-grid">
+                  {[
+                    { icon: "〽", label: "Following Activity" },
+                    { icon: "⌖", label: "Discover" },
+                    { icon: "♛", label: "Top 100" },
+                  ].map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      className="discover-menu-item"
+                      onMouseDown={() => {
+                        if (item.label === "Discover") {
+                          setActiveView("discover");
+                          setSearch("");
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }
+                      }}
+                      onClick={() => {
+                        setShowDiscoverMenu(false);
+                        if (item.label === "Following Activity") {
+                          navigate("/games?view=following");
+                        } else if (item.label === "Top 100") {
+                          navigate("/games?view=top100");
+                        }
+                      }}
+                    >
+                      <span className="discover-menu-icon" aria-hidden="true">
+                        {item.icon}
+                      </span>
+                      <span>{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {showNotifications && (
               <div className="navbar-popover notifications-popover">
@@ -2228,47 +3073,65 @@ function Games() {
                 </div>
 
                 <div className="notification-body">
-                  {notificationTab === "all" && (
-                    <>
-                      <div className="notification-period">Last 30 Days</div>
+                  {(() => {
+                    const visibleNotifications = notifications.filter((item) =>
+                      notificationTab === "all"
+                        ? true
+                        : notificationTab === "updates"
+                          ? item.type === "update"
+                          : item.type === "activity",
+                    );
 
-                      <div className="notification-item">
-                        <div className="notification-avatar">G</div>
-                        <div className="notification-copy">
-                          <strong>Gamer community</strong>
-                          <p>New game recommendations are waiting for you.</p>
-                          <span>Recently</span>
-                        </div>
+                    return visibleNotifications.length ? (
+                      <>
+                        <div className="notification-period">Last 30 Days</div>
+                        {visibleNotifications.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            className={`notification-item ${item.read ? "is-read" : ""}`}
+                            onClick={() => {
+                              const next = notifications.map((notification) =>
+                                notification.id === item.id
+                                  ? { ...notification, read: true }
+                                  : notification,
+                              );
+                              setNotifications(next);
+                              localStorage.setItem(
+                                "gamingverse_notifications",
+                                JSON.stringify(next),
+                              );
+                            }}
+                          >
+                            <div
+                              className={`notification-avatar ${item.type === "update" ? "purple" : ""}`}
+                            >
+                              {item.type === "update" ? "★" : "G"}
+                            </div>
+                            <div className="notification-copy">
+                              <strong>{item.title}</strong>
+                              <p>{item.message}</p>
+                              <span>{formatActivityDate(item.createdAt)}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </>
+                    ) : (
+                      <div className="notification-empty-state">
+                        <span>{notificationTab === "updates" ? "✦" : "◌"}</span>
+                        <strong>
+                          {notificationTab === "updates"
+                            ? "No new updates"
+                            : "No recent activity"}
+                        </strong>
+                        <p>
+                          {notificationTab === "updates"
+                            ? "You are all caught up."
+                            : "Your latest GamingVerse activity will appear here."}
+                        </p>
                       </div>
-
-                      <div className="notification-item">
-                        <div className="notification-avatar purple">★</div>
-                        <div className="notification-copy">
-                          <strong>GamingVerse</strong>
-                          <p>
-                            Your saved games and Play Later list were updated.
-                          </p>
-                          <span>Recently</span>
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {notificationTab === "updates" && (
-                    <div className="notification-empty-state">
-                      <span>✦</span>
-                      <strong>No new updates</strong>
-                      <p>You are all caught up.</p>
-                    </div>
-                  )}
-
-                  {notificationTab === "activity" && (
-                    <div className="notification-empty-state">
-                      <span>◌</span>
-                      <strong>No recent activity</strong>
-                      <p>Your latest activity will appear here.</p>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
 
                 <div className="notification-footer">
@@ -2322,6 +3185,651 @@ function Games() {
           </div>
         </div>
       </header>
+
+      {activeView === "upcomings" && (
+        <section className="games-upcomings-page">
+          <div className="games-content">
+            <section className="game-section upcoming-games-section">
+              <div className="section-heading automatic-games-heading">
+                <div>
+                  <span className="section-label">UPCOMING RELEASES</span>
+                  <h2>Upcoming PC & Console Games</h2>
+                  <p className="catalogue-subtitle">
+                    Only games with a future release date are shown here.
+                  </p>
+                </div>
+              </div>
+
+              {upcomingGamesLoading ? (
+                <div className="automatic-games-message">
+                  <span>🎮</span>
+                  <div>
+                    <strong>Loading upcoming games...</strong>
+                    <p>Checking the latest future release dates.</p>
+                  </div>
+                </div>
+              ) : upcomingGamesError ? (
+                <div className="automatic-games-message">
+                  <span>⚠️</span>
+                  <div>
+                    <strong>Upcoming games are unavailable.</strong>
+                    <p>{upcomingGamesError}</p>
+                  </div>
+                </div>
+              ) : filteredUpcomingGames.length > 0 ? (
+                <div className="automatic-games-grid">
+                  {filteredUpcomingGames.map((game) => {
+                    const requiredAge = getRequiredGameAge(game.name);
+                    const accessible = canAccessGame(game, userAge);
+
+                    return (
+                      <article
+                        className={`automatic-game-card ${
+                          !accessible ? "age-restricted-card" : ""
+                        }`}
+                        key={`upcoming-${game.rawgId || game.name}`}
+                        onClick={() => openDetails(game)}
+                        title={
+                          !accessible ? `Requires ${requiredAge}+` : game.name
+                        }
+                      >
+                        <div className="automatic-game-image-wrap">
+                          <img
+                            src={game.image}
+                            alt={game.name}
+                            loading="lazy"
+                          />
+                          <div className="automatic-game-image-gradient"></div>
+                          <div className="automatic-game-source-badge">
+                            UPCOMING
+                          </div>
+                          <div className="automatic-game-age-badge">
+                            {requiredAge}+
+                          </div>
+
+                          {!accessible && (
+                            <div className="automatic-game-lock">
+                              <span>🔒</span>
+                              <strong>{requiredAge}+</strong>
+                              <small>Age restricted</small>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="automatic-game-info">
+                          <h3>{game.name}</h3>
+                          <div className="automatic-game-meta">
+                            <span>
+                              ⭐ {game.rating ? game.rating.toFixed(1) : "New"}
+                            </span>
+                            <span>{game.genre}</span>
+                          </div>
+                          <div className="automatic-game-platforms">
+                            🎮 {game.platforms}
+                          </div>
+
+                          <button
+                            className="card-details-button automatic-card-view-details"
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              openDetails(game);
+                            }}
+                          >
+                            {accessible ? "View Details" : "Age Restricted"}
+                          </button>
+
+                          <div className="automatic-game-footer">
+                            <span>{game.releaseDate}</span>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="automatic-games-message">
+                  <span>📅</span>
+                  <div>
+                    <strong>No upcoming games found</strong>
+                    <p>
+                      There are no future releases matching the selected filter.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </section>
+          </div>
+        </section>
+      )}
+
+      {activeView === "discover" && (
+        <section className="discover-games-page">
+          <div className="discover-games-layout">
+            <aside className="discover-games-sidebar">
+              <div className="discover-sidebar-title">FILTERS</div>
+
+              <label className="discover-filter-label">
+                <span>SORT BY</span>
+                <select
+                  value={discoverSort}
+                  onChange={(event) => setDiscoverSort(event.target.value)}
+                >
+                  <option>Newest Releases</option>
+                  <option>Highest Rated</option>
+                  <option>Most GamingVerse Voted</option>
+                </select>
+              </label>
+
+              <div className="discover-filter-group">
+                <span className="discover-filter-heading">GAME TYPE</span>
+                {[
+                  ["All Platforms", "🎮"],
+                  ["PC", "▣"],
+                  ["Console", "◈"],
+                ].map(([label, icon]) => (
+                  <button
+                    key={label}
+                    type="button"
+                    className={`discover-filter-button ${discoverPlatform === label ? "active" : ""}`}
+                    onClick={() => {
+                      setDiscoverPlatform(label);
+                      setDiscoverPreset("");
+                    }}
+                  >
+                    <span>{icon}</span>
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="discover-filter-group">
+                <span className="discover-filter-heading">GENRE</span>
+                {[
+                  "All Genres",
+                  "Action",
+                  "Adventure",
+                  "RPG",
+                  "Racing",
+                  "Sports",
+                  "Shooter",
+                  "Strategy",
+                ].map((label) => (
+                  <button
+                    key={label}
+                    type="button"
+                    className={`discover-filter-button ${discoverGenre === label ? "active" : ""}`}
+                    onClick={() => {
+                      setDiscoverGenre(label);
+                      setDiscoverPreset("");
+                    }}
+                  >
+                    <span className="discover-filter-dot" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="discover-filter-group">
+                <span className="discover-filter-heading">RELEASE</span>
+                {["All Releases", "Released", "Upcoming"].map((label) => (
+                  <button
+                    key={label}
+                    type="button"
+                    className={`discover-filter-button ${discoverRelease === label ? "active" : ""}`}
+                    onClick={() => {
+                      setDiscoverRelease(label);
+                      setDiscoverPreset("");
+                    }}
+                  >
+                    <span className="discover-filter-dot release-dot" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                className="discover-clear-button"
+                onClick={() => {
+                  setDiscoverSort("Newest Releases");
+                  setDiscoverPlatform("All Platforms");
+                  setDiscoverGenre("All Genres");
+                  setDiscoverRelease("All Releases");
+                  setDiscoverPreset("");
+                }}
+              >
+                Reset filters
+              </button>
+            </aside>
+
+            <main className="discover-games-main">
+              <div className="discover-games-header">
+                <div>
+                  <span className="section-label">DISCOVER</span>
+                  <h1>Find Exactly What You Want to Play</h1>
+                  <p>
+                    Adjust the filters to discover games tailored to your
+                    platform, genre, release type and gaming style.
+                  </p>
+                </div>
+              </div>
+
+              <div className="discover-games-hero">
+                <div className="discover-hero-icon">
+                  <GVIcon name="grid" size={38} />
+                </div>
+                <h2>Discover Your Next Game</h2>
+                <p>
+                  Pick a filter or try a quick preset to build your perfect
+                  gaming list.
+                </p>
+
+                <div className="discover-quick-divider" />
+                <span className="discover-quick-title">
+                  OR TRY A QUICK PRESET
+                </span>
+
+                <div className="discover-presets">
+                  {[
+                    ["Popular RPGs", "⚡"],
+                    ["Top Rated Action", "✦"],
+                    ["Family Friendly", "♡"],
+                    ["Award Winners", "♕"],
+                    ["Multiplayer", "✣"],
+                    ["Open World", "✧"],
+                  ].map(([label, icon]) => (
+                    <button
+                      key={label}
+                      type="button"
+                      className={`discover-preset ${discoverPreset === label ? "active" : ""}`}
+                      onClick={() => {
+                        setDiscoverPreset(label);
+                        setDiscoverPlatform("All Platforms");
+                        setDiscoverGenre("All Genres");
+                        setDiscoverRelease("All Releases");
+                      }}
+                    >
+                      <span>{icon}</span>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {discoverHasSelection && (
+                <section className="discover-results-section">
+                  <div className="discover-results-heading">
+                    <div>
+                      <span className="section-label">MATCHES</span>
+                      <h2>{discoverGames.length} games found</h2>
+                    </div>
+                    <span>GamingVerse Discover</span>
+                  </div>
+
+                  {discoverGames.length > 0 ? (
+                    <div className="discover-results-grid">
+                      {discoverGames.map((game) => {
+                        const accessible = canAccessGame(game, userAge);
+                        const requiredAge = getRequiredGameAge(game.name);
+                        const meter =
+                          gamingVerseRatings[createGameId(game.name)] || {};
+                        return (
+                          <article
+                            className="discover-result-card"
+                            key={`discover-${game.rawgId || game.name}`}
+                            onClick={() => openDetails(game)}
+                          >
+                            <div className="discover-result-image">
+                              {game.image ? (
+                                <img
+                                  src={game.image}
+                                  alt={game.name}
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <span>🎮</span>
+                              )}
+                              <span className="discover-result-age">
+                                {requiredAge}+
+                              </span>
+                            </div>
+                            <div className="discover-result-info">
+                              <h3>{game.name}</h3>
+                              <p>{game.genre || getGameCategory(game)}</p>
+                              <div className="discover-result-meta">
+                                <span>{game.platforms || "PC • Console"}</span>
+                                {meter.total > 0 && (
+                                  <strong>{meter.percent}% GV</strong>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  openDetails(game);
+                                }}
+                              >
+                                {accessible ? "View Details" : "View Access"}
+                              </button>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="discover-no-results">
+                      <span>🎮</span>
+                      <h2>No games match these filters</h2>
+                      <p>Try another genre, platform or quick preset.</p>
+                    </div>
+                  )}
+                </section>
+              )}
+            </main>
+          </div>
+        </section>
+      )}
+
+      {activeView === "top100" && (
+        <section className="top100-games-page">
+          <div className="top100-games-layout">
+            <aside className="top100-games-sidebar">
+              <div className="top100-sidebar-title">FILTER BY</div>
+              {[
+                ["All", "#a83fff"],
+                ["Perfection", "#a83fff"],
+                ["Go For It", "#00d084"],
+                ["Timepass", "#ffb400"],
+                ["Skip", "#ff5c7a"],
+              ].map(([label, dot]) => (
+                <button
+                  key={`top100-filter-${label}`}
+                  type="button"
+                  className={`top100-filter-option ${top100Filter === label ? "active" : ""}`}
+                  onClick={() => setTop100Filter(label)}
+                >
+                  <span
+                    className="top100-filter-dot"
+                    style={{ background: dot }}
+                  />
+                  <span>{label}</span>
+                </button>
+              ))}
+
+              <div className="top100-sidebar-divider" />
+              <div className="top100-sidebar-title">SORT BY</div>
+              {["Game", "PC", "Console"].map((label) => (
+                <button
+                  key={`top100-sort-${label}`}
+                  type="button"
+                  className={`top100-sort-option ${top100Sort === label ? "active" : ""}`}
+                  onClick={() => setTop100Sort(label)}
+                >
+                  <span className="top100-radio" />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </aside>
+
+            <main className="top100-games-main">
+              <div className="top100-games-heading">
+                <h1>Top 100 Games</h1>
+                <span>{top100Games.length} games • GamingVerse Meter</span>
+              </div>
+
+              <div className="top100-games-list">
+                {top100Games.map((game, index) => {
+                  const meter =
+                    gamingVerseRatings[createGameId(game?.name || "")] || {};
+                  const percent = Number.isFinite(Number(meter.percent))
+                    ? Number(meter.percent)
+                    : 0;
+                  const votes = Number(meter.total) || 0;
+                  const circumference = 282.74;
+                  const dashOffset =
+                    circumference - (circumference * percent) / 100;
+
+                  return (
+                    <article
+                      className="top100-game-row"
+                      key={`top100-${game.name}-${index}`}
+                    >
+                      <div className={`top100-rank rank-${index + 1}`}>
+                        {index + 1}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="top100-game-poster"
+                        onClick={() => openDetails(game)}
+                        aria-label={`Open ${game.name}`}
+                      >
+                        {game.image ? (
+                          <img src={game.image} alt={game.name} />
+                        ) : (
+                          <span>🎮</span>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="top100-game-info"
+                        onClick={() => openDetails(game)}
+                      >
+                        <h2>{game.name}</h2>
+                        <p>Game • {top100Year(game.releaseDate)}</p>
+                      </button>
+
+                      <div className="top100-score">
+                        <svg
+                          viewBox="0 0 200 105"
+                          aria-label={`${percent}% GamingVerse Meter rating`}
+                        >
+                          <path
+                            className="top100-score-track"
+                            d="M10 95 A90 90 0 0 1 190 95"
+                          />
+                          <path
+                            className="top100-score-progress"
+                            d="M10 95 A90 90 0 0 1 190 95"
+                            style={{
+                              strokeDasharray: circumference,
+                              strokeDashoffset: dashOffset,
+                            }}
+                          />
+                        </svg>
+                        <strong>{percent}%</strong>
+                        <span>
+                          {votes
+                            ? `${top100FormatVotes(votes)} GamingVerse Votes`
+                            : "No GamingVerse votes yet"}
+                        </span>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+              {top100Games.length === 0 && (
+                <div className="top100-games-empty">
+                  <span>🎮</span>
+                  <h2>No games match this filter</h2>
+                  <p>
+                    Only games with GamingVerse community votes appear in this
+                    filter.
+                  </p>
+                </div>
+              )}
+            </main>
+          </div>
+        </section>
+      )}
+
+      {activeView === "following" && (
+        <section className="following-activity-page">
+          <div className="following-activity-layout">
+            <aside className="following-activity-sidebar">
+              <div className="activity-sidebar-title">FILTER BY</div>
+              {[
+                ["All", "#a83fff"],
+                ["Perfection", "#a83fff"],
+                ["Go For It", "#00d084"],
+                ["Timepass", "#ffb400"],
+                ["Skip", "#ff5c7a"],
+              ].map(([label, dot]) => (
+                <button
+                  key={label}
+                  type="button"
+                  className={`activity-filter-option ${activityFilter === label ? "active" : ""}`}
+                  onClick={() => setActivityFilter(label)}
+                >
+                  <span
+                    className="activity-filter-dot"
+                    style={{ background: dot }}
+                  />
+                  <span>{label}</span>
+                </button>
+              ))}
+
+              <div className="activity-sidebar-divider" />
+              <div className="activity-sidebar-title">SORT BY</div>
+              {["Recent", "Movie", "Show", "Anime"].map((label) => (
+                <button
+                  key={label}
+                  type="button"
+                  className={`activity-sort-option ${activitySort === label ? "active" : ""}`}
+                  onClick={() => {
+                    if (["Movie", "Show", "Anime"].includes(label)) {
+                      setActivityType(label);
+                    }
+                    setActivitySort(label);
+                  }}
+                >
+                  <span className="activity-radio" />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </aside>
+
+            <main className="following-activity-main">
+              <div className="following-activity-heading">
+                <h1>Activity</h1>
+                <p>See what your friends are reviewing</p>
+              </div>
+
+              {(() => {
+                const verdictMap = {
+                  All: null,
+                  Perfection: "perfection",
+                  "Go For It": "go-for-it",
+                  Timepass: "timepass",
+                  Skip: "skip",
+                };
+                const wantedVerdict = verdictMap[activityFilter];
+                let visible = activityReviews.filter(
+                  (review) =>
+                    !wantedVerdict || review.verdict === wantedVerdict,
+                );
+
+                if (activitySort === "Recent") {
+                  visible = [...visible].sort(
+                    (a, b) => (b.createdAt || 0) - (a.createdAt || 0),
+                  );
+                }
+
+                const groups = {};
+                visible.forEach((review) => {
+                  const date = new Date(review.createdAt || Date.now());
+                  const now = new Date();
+                  const days = Math.floor((now - date) / 86400000);
+                  const label =
+                    days < 7
+                      ? "Last Week"
+                      : date.toLocaleDateString("en-US", {
+                          month: "short",
+                          year: "numeric",
+                        });
+                  if (!groups[label]) groups[label] = [];
+                  groups[label].push(review);
+                });
+
+                const groupEntries = Object.entries(groups);
+
+                return groupEntries.length ? (
+                  <div className="following-activity-timeline">
+                    {groupEntries.map(([period, items]) => (
+                      <section className="activity-period" key={period}>
+                        <h2>{period}</h2>
+                        {items.map((review) => {
+                          const verdictLabel =
+                            {
+                              perfection: "Perfection",
+                              "go-for-it": "Go For It",
+                              timepass: "Timepass",
+                              skip: "Skip",
+                            }[review.verdict] || "Perfection";
+                          const when = review.createdAt
+                            ? formatActivityDate(review.createdAt)
+                            : "Recently";
+                          return (
+                            <article
+                              className="activity-review-card"
+                              key={`${review.gameId}-${review.id}`}
+                            >
+                              <div className="activity-timeline-line" />
+                              <div className="activity-review-poster">
+                                {review.gameImage ? (
+                                  <img src={review.gameImage} alt="" />
+                                ) : (
+                                  <div className="activity-poster-fallback">
+                                    🎮
+                                  </div>
+                                )}
+                              </div>
+                              <div className="activity-review-copy">
+                                <div className="activity-review-user">
+                                  <span className="activity-user-avatar">
+                                    {review.initials ||
+                                      String(review.userName || "G")
+                                        .charAt(0)
+                                        .toUpperCase()}
+                                  </span>
+                                  <strong>{review.userName || "Gamer"}</strong>
+                                  <span>reviewed</span>
+                                </div>
+                                <h3>
+                                  {String(
+                                    review.gameName || review.gameId || "Game",
+                                  ).replace(/[-_]+/g, " ")}
+                                </h3>
+                                <span className="activity-review-date">
+                                  {when}
+                                </span>
+                              </div>
+                              <span
+                                className={`activity-verdict-badge ${review.verdict || "perfection"}`}
+                              >
+                                {verdictLabel}
+                              </span>
+                            </article>
+                          );
+                        })}
+                      </section>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="following-activity-empty">
+                    <span>◌</span>
+                    <h2>No recent activity</h2>
+                    <p>Reviews from people you follow will appear here.</p>
+                  </div>
+                );
+              })()}
+            </main>
+          </div>
+        </section>
+      )}
 
       {activeView === "home" && (
         <>
@@ -2626,19 +4134,17 @@ function Games() {
                           <div className="automatic-game-platforms">
                             🎮 {game.platforms}
                           </div>
-                          <div className="automatic-game-footer">
-                            <span>{game.releaseDate || "Release TBA"}</span>
-                            <button
-                              type="button"
-                              className="details-button-small"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                openDetails(game);
-                              }}
-                            >
-                              {accessible ? "Details" : "View Access"}
-                            </button>
-                          </div>
+
+                          <button
+                            className="card-details-button automatic-card-view-details"
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              openDetails(game);
+                            }}
+                          >
+                            {accessible ? "View Details" : "Age Restricted"}
+                          </button>
                         </div>
                       </article>
                     );
@@ -2656,14 +4162,6 @@ function Games() {
                   </div>
                 </div>
               )}
-
-              <div className="rawg-attribution">
-                Automatic game data & images provided by{" "}
-                <a href="https://rawg.io/" target="_blank" rel="noreferrer">
-                  RAWG
-                </a>
-                .
-              </div>
             </section>
 
             {/* =================================================
@@ -3153,256 +4651,474 @@ function Games() {
               </main>
             ) : spacesSection === "clubs" ? (
               <main className="clubs-feed">
-                <div className="clubs-feed-head">
-                  <div>
-                    <span className="section-label">COMMUNITY</span>
-                    <h1>Gaming Clubs</h1>
-                    <p>
-                      Create and join gaming clubs, share gaming interests,
-                      discuss your favourite games and meet other gamers.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="clubs-create-button"
-                    onClick={() => setShowCreateClub((current) => !current)}
-                  >
-                    {showCreateClub ? "Close" : "+ Create Club"}
-                  </button>
-                </div>
+                {selectedClubId &&
+                  (() => {
+                    const selectedClub = gamingClubs.find(
+                      (club) => club.id === selectedClubId,
+                    );
+                    if (!selectedClub) return null;
+                    const joined = joinedClubIds.includes(selectedClub.id);
+                    const clubMembers =
+                      selectedClub.members +
+                      (joined && !selectedClub.membersAdded ? 1 : 0);
+                    const clubDiscussionsForClub = clubDiscussions.filter(
+                      (discussion) =>
+                        !discussion.clubId ||
+                        discussion.clubId === selectedClub.id,
+                    );
 
-                {showCreateClub && (
-                  <section className="club-create-panel">
-                    <div className="club-create-grid">
-                      <label>
-                        Club Name
-                        <input
-                          value={newClubName}
-                          onChange={(event) =>
-                            setNewClubName(event.target.value)
-                          }
-                          placeholder="e.g. Open World Legends"
-                          maxLength={50}
-                        />
-                      </label>
-
-                      <label>
-                        Interest
-                        <select
-                          value={newClubInterest}
-                          onChange={(event) =>
-                            setNewClubInterest(event.target.value)
-                          }
+                    return (
+                      <section className="club-open-page">
+                        <div
+                          className="club-open-hero"
+                          style={{ "--club-accent": selectedClub.accent }}
                         >
-                          {[
-                            "Action",
-                            "Adventure",
-                            "RPG",
-                            "FPS",
-                            "PlayStation",
-                            "Xbox",
-                            "PC",
-                          ].map((interest) => (
-                            <option key={interest} value={interest}>
-                              {interest}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
-
-                    <label className="club-create-description">
-                      Description
-                      <textarea
-                        value={newClubDescription}
-                        onChange={(event) =>
-                          setNewClubDescription(event.target.value)
-                        }
-                        placeholder="Tell gamers what your club is about..."
-                        maxLength={180}
-                      />
-                    </label>
-
-                    <button
-                      type="button"
-                      className="clubs-create-submit"
-                      onClick={createGamingClub}
-                    >
-                      Create & Join Club
-                    </button>
-                  </section>
-                )}
-
-                <div className="clubs-toolbar">
-                  <div className="club-interest-filters">
-                    {[
-                      "All",
-                      "Action",
-                      "Adventure",
-                      "RPG",
-                      "FPS",
-                      "PlayStation",
-                      "Xbox",
-                      "PC",
-                    ].map((interest) => (
-                      <button
-                        key={interest}
-                        type="button"
-                        className={clubInterest === interest ? "active" : ""}
-                        onClick={() => setClubInterest(interest)}
-                      >
-                        {interest}
-                      </button>
-                    ))}
-                  </div>
-
-                  <label className="club-search">
-                    <span>⌕</span>
-                    <input
-                      value={clubSearch}
-                      onChange={(event) => setClubSearch(event.target.value)}
-                      placeholder="Search clubs..."
-                    />
-                  </label>
-                </div>
-
-                <section className="clubs-block">
-                  <div className="clubs-block-heading">
-                    <div>
-                      <span className="section-label">FIND YOUR COMMUNITY</span>
-                      <h2>Clubs for Gamers</h2>
-                    </div>
-                    <span>{filteredGamingClubs.length} clubs</span>
-                  </div>
-
-                  <div className="clubs-grid">
-                    {filteredGamingClubs.map((club) => {
-                      const joined = joinedClubIds.includes(club.id);
-                      return (
-                        <article className="gaming-club-card" key={club.id}>
-                          <div
-                            className="gaming-club-card-top"
-                            style={{ "--club-accent": club.accent }}
+                          <div className="club-open-icon">♣</div>
+                          <div className="club-open-heading">
+                            <span>{selectedClub.interest}</span>
+                            <h1>{selectedClub.name}</h1>
+                          </div>
+                          <button
+                            type="button"
+                            className="club-open-close"
+                            onClick={closeClub}
+                            aria-label="Close club"
                           >
-                            <div className="gaming-club-icon">♣</div>
-                            <span>{club.interest}</span>
+                            ×
+                          </button>
+                        </div>
+
+                        <div className="club-open-content">
+                          <p className="club-open-description">
+                            {selectedClub.description}
+                          </p>
+
+                          <div className="club-open-meta">
+                            <span>♟ {clubMembers} members</span>
+                            <span>● {selectedClub.interest}</span>
+                            <span>{joined ? "✓ Joined" : "Not joined"}</span>
                           </div>
 
-                          <div className="gaming-club-card-body">
-                            <h3>{club.name}</h3>
-                            <p>{club.description}</p>
+                          <div className="clubs-two-column club-open-columns">
+                            <section className="club-panel">
+                              <div className="club-panel-heading">
+                                <div>
+                                  <span className="section-label">
+                                    GROUP CHAT
+                                  </span>
+                                  <h2>Group Chat</h2>
+                                </div>
+                                <span>💬</span>
+                              </div>
+                              {joined && (
+                                <div className="club-post-row">
+                                  <input
+                                    value={clubPost}
+                                    onChange={(event) =>
+                                      setClubPost(event.target.value)
+                                    }
+                                    placeholder="Type a message..."
+                                    maxLength={140}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={postClubDiscussion}
+                                  >
+                                    Post
+                                  </button>
+                                </div>
+                              )}
+                              <div className="club-discussions-list">
+                                {clubDiscussionsForClub
+                                  .slice(0, 8)
+                                  .map((discussion) => (
+                                    <article
+                                      className="club-discussion-item"
+                                      key={discussion.id}
+                                    >
+                                      <div className="club-discussion-avatar">
+                                        {(discussion.author || "G")
+                                          .charAt(0)
+                                          .toUpperCase()}
+                                      </div>
+                                      <div>
+                                        <strong>{discussion.title}</strong>
+                                        <span>
+                                          @{discussion.author} •{" "}
+                                          {discussion.meta}
+                                        </span>
+                                      </div>
+                                    </article>
+                                  ))}
+                                {!clubDiscussionsForClub.length && (
+                                  <div className="club-empty-state">
+                                    No messages yet. Start the conversation.
+                                  </div>
+                                )}
+                              </div>
+                            </section>
 
-                            <div className="gaming-club-card-footer">
-                              <span>
-                                ♟{" "}
-                                {club.members +
-                                  (joined && !club.membersAdded ? 1 : 0)}{" "}
-                                members
-                              </span>
-                              <button
-                                type="button"
-                                className={joined ? "joined" : ""}
-                                onClick={() => toggleClubMembership(club.id)}
-                              >
-                                {joined ? "Joined ✓" : "Join Club"}
-                              </button>
-                            </div>
+                            <section className="club-panel">
+                              <div className="club-panel-heading">
+                                <div>
+                                  <span className="section-label">EVENTS</span>
+                                  <h2>Gaming Events</h2>
+                                </div>
+                                <span>▦</span>
+                              </div>
+                              <div className="club-events-list">
+                                {DEFAULT_CLUB_EVENTS.map((event) => {
+                                  const going = joinedEventIds.includes(
+                                    event.id,
+                                  );
+                                  return (
+                                    <div
+                                      className="club-event-item"
+                                      key={event.id}
+                                    >
+                                      <div className="club-event-icon">🎮</div>
+                                      <div>
+                                        <strong>{event.title}</strong>
+                                        <span>{event.meta}</span>
+                                      </div>
+                                      {joined && (
+                                        <button
+                                          type="button"
+                                          className={going ? "joined" : ""}
+                                          onClick={() =>
+                                            toggleClubEvent(event.id)
+                                          }
+                                        >
+                                          {going ? "Going ✓" : "Join"}
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </section>
                           </div>
-                        </article>
-                      );
-                    })}
-                  </div>
 
-                  {!filteredGamingClubs.length && (
-                    <div className="clubs-feature-note">
-                      <strong>No clubs found</strong>
-                      <span>Try another interest or search term.</span>
-                    </div>
-                  )}
-                </section>
-
-                <div className="clubs-two-column">
-                  <section className="club-panel">
-                    <div className="club-panel-heading">
-                      <div>
-                        <span className="section-label">DISCUSSIONS</span>
-                        <h2>Community Talks</h2>
-                      </div>
-                      <span>💬</span>
-                    </div>
-
-                    <div className="club-post-row">
-                      <input
-                        value={clubPost}
-                        onChange={(event) => setClubPost(event.target.value)}
-                        placeholder="Start a discussion..."
-                        maxLength={140}
-                      />
-                      <button type="button" onClick={postClubDiscussion}>
-                        Post
-                      </button>
-                    </div>
-
-                    <div className="club-discussions-list">
-                      {clubDiscussions.slice(0, 6).map((discussion) => (
-                        <article
-                          className="club-discussion-item"
-                          key={discussion.id}
-                        >
-                          <div className="club-discussion-avatar">
-                            {(discussion.author || "G").charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <strong>{discussion.title}</strong>
-                            <span>
-                              @{discussion.author} • {discussion.meta}
-                            </span>
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-                  </section>
-
-                  <section className="club-panel">
-                    <div className="club-panel-heading">
-                      <div>
-                        <span className="section-label">EVENTS</span>
-                        <h2>Gaming Events</h2>
-                      </div>
-                      <span>▦</span>
-                    </div>
-
-                    <div className="club-events-list">
-                      {DEFAULT_CLUB_EVENTS.map((event) => {
-                        const going = joinedEventIds.includes(event.id);
-                        return (
-                          <div className="club-event-item" key={event.id}>
-                            <div className="club-event-icon">🎮</div>
-                            <div>
-                              <strong>{event.title}</strong>
-                              <span>{event.meta}</span>
-                            </div>
+                          <div className="club-open-footer">
                             <button
                               type="button"
-                              className={going ? "joined" : ""}
-                              onClick={() => toggleClubEvent(event.id)}
+                              className="club-open-back"
+                              onClick={closeClub}
                             >
-                              {going ? "Going ✓" : "Join"}
+                              ← Back to Clubs
                             </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </section>
-                </div>
 
-                <div className="clubs-feature-note">
-                  <strong>Gaming Clubs</strong>
-                  <span>
-                    Connect with other gamers based on shared interests,
-                    participate in discussions and join gaming events.
-                  </span>
-                </div>
+                            {joined && (
+                              <button
+                                type="button"
+                                className="club-open-leave"
+                                onClick={() => {
+                                  setJoinedClubIds((current) => {
+                                    const next = current.filter(
+                                      (id) => id !== selectedClub.id,
+                                    );
+                                    localStorage.setItem(
+                                      "gamingverse_joined_clubs",
+                                      JSON.stringify(next),
+                                    );
+                                    return next;
+                                  });
+                                  closeClub();
+                                }}
+                              >
+                                Leave Club
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </section>
+                    );
+                  })()}
+
+                {!selectedClubId && (
+                  <>
+                    <div className="clubs-feed-head">
+                      <div>
+                        <span className="section-label">COMMUNITY</span>
+                        <h1>Gaming Clubs</h1>
+                        <p>
+                          Create and join gaming clubs, share gaming interests,
+                          discuss your favourite games and meet other gamers.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="clubs-create-button"
+                        onClick={() => setShowCreateClub((current) => !current)}
+                      >
+                        {showCreateClub ? "Close" : "+ Create Club"}
+                      </button>
+                    </div>
+
+                    {showCreateClub && (
+                      <section className="club-create-panel">
+                        <div className="club-create-grid">
+                          <label>
+                            Club Name
+                            <input
+                              value={newClubName}
+                              onChange={(event) =>
+                                setNewClubName(event.target.value)
+                              }
+                              placeholder="e.g. Open World Legends"
+                              maxLength={50}
+                            />
+                          </label>
+
+                          <label>
+                            Interest
+                            <select
+                              value={newClubInterest}
+                              onChange={(event) =>
+                                setNewClubInterest(event.target.value)
+                              }
+                            >
+                              {[
+                                "Action",
+                                "Adventure",
+                                "RPG",
+                                "FPS",
+                                "PlayStation",
+                                "Xbox",
+                                "PC",
+                              ].map((interest) => (
+                                <option key={interest} value={interest}>
+                                  {interest}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        </div>
+
+                        <label className="club-create-description">
+                          Description
+                          <textarea
+                            value={newClubDescription}
+                            onChange={(event) =>
+                              setNewClubDescription(event.target.value)
+                            }
+                            placeholder="Tell gamers what your club is about..."
+                            maxLength={180}
+                          />
+                        </label>
+
+                        <button
+                          type="button"
+                          className="clubs-create-submit"
+                          onClick={createGamingClub}
+                        >
+                          Create & Join Club
+                        </button>
+                      </section>
+                    )}
+
+                    <div className="clubs-toolbar">
+                      <div className="club-interest-filters">
+                        {[
+                          "All",
+                          "Action",
+                          "Adventure",
+                          "RPG",
+                          "FPS",
+                          "PlayStation",
+                          "Xbox",
+                          "PC",
+                        ].map((interest) => (
+                          <button
+                            key={interest}
+                            type="button"
+                            className={
+                              clubInterest === interest ? "active" : ""
+                            }
+                            onClick={() => setClubInterest(interest)}
+                          >
+                            {interest}
+                          </button>
+                        ))}
+                      </div>
+
+                      <label className="club-search">
+                        <span>⌕</span>
+                        <input
+                          value={clubSearch}
+                          onChange={(event) =>
+                            setClubSearch(event.target.value)
+                          }
+                          placeholder="Search clubs..."
+                        />
+                      </label>
+                    </div>
+
+                    <section className="clubs-block">
+                      <div className="clubs-block-heading">
+                        <div>
+                          <span className="section-label">
+                            FIND YOUR COMMUNITY
+                          </span>
+                          <h2>Clubs for Gamers</h2>
+                        </div>
+                        <span>{filteredGamingClubs.length} clubs</span>
+                      </div>
+
+                      <div className="clubs-grid">
+                        {filteredGamingClubs.map((club) => {
+                          const joined = joinedClubIds.includes(club.id);
+                          return (
+                            <article
+                              className="gaming-club-card"
+                              key={club.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => openClub(club.id)}
+                              onKeyDown={(event) => {
+                                if (
+                                  event.key === "Enter" ||
+                                  event.key === " "
+                                ) {
+                                  event.preventDefault();
+                                  openClub(club.id);
+                                }
+                              }}
+                            >
+                              <div
+                                className="gaming-club-card-top"
+                                style={{ "--club-accent": club.accent }}
+                              >
+                                <div className="gaming-club-icon">♣</div>
+                                <span>{club.interest}</span>
+                              </div>
+
+                              <div className="gaming-club-card-body">
+                                <h3>{club.name}</h3>
+                                <p>{club.description}</p>
+
+                                <div className="gaming-club-card-footer">
+                                  <span>
+                                    ♟{" "}
+                                    {club.members +
+                                      (joined && !club.membersAdded
+                                        ? 1
+                                        : 0)}{" "}
+                                    members
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className={joined ? "joined" : ""}
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      toggleClubMembership(club.id);
+                                    }}
+                                  >
+                                    {joined ? "Joined ✓" : "Join Club"}
+                                  </button>
+                                </div>
+                              </div>
+                            </article>
+                          );
+                        })}
+                      </div>
+
+                      {!filteredGamingClubs.length && (
+                        <div className="clubs-feature-note">
+                          <strong>No clubs found</strong>
+                          <span>Try another interest or search term.</span>
+                        </div>
+                      )}
+                    </section>
+
+                    <div className="clubs-two-column">
+                      <section className="club-panel">
+                        <div className="club-panel-heading">
+                          <div>
+                            <span className="section-label">DISCUSSIONS</span>
+                            <h2>Community Talks</h2>
+                          </div>
+                          <span>💬</span>
+                        </div>
+
+                        <div className="club-post-row">
+                          <input
+                            value={communityTalkPost}
+                            onChange={(event) =>
+                              setCommunityTalkPost(event.target.value)
+                            }
+                            placeholder="Start a community discussion..."
+                            maxLength={140}
+                          />
+                          <button type="button" onClick={postCommunityTalk}>
+                            Post
+                          </button>
+                        </div>
+
+                        <div className="club-discussions-list">
+                          {communityTalks.slice(0, 6).map((discussion) => (
+                            <article
+                              className="club-discussion-item"
+                              key={discussion.id}
+                            >
+                              <div className="club-discussion-avatar">
+                                {(discussion.author || "G")
+                                  .charAt(0)
+                                  .toUpperCase()}
+                              </div>
+                              <div>
+                                <strong>{discussion.title}</strong>
+                                <span>
+                                  @{discussion.author} • {discussion.meta}
+                                </span>
+                              </div>
+                            </article>
+                          ))}
+                        </div>
+                      </section>
+
+                      <section className="club-panel">
+                        <div className="club-panel-heading">
+                          <div>
+                            <span className="section-label">EVENTS</span>
+                            <h2>Gaming Events</h2>
+                          </div>
+                          <span>▦</span>
+                        </div>
+
+                        <div className="club-events-list">
+                          {DEFAULT_CLUB_EVENTS.map((event) => {
+                            const going = joinedEventIds.includes(event.id);
+                            return (
+                              <div className="club-event-item" key={event.id}>
+                                <div className="club-event-icon">🎮</div>
+                                <div>
+                                  <strong>{event.title}</strong>
+                                  <span>{event.meta}</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  className={going ? "joined" : ""}
+                                  onClick={() => toggleClubEvent(event.id)}
+                                >
+                                  {going ? "Going ✓" : "Join"}
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    </div>
+
+                    <div className="clubs-feature-note">
+                      <strong>Gaming Clubs</strong>
+                      <span>
+                        Connect with other gamers based on shared interests,
+                        participate in discussions and join gaming events.
+                      </span>
+                    </div>
+                  </>
+                )}
               </main>
             ) : (
               <main className="trailers-feed">

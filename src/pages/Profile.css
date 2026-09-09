@@ -1191,7 +1191,178 @@ textarea {
 }
 
 .age-status-card span {
-  color: rgba(255,255,255,0.58);
+  color: rgba(255, 255, 255, 0.58);
   font-size: 11px;
   line-height: 1.45;
+}
+
+/* =========================================================
+   FOLLOWERS / FOLLOWING MODAL
+   Matches the compact dark GamingVerse pop-up shown in the
+   profile reference design.
+========================================================= */
+.profile-details > .profile-detail-line:first-child {
+  position: relative;
+  min-height: 18px;
+}
+
+.profile-details > .profile-detail-line:first-child > strong {
+  visibility: hidden;
+}
+
+.social-count-button {
+  position: absolute;
+  top: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #ddd;
+  font: inherit;
+  font-weight: 600;
+  line-height: 18px;
+  cursor: pointer;
+  transition: color 0.18s ease;
+}
+
+.social-followers-button {
+  left: 26px;
+}
+
+.social-following-button {
+  left: 130px;
+}
+
+.social-count-button:hover {
+  color: #b45cff;
+}
+
+.social-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+}
+
+.social-modal {
+  width: min(354px, calc(100vw - 40px));
+  max-height: min(520px, calc(100vh - 40px));
+  overflow: hidden;
+  background: #1b1b1b;
+  border: 1px solid #292929;
+  border-radius: 11px;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.58);
+}
+
+.social-modal-header {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 13px 0 14px;
+  border-bottom: 1px solid #303030;
+}
+
+.social-modal-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.social-modal-close {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #c9c9c9;
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.social-modal-close:hover {
+  background: #292929;
+  color: #fff;
+}
+
+.social-modal-list {
+  max-height: 430px;
+  overflow-y: auto;
+  padding: 5px 0;
+}
+
+.social-user-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 57px;
+  padding: 7px 14px;
+}
+
+.social-user-row:hover {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.social-user-avatar {
+  width: 37px;
+  height: 37px;
+  flex: 0 0 37px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #3d4a65;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.social-user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.social-user-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.social-user-copy strong {
+  overflow: hidden;
+  color: #f2f2f2;
+  font-size: 13px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.social-user-copy span {
+  overflow: hidden;
+  color: #999;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.social-modal-empty {
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: #888;
+  font-size: 13px;
+  text-align: center;
 }

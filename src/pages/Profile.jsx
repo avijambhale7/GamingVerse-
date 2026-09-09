@@ -46,6 +46,23 @@ const profileGameImages = Object.entries(profileAllImages).map(
   }),
 );
 
+function normalizeSocialList(value) {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean);
+  }
+
+  if (value && typeof value === "object") {
+    return Object.entries(value).map(([key, item]) => {
+      if (item && typeof item === "object") {
+        return { ...item, uid: item.uid || item.userId || item.id || key };
+      }
+      return { uid: key };
+    });
+  }
+
+  return [];
+}
+
 const gameAliases = {
   blackmythwukong: ["blackmythwukong", "blackmyth", "wukong"],
   assassinscreedshadows: [
@@ -262,6 +279,15 @@ function Profile() {
   const [message, setMessage] = useState("");
   const [photoFile, setPhotoFile] = useState(null);
 
+  // Social lists used by the Followers / Following pop-up.
+  const [socialLists, setSocialLists] = useState({
+    followers: [],
+    following: [],
+  });
+  const [socialModal, setSocialModal] = useState(null);
+  const [socialMembers, setSocialMembers] = useState([]);
+  const [socialLoading, setSocialLoading] = useState(false);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (!currentUser) {
@@ -292,6 +318,16 @@ function Profile() {
           twitter: data.twitter || "",
           youtube: data.youtube || "",
           photoURL: data.photoURL || currentUser.photoURL || "",
+        });
+
+        // Keep the existing profile data untouched while also reading social lists.
+        setSocialLists({
+          followers: normalizeSocialList(
+            data.followers || data.followedBy || [],
+          ),
+          following: normalizeSocialList(
+            data.following || data.followingUsers || [],
+          ),
         });
       } catch (error) {
         console.error("Error loading profile:", error);
@@ -383,6 +419,54 @@ function Profile() {
 
     return myReviews;
   }, [myReviews, filter]);
+
+  const openSocialModal = async (type) => {
+    const entries = socialLists[type] || [];
+    setSocialModal(type);
+    setSocialMembers([]);
+    setSocialLoading(true);
+
+    try {
+      const members = await Promise.all(
+        entries.map(async (entry) => {
+          const item =
+            typeof entry === "object" && entry !== null
+              ? entry
+              : { uid: entry };
+          const uid = item.uid || item.userId || item.id || "";
+          let data = item;
+
+          if (uid && !item.username && !item.displayName && !item.firstName) {
+            try {
+              const snapshot = await get(ref(db, `users/${uid}`));
+              if (snapshot.exists()) data = { ...item, ...snapshot.val() };
+            } catch (error) {
+              console.error("Could not load social profile:", error);
+            }
+          }
+
+          const displayName =
+            data.displayName ||
+            `${data.firstName || ""} ${data.lastName || ""}`.trim() ||
+            data.name ||
+            data.username ||
+            "GamingVerse User";
+          const username = data.username || data.displayName || "gamer";
+
+          return {
+            uid,
+            displayName,
+            username: username.startsWith("@") ? username.slice(1) : username,
+            photoURL: data.photoURL || "",
+          };
+        }),
+      );
+
+      setSocialMembers(members.filter(Boolean));
+    } finally {
+      setSocialLoading(false);
+    }
+  };
 
   const formatAge = (timestamp) => {
     if (!timestamp) return "";
@@ -917,6 +1001,21 @@ function Profile() {
               <strong>0 Followers</strong>
               <b>•</b>
               <strong>0 Following</strong>
+
+              <button
+                type="button"
+                className="social-count-button social-followers-button"
+                onClick={() => openSocialModal("followers")}
+              >
+                {socialLists.followers.length} Followers
+              </button>
+              <button
+                type="button"
+                className="social-count-button social-following-button"
+                onClick={() => openSocialModal("following")}
+              >
+                {socialLists.following.length} Following
+              </button>
             </div>
 
             <div className="profile-detail-line">
@@ -1142,6 +1241,70 @@ function Profile() {
           </div>
         </aside>
       </main>
+
+      {socialModal && (
+        <div
+          className="social-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setSocialModal(null);
+          }}
+        >
+          <section
+            className="social-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="social-modal-title"
+          >
+            <div className="social-modal-header">
+              <h2 id="social-modal-title">
+                {socialModal === "followers" ? "Followers" : "Following"}
+              </h2>
+              <button
+                type="button"
+                className="social-modal-close"
+                aria-label="Close"
+                onClick={() => setSocialModal(null)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="social-modal-list">
+              {socialLoading ? (
+                <div className="social-modal-empty">Loading...</div>
+              ) : socialMembers.length === 0 ? (
+                <div className="social-modal-empty">
+                  {socialModal === "followers"
+                    ? "No followers yet."
+                    : "Not following anyone yet."}
+                </div>
+              ) : (
+                socialMembers.map((member, index) => (
+                  <div
+                    className="social-user-row"
+                    key={member.uid || `${member.username}-${index}`}
+                  >
+                    <div className="social-user-avatar">
+                      {member.photoURL ? (
+                        <img src={member.photoURL} alt="" />
+                      ) : (
+                        <span>
+                          {member.displayName.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="social-user-copy">
+                      <strong>{member.displayName}</strong>
+                      <span>@{member.username}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
