@@ -229,6 +229,56 @@ const databaseGames = Object.entries(gamesData || {})
     );
   });
 
+const normalizeCatalogueImageKey = (value = "") =>
+  normalizeGameSearchText(value)
+    .replace(/\bthe\b/g, " ")
+    .replace(/\bmarvels\b/g, " ")
+    .replace(/\btom clancys\b/g, " ")
+    .replace(/\bea sports\b/g, " ")
+    .replace(/\bremastered\b/g, " ")
+    .replace(/\bthe end\b/g, " end ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const imageNameTokens = (value = "") =>
+  new Set(
+    normalizeCatalogueImageKey(value)
+      .split(" ")
+      .map((token) => token.trim())
+      .filter((token) => token.length > 1),
+  );
+
+const localImageSimilarity = (a = "", b = "") => {
+  const left = imageNameTokens(a);
+  const right = imageNameTokens(b);
+  if (!left.size || !right.size) return 0;
+
+  let intersection = 0;
+  left.forEach((token) => {
+    if (right.has(token)) intersection += 1;
+  });
+
+  return intersection / Math.max(left.size, right.size);
+};
+
+const getBestLocalCatalogueImage = (game) => {
+  const candidates = [game?.name, game?.databaseKey, game?.title].filter(
+    Boolean,
+  );
+  let best = { image: "", score: 0 };
+
+  for (const item of [...posterGames, ...horizontalGames]) {
+    if (!item?.image || !item?.name) continue;
+
+    for (const candidate of candidates) {
+      const score = localImageSimilarity(candidate, item.name);
+      if (score > best.score) best = { image: item.image, score };
+    }
+  }
+
+  return best.score >= 0.45 ? best.image : "";
+};
+
 const completeGameCatalogue = (() => {
   const result = [];
   const seen = new Set();
@@ -308,7 +358,187 @@ const emptyCounts = {
    Add more games here as your asset library grows.
    trailerUrl can be a YouTube embed URL for the official trailer.
 ========================================================= */
+const VERIFIED_YOUTUBE_TRAILERS = {
+  "GTA V": "https://www.youtube.com/embed/hvoD7ehZPcM",
+  Hades: "https://www.youtube.com/embed/Bz8l935Bv0Y",
+  "Cyberpunk 2077": "https://www.youtube.com/embed/8X2kIfS6fb8",
+  "Assassin's Creed Shadows": "https://www.youtube.com/embed/vovkzbtYBC8",
+  "Among Us": "https://www.youtube.com/embed/NSJ4cESNQfE",
+  "Black Myth Wukong": "https://www.youtube.com/embed/0Zw-mo0EFt0",
+  "Counter Strike 2": "https://www.youtube.com/embed/nSE38xjMLqE",
+  "Ghost of Tsushima": "https://www.youtube.com/embed/kSAvzeopPC8",
+  "GTA VI": "https://www.youtube.com/embed/VQRLujxTm3c",
+  "God of War Ragnarok": "https://www.youtube.com/embed/g1wr0DfV73E",
+  "God of War": "https://www.youtube.com/embed/lRhzFqA1f7o",
+  "Hogwarts Legacy": "https://www.youtube.com/embed/BtyBjOW8sGY",
+  Minecraft: "https://www.youtube.com/embed/Rla3FUlxJdE",
+  "Red Dead Redemption 2": "https://www.youtube.com/embed/Dw_oH5oiUSE",
+  "Elden Ring Nightreign": "https://www.youtube.com/embed/AWrXpJQBJF0",
+  "Far Cry 6": "https://www.youtube.com/embed/qjSM3Lp7EhI",
+  "Far Cry 5": "https://www.youtube.com/embed/Kdaoe4hbMso",
+  "Mafia III": "https://www.youtube.com/embed/YYhlmUd9Xoc",
+  "Just Cause 4": "https://www.youtube.com/embed/pvhzeV0kjc8",
+  "Marvel's Spider-Man 2": "https://www.youtube.com/embed/9fVYKsEmuRo",
+  "Uncharted 4: A Thief's End": "https://www.youtube.com/embed/D3pYbbA1kfk",
+  "Sekiro: Shadows Die Twice": "https://www.youtube.com/embed/rXMX4YJ7Lks",
+  "Star Wars Jedi: Fallen Order": "https://www.youtube.com/embed/xIl2z5wwjdA",
+  "Star Wars Jedi: Survivor": "https://www.youtube.com/embed/VRaobDJjiec",
+  "The Last of Us Part II": "https://www.youtube.com/embed/W2Wnvvj33Wo",
+  "The Last of Us Part I": "https://www.youtube.com/embed/WxjeV10H1F0",
+  "Rise of the Tomb Raider": "https://www.youtube.com/embed/qiYiddjc6cU",
+  "Shadow of the Tomb Raider": "https://www.youtube.com/embed/XYtyeqVQnRI",
+  "Resident Evil 4": "https://www.youtube.com/embed/H94wplkA99s",
+  "Resident Evil Village": "https://www.youtube.com/embed/uIdjcDTc9Vk",
+  "Silent Hill 2": "https://www.youtube.com/embed/0JHD_vb4jxE",
+  "Alan Wake 2": "https://www.youtube.com/embed/MEWgOlTIW4Y",
+  "Hades II": "https://www.youtube.com/embed/ppEKFy83w-o",
+  "Dota 2": "https://www.youtube.com/embed/9B7G4Y2EKaA",
+  VALORANT: "https://www.youtube.com/embed/IhhjcB2ZjIM",
+};
+
+const GAME_MEDIA_FALLBACKS = {
+  "PUBG: Battlegrounds": {
+    poster:
+      "https://cdn.cloudflare.steamstatic.com/steam/apps/578080/library_600x900_2x.jpg",
+    hero: "https://cdn.cloudflare.steamstatic.com/steam/apps/578080/library_hero.jpg",
+    trailer: "https://www.youtube.com/embed/u1oqfdh4xBY",
+  },
+  "Dota 2": {
+    poster: "https://i.ytimg.com/vi/9B7G4Y2EKaA/maxresdefault.jpg",
+    hero: "https://i.ytimg.com/vi/9B7G4Y2EKaA/maxresdefault.jpg",
+    trailer: "https://www.youtube.com/embed/9B7G4Y2EKaA",
+  },
+  VALORANT: {
+    poster: "https://i.ytimg.com/vi/IhhjcB2ZjIM/maxresdefault.jpg",
+    hero: "https://i.ytimg.com/vi/IhhjcB2ZjIM/maxresdefault.jpg",
+    trailer: "https://www.youtube.com/embed/IhhjcB2ZjIM",
+  },
+};
+
+const getGameMediaFallback = (gameName = "") => {
+  const normalized = normalizeGameSearchText(gameName);
+  const key = Object.keys(GAME_MEDIA_FALLBACKS).find(
+    (name) => normalizeGameSearchText(name) === normalized,
+  );
+  return key ? GAME_MEDIA_FALLBACKS[key] : null;
+};
+
+const getBestLocalImage = (game, sourceList) => {
+  const candidates = [game?.name, game?.databaseKey, game?.title].filter(
+    Boolean,
+  );
+  let best = { image: "", score: 0 };
+
+  for (const item of sourceList) {
+    if (!item?.image || !item?.name) continue;
+    for (const candidate of candidates) {
+      const score = localImageSimilarity(candidate, item.name);
+      if (score > best.score) best = { image: item.image, score };
+    }
+  }
+
+  return best.score >= 0.34 ? best.image : "";
+};
+
+const resolveGameMedia = (game) => {
+  const name = String(game?.name || "").trim();
+  const fallback = getGameMediaFallback(name) || {};
+  const verifiedTrailer = getVerifiedTrailerUrl(name);
+
+  const exactCatalogueImage = (() => {
+    const key = normalizeCatalogueImageKey(name);
+    return key && typeof catalogueImageMap !== "undefined"
+      ? catalogueImageMap[key] || ""
+      : "";
+  })();
+
+  // Prefer an actual local poster, then an already-discovered RAWG image,
+  // then the game's own image.
+  const poster =
+    getBestLocalImage(game, posterGames) ||
+    exactCatalogueImage ||
+    game?.image ||
+    fallback.poster ||
+    (verifiedTrailer
+      ? `https://i.ytimg.com/vi/${extractYouTubeId(verifiedTrailer)}/hqdefault.jpg`
+      : "");
+
+  const hero =
+    game?.heroImage ||
+    getBestLocalImage(game, horizontalGames) ||
+    game?.image ||
+    exactCatalogueImage ||
+    fallback.hero ||
+    poster ||
+    (verifiedTrailer
+      ? `https://i.ytimg.com/vi/${extractYouTubeId(verifiedTrailer)}/hqdefault.jpg`
+      : "");
+
+  const trailer = verifiedTrailer || game?.trailerUrl || fallback.trailer || "";
+
+  return { poster, hero, trailer };
+};
+
+const normalizeTrailerGameName = (value = "") =>
+  String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[’':.!,-]/g, "")
+    .replace(/\bragnarok\b/g, "ragnarok")
+    .replace(/\bthe last of us part 2\b/g, "the last of us part ii")
+    .replace(/\bthe last of us part 1\b/g, "the last of us part i")
+    .replace(/\bgrand theft auto 6\b/g, "gta vi")
+    .replace(/\bgrand theft auto 5\b/g, "gta v")
+    .replace(/\bcounter strike 2\b/g, "counter strike 2")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const trailerMapByNormalizedName = Object.fromEntries(
+  Object.entries(VERIFIED_YOUTUBE_TRAILERS).map(([name, url]) => [
+    normalizeTrailerGameName(name),
+    url,
+  ]),
+);
+
+function getVerifiedTrailerUrl(gameName = "") {
+  return trailerMapByNormalizedName[normalizeTrailerGameName(gameName)] || "";
+}
+
+function extractYouTubeId(value = "") {
+  const text = String(value || "").trim();
+  if (!text) return "";
+
+  const patterns = [
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/i,
+    /^([A-Za-z0-9_-]{6,})$/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match?.[1]) return match[1];
+  }
+  return "";
+}
+
+function toYouTubeEmbedUrl(value = "") {
+  const id = extractYouTubeId(value);
+  if (!id) return "";
+  return `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&mute=1&controls=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
+}
+
 const gameDetails = {
+  Hades: {
+    title: "Hades",
+    description:
+      "A fast-paced action roguelike from Supergiant Games, focused on repeated escape attempts from the Underworld.",
+    genre: "Action • Roguelike",
+    platforms: "PC • Nintendo Switch • PlayStation • Xbox",
+    releaseDate: "17 September 2020",
+    developer: "Supergiant Games",
+    publisher: "Supergiant Games",
+    trailerUrl: "https://www.youtube.com/embed/Bz8l935Bv0Y",
+  },
   "GTA V": {
     title: "Grand Theft Auto V",
     description:
@@ -659,11 +889,14 @@ function mapRawgGame(game) {
           .join(" • ")
       : "—";
 
+  const rawgTrailerUrl = game?.clip?.clip || game?.clips?.clip || "";
+
   return {
     id: `rawg-${game.id}`,
     rawgId: game.id,
     name: displayName,
     image: game.background_image || "",
+    trailerUrl: rawgTrailerUrl,
     ageRating,
     genre,
     rating: Number.isFinite(Number(game?.rating)) ? Number(game.rating) : 0,
@@ -1136,6 +1369,9 @@ function getGameDetails(gameName) {
       trailerUrl: "",
     };
   const rich = richGameDetails[gameName] || {};
+  const mediaFallback = getGameMediaFallback(gameName) || {};
+  const verifiedTrailerUrl =
+    getVerifiedTrailerUrl(gameName) || mediaFallback.trailer || "";
   const trailerSearchUrl =
     details.trailerSearchUrl ||
     rich.trailerSearchUrl ||
@@ -1157,6 +1393,7 @@ function getGameDetails(gameName) {
     developer: details.developer || databaseDetails?.developer || "—",
     publisher: details.publisher || databaseDetails?.publisher || "—",
     trailerSearchUrl,
+    trailerUrl: verifiedTrailerUrl || details.trailerUrl || "",
   };
 }
 /* =========================================================
@@ -1269,6 +1506,8 @@ function Games() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeView, setActiveView] = useState("home");
   const [showAllAutomaticGames, setShowAllAutomaticGames] = useState(false);
+  const [showAllFeaturedGames, setShowAllFeaturedGames] = useState(false);
+  const [showAllCatalogueGames, setShowAllCatalogueGames] = useState(false);
   const [activityFilter, setActivityFilter] = useState("All");
   const [activitySort, setActivitySort] = useState("Recent");
   const [activityType, setActivityType] = useState("All");
@@ -1388,6 +1627,10 @@ function Games() {
   const [selectedGame, setSelectedGame] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showTrailer, setShowTrailer] = useState(false);
+  const [showPoster, setShowPoster] = useState(false);
+  const [trailerLoading, setTrailerLoading] = useState(false);
+  const trailerSessionRef = useRef(0);
+  const showTrailerRef = useRef(false);
   const [watchedGames, setWatchedGames] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("gamingverse_watched") || "[]");
@@ -1432,6 +1675,8 @@ function Games() {
   const [automaticGames, setAutomaticGames] = useState([]);
   const [automaticGamesLoading, setAutomaticGamesLoading] = useState(true);
   const [automaticGamesError, setAutomaticGamesError] = useState("");
+  const [catalogueImageMap, setCatalogueImageMap] = useState({});
+  const [trailerMediaMap, setTrailerMediaMap] = useState({});
   const [upcomingGames, setUpcomingGames] = useState([]);
   const [upcomingGamesLoading, setUpcomingGamesLoading] = useState(true);
   const [upcomingGamesError, setUpcomingGamesError] = useState("");
@@ -1603,6 +1848,7 @@ function Games() {
         const catalogueToday = new Date().toISOString().slice(0, 10);
         const seen = new Set();
         const allResults = [];
+        const discoveredCatalogueImages = {};
 
         for (
           let page = 1;
@@ -1630,6 +1876,18 @@ function Games() {
           const pageResults = Array.isArray(data?.results) ? data.results : [];
 
           if (!pageResults.length) break;
+
+          // Keep RAWG images for ALL valid games, including games that are
+          // already in the GamingVerse curated catalogue. These images are
+          // used to fill poster cards that do not have a local image.
+          pageResults.forEach((rawGame) => {
+            if (rawGame?.name && rawGame?.background_image) {
+              const imageKey = normalizeCatalogueImageKey(rawGame.name);
+              if (imageKey && !discoveredCatalogueImages[imageKey]) {
+                discoveredCatalogueImages[imageKey] = rawGame.background_image;
+              }
+            }
+          });
 
           pageResults
             .filter((game) => game?.name && game?.background_image)
@@ -1677,12 +1935,16 @@ function Games() {
             releaseDate: game.releaseDate || "—",
             developer: game.developer || "—",
             publisher: game.publisher || "—",
-            trailerUrl: "",
+            trailerUrl: game.trailerUrl || "",
           };
           gameAgeRatings[game.name] = game.ageRating;
         });
 
         if (!cancelled) {
+          setCatalogueImageMap((prev) => ({
+            ...prev,
+            ...discoveredCatalogueImages,
+          }));
           setAutomaticGames(mapped);
         }
 
@@ -1768,7 +2030,7 @@ function Games() {
             releaseDate: game.releaseDate || "TBA",
             developer: game.developer || "—",
             publisher: game.publisher || "—",
-            trailerUrl: "",
+            trailerUrl: game.trailerUrl || "",
           };
           gameAgeRatings[game.name] = game.ageRating;
         });
@@ -2145,14 +2407,366 @@ function Games() {
       document.removeEventListener("keydown", handleEscape);
     };
   }, []);
+  const getCatalogueImage = (game) => {
+    if (game?.image) return game.image;
+
+    const candidates = [
+      game?.name,
+      game?.databaseKey,
+      game?.title,
+      game?.name === "Counter-Strike 2" ? "Counter Strike 2" : "",
+      game?.name === "Grand Theft Auto VI" ? "GTA VI" : "",
+      game?.name === "Grand Theft Auto V" ? "GTA V" : "",
+      game?.name === "Marvel's Spider-Man 2" ? "Spider-Man 2" : "",
+      game?.name === "Marvel's Spider-Man: Miles Morales"
+        ? "Spider-Man Miles Morales"
+        : "",
+      game?.name === "Marvel's Spider-Man Remastered"
+        ? "Spider-Man Remastered"
+        : "",
+    ];
+
+    for (const candidate of candidates) {
+      const key = normalizeCatalogueImageKey(candidate || "");
+      if (key && catalogueImageMap[key]) return catalogueImageMap[key];
+    }
+
+    return getBestLocalCatalogueImage(game);
+  };
+
   const filteredPosters = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return completeGameCatalogue.filter(
-      (game) =>
-        game.name.toLowerCase().includes(query) &&
-        matchesHomeCategory(game, activeCategory),
-    );
-  }, [search, activeCategory]);
+    return completeGameCatalogue
+      .filter(
+        (game) =>
+          game.name.toLowerCase().includes(query) &&
+          matchesHomeCategory(game, activeCategory),
+      )
+      .map((game) => ({
+        ...game,
+        image: getCatalogueImage(game),
+      }));
+  }, [search, activeCategory, catalogueImageMap]);
+
+  // Resolve missing poster images from RAWG.
+  // This runs only for games that still have no local image.
+  useEffect(() => {
+    if (automaticGamesLoading || !RAWG_API_KEY) return undefined;
+
+    let cancelled = false;
+
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+    const getSearchCandidates = (game) => {
+      const raw = [game?.name, game?.databaseKey, game?.title]
+        .map((value) => String(value || "").trim())
+        .filter(Boolean);
+
+      const expanded = [...raw];
+      raw.forEach((value) => {
+        expanded.push(
+          value
+            .replace(/^Marvel's\s+/i, "")
+            .replace(/^Tom Clancy's\s+/i, "")
+            .replace(/^EA Sports\s+/i, "")
+            .replace(/^Grand Theft Auto\s+/i, "GTA ")
+            .replace(/^Counter-Strike\s+/i, "Counter Strike "),
+        );
+      });
+
+      if (/spider.?man/i.test(game?.name || "")) {
+        expanded.push("Spider-Man", "Marvel Spider-Man");
+      }
+      if (/star wars jedi/i.test(game?.name || "")) {
+        expanded.push(game.name.replace(/:/g, ""));
+      }
+
+      return [...new Set(expanded.map((x) => x.trim()).filter(Boolean))];
+    };
+
+    const chooseBestRawgResult = (results, game) => {
+      const wanted = normalizeCatalogueImageKey(game?.name || "");
+      const safe = results.filter(
+        (item) =>
+          item?.name &&
+          item?.background_image &&
+          !containsBlockedGameTerm(item.name),
+      );
+
+      safe.sort((a, b) => {
+        const aScore = localImageSimilarity(wanted, a.name);
+        const bScore = localImageSimilarity(wanted, b.name);
+        if (bScore !== aScore) return bScore - aScore;
+        return (Number(b?.rating) || 0) - (Number(a?.rating) || 0);
+      });
+
+      return safe[0] || null;
+    };
+
+    const lookupGameImage = async (game) => {
+      for (const candidate of getSearchCandidates(game)) {
+        try {
+          const endpoint =
+            `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_API_KEY)}` +
+            `&search=${encodeURIComponent(candidate)}` +
+            `&page_size=10` +
+            `&search_precise=true`;
+
+          const response = await fetch(endpoint, { cache: "no-store" });
+          if (!response.ok) {
+            if (response.status === 429) await sleep(1200);
+            continue;
+          }
+
+          const data = await response.json();
+          const result = chooseBestRawgResult(
+            Array.isArray(data?.results) ? data.results : [],
+            game,
+          );
+
+          if (result?.background_image) {
+            return {
+              gameKey: normalizeCatalogueImageKey(game.name),
+              image: result.background_image,
+            };
+          }
+        } catch (error) {
+          console.warn(`Poster lookup failed for ${candidate}:`, error);
+        }
+      }
+
+      return null;
+    };
+
+    const missingGames = completeGameCatalogue.filter((game) => {
+      if (!game?.name) return false;
+      if (getCatalogueImage(game)) return false;
+      return true;
+    });
+
+    const runLookups = async () => {
+      const foundImages = {};
+      const batchSize = 3;
+
+      for (let index = 0; index < missingGames.length; index += batchSize) {
+        const batch = missingGames.slice(index, index + batchSize);
+        const results = await Promise.all(
+          batch.map((game) => lookupGameImage(game)),
+        );
+
+        results.forEach((result) => {
+          if (result?.gameKey && result?.image) {
+            foundImages[result.gameKey] = result.image;
+          }
+        });
+
+        if (cancelled) return;
+        await sleep(180);
+      }
+
+      if (!cancelled && Object.keys(foundImages).length) {
+        setCatalogueImageMap((prev) => ({
+          ...prev,
+          ...foundImages,
+        }));
+      }
+    };
+
+    if (missingGames.length) runLookups();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [automaticGamesLoading]);
+
+  // Load a trailer media source for the game details page.
+  // Prefer a RAWG playable clip, then use a verified YouTube trailer.
+  useEffect(() => {
+    if (!showDetails || !selectedGame?.name || !RAWG_API_KEY) return undefined;
+
+    const gameName = String(selectedGame.name).trim();
+    const key = normalizeTrailerGameName(gameName);
+    if (trailerMediaMap[key]) return undefined;
+
+    let cancelled = false;
+
+    const candidates = [
+      gameName,
+      getGameDetails(gameName)?.title,
+      selectedGame?.databaseKey,
+    ]
+      .map((value) => String(value || "").trim())
+      .filter(Boolean);
+
+    const uniqueCandidates = [...new Set(candidates)];
+    const scoreResult = (result) => {
+      const wanted = normalizeGameSearchText(gameName);
+      const got = normalizeGameSearchText(result?.name || "");
+      if (!wanted || !got) return 0;
+      if (wanted === got) return 1000;
+      if (got.includes(wanted) || wanted.includes(got)) return 500;
+      return localImageSimilarity(wanted, got) * 100;
+    };
+
+    const loadTrailer = async () => {
+      let best = null;
+
+      try {
+        for (const candidate of uniqueCandidates) {
+          const endpoint =
+            `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_API_KEY)}` +
+            `&search=${encodeURIComponent(candidate)}&page_size=10&search_precise=true`;
+          const response = await fetch(endpoint, { cache: "no-store" });
+          if (!response.ok) continue;
+
+          const data = await response.json();
+          const results = Array.isArray(data?.results)
+            ? data.results
+                .filter(
+                  (item) => item?.name && !containsBlockedGameTerm(item.name),
+                )
+                .sort((a, b) => scoreResult(b) - scoreResult(a))
+            : [];
+
+          if (results[0]) {
+            best = results[0];
+            break;
+          }
+        }
+
+        let clipUrl =
+          best?.clip?.clips?.["640"] ||
+          best?.clip?.clips?.["320"] ||
+          best?.clip?.clip ||
+          "";
+        let preview = best?.clip?.preview || selectedGame?.image || "";
+
+        if (best?.id && !clipUrl) {
+          const detailResponse = await fetch(
+            `https://api.rawg.io/api/games/${best.id}?key=${encodeURIComponent(RAWG_API_KEY)}`,
+            { cache: "no-store" },
+          );
+
+          if (detailResponse.ok) {
+            const detail = await detailResponse.json();
+            clipUrl =
+              detail?.clip?.clips?.["640"] ||
+              detail?.clip?.clips?.["320"] ||
+              detail?.clip?.clip ||
+              "";
+            preview = detail?.clip?.preview || preview;
+          }
+        }
+
+        if (cancelled) return;
+
+        const verifiedYoutube = getVerifiedTrailerUrl(gameName);
+        const details = getGameDetails(gameName);
+        const rawgImage = best?.background_image || "";
+        const youtubePreview = verifiedYoutube
+          ? `https://i.ytimg.com/vi/${extractYouTubeId(verifiedYoutube)}/hqdefault.jpg`
+          : "";
+
+        setSelectedGame((current) => {
+          if (!current || normalizeTrailerGameName(current.name) !== key)
+            return current;
+
+          const mediaFallback = getGameMediaFallback(gameName) || {};
+          return {
+            ...current,
+            image:
+              getBestLocalImage(current, posterGames) ||
+              catalogueImageMap[normalizeCatalogueImageKey(gameName)] ||
+              current.image ||
+              rawgImage ||
+              mediaFallback.poster ||
+              youtubePreview,
+            heroImage:
+              getBestLocalImage(current, horizontalGames) ||
+              current.heroImage ||
+              rawgImage ||
+              mediaFallback.hero ||
+              current.image ||
+              youtubePreview,
+            trailerUrl:
+              clipUrl ||
+              verifiedYoutube ||
+              current.trailerUrl ||
+              mediaFallback.trailer ||
+              "",
+            trailerType: clipUrl
+              ? "video"
+              : verifiedYoutube
+                ? "youtube"
+                : current.trailerType || "search",
+          };
+        });
+
+        setTrailerMediaMap((current) => ({
+          ...current,
+          [key]: {
+            type: clipUrl ? "video" : verifiedYoutube ? "youtube" : "search",
+            url: clipUrl || verifiedYoutube || "",
+            preview,
+            searchUrl:
+              details?.trailerSearchUrl ||
+              `https://www.youtube.com/results?search_query=${encodeURIComponent(`${details?.title || gameName} official trailer`)}`,
+          },
+        }));
+      } catch (error) {
+        if (cancelled) return;
+
+        const details = getGameDetails(gameName);
+        const verifiedYoutube = getVerifiedTrailerUrl(gameName);
+        const youtubePreview = verifiedYoutube
+          ? `https://i.ytimg.com/vi/${extractYouTubeId(verifiedYoutube)}/hqdefault.jpg`
+          : "";
+        const mediaFallback = getGameMediaFallback(gameName) || {};
+
+        setSelectedGame((current) => {
+          if (!current || normalizeTrailerGameName(current.name) !== key)
+            return current;
+          return {
+            ...current,
+            image: current.image || mediaFallback.poster || youtubePreview,
+            heroImage:
+              current.heroImage ||
+              mediaFallback.hero ||
+              youtubePreview ||
+              current.image ||
+              "",
+            trailerUrl:
+              verifiedYoutube ||
+              mediaFallback.trailer ||
+              current.trailerUrl ||
+              "",
+            trailerType:
+              verifiedYoutube || mediaFallback.trailer
+                ? "youtube"
+                : current.trailerType || "search",
+          };
+        });
+
+        setTrailerMediaMap((current) => ({
+          ...current,
+          [key]: {
+            type: getVerifiedTrailerUrl(gameName) ? "youtube" : "search",
+            url: getVerifiedTrailerUrl(gameName),
+            preview: selectedGame?.image || "",
+            searchUrl:
+              details?.trailerSearchUrl ||
+              `https://www.youtube.com/results?search_query=${encodeURIComponent(`${details?.title || gameName} official trailer`)}`,
+          },
+        }));
+      }
+    };
+
+    loadTrailer();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showDetails, selectedGame?.name]);
 
   const filteredHorizontal = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -2361,14 +2975,7 @@ function Games() {
   };
 
   const openMeter = (game) => {
-    if (!canAccessGame(game, userAge)) {
-      handleRestrictedGame(game);
-      return;
-    }
-
-    setSelectedGame(game);
-    setShowDetails(false);
-    setReviewMessage("");
+    openDetails(game);
   };
 
   const openDetails = (game) => {
@@ -2377,7 +2984,14 @@ function Games() {
       return;
     }
 
-    setSelectedGame(game);
+    const media = resolveGameMedia(game);
+    setSelectedGame({
+      ...game,
+      image: media.poster || game?.image || "",
+      heroImage: media.hero || game?.heroImage || "",
+      trailerUrl: media.trailer || game?.trailerUrl || "",
+      trailerType: media.trailer ? "youtube" : game?.trailerType || "search",
+    });
     setShowDetails(true);
     setReviewMessage("");
     setSelectedReview(null);
@@ -2442,27 +3056,304 @@ function Games() {
       navigate(`/profile?tab=${profileTab}`, { replace: true });
     }
   };
-  const openTrailer = (game) => {
+  const fetchWithTimeout = async (url, options = {}, timeoutMs = 8000) => {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } finally {
+      window.clearTimeout(timer);
+    }
+  };
+
+  const openTrailer = async (game) => {
     if (!canAccessGame(game, userAge)) {
       handleRestrictedGame(game);
       return;
     }
 
-    const trailer = getGameDetails(game?.name || "").trailerUrl;
+    const trailerSession = ++trailerSessionRef.current;
+    const gameName = String(game?.name || "").trim();
+    const details = getGameDetails(gameName);
+    const verifiedTrailer = getVerifiedTrailerUrl(gameName);
+    const trailerSearchUrl =
+      details?.trailerSearchUrl ||
+      `https://www.youtube.com/results?search_query=${encodeURIComponent(
+        `${details?.title || gameName || "Game"} official trailer`,
+      )}`;
 
-    if (!trailer) {
-      setReviewMessage("Trailer unavailable for this game.");
+    // Always prefer a verified YouTube trailer. Do not allow a non-YouTube
+    // game.trailerUrl value to break the embedded player.
+    const gameTrailerUrl = String(game?.trailerUrl || "").trim();
+    const knownYoutubeTrailer =
+      verifiedTrailer ||
+      details?.trailerUrl ||
+      (extractYouTubeId(gameTrailerUrl) ? gameTrailerUrl : "");
+
+    setSelectedGame({
+      ...game,
+      trailerUrl: knownYoutubeTrailer,
+      trailerType: knownYoutubeTrailer ? "youtube" : "search",
+      trailerSearchUrl,
+      trailerPreview: game?.image || "",
+      fallbackYoutubeTrailer: knownYoutubeTrailer,
+    });
+    setShowDetails(false);
+    showTrailerRef.current = true;
+    setShowTrailer(true);
+    setTrailerLoading(false);
+    setReviewMessage("");
+
+    // Known trailers should open immediately. No RAWG request is needed.
+    if (knownYoutubeTrailer) return;
+
+    setTrailerLoading(true);
+
+    if (!RAWG_API_KEY) {
+      setTrailerLoading(false);
       return;
     }
 
-    setSelectedGame(game);
-    setShowDetails(false);
-    setShowTrailer(true);
-    setReviewMessage("");
+    const normalizeTrailerQuery = (value = "") =>
+      String(value)
+        .replace(/^Marvel's\s+/i, "")
+        .replace(/^Tom Clancy's\s+/i, "")
+        .replace(/^EA Sports\s+/i, "")
+        .replace(/^Grand Theft Auto\s+/i, "GTA ")
+        .replace(/^Counter-Strike\s+/i, "Counter Strike ")
+        .replace(/^Hollow Knight:\s*/i, "Hollow Knight ")
+        .trim();
+
+    const candidates = [
+      gameName,
+      details?.title,
+      game?.databaseKey,
+      normalizeTrailerQuery(gameName),
+      normalizeTrailerQuery(details?.title || ""),
+    ].filter(Boolean);
+
+    const uniqueCandidates = [...new Set(candidates)];
+
+    const scoreResult = (result) => {
+      const wanted = normalizeGameSearchText(gameName);
+      const got = normalizeGameSearchText(result?.name || "");
+      if (!wanted || !got) return 0;
+      if (wanted === got) return 1000;
+      if (got.includes(wanted) || wanted.includes(got)) return 500;
+      return localImageSimilarity(wanted, got) * 100;
+    };
+
+    try {
+      let best = null;
+
+      for (const candidate of uniqueCandidates) {
+        const endpoint =
+          `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_API_KEY)}` +
+          `&search=${encodeURIComponent(candidate)}` +
+          `&page_size=10` +
+          `&search_precise=true`;
+
+        const response = await fetchWithTimeout(endpoint, {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (!response.ok) continue;
+
+        const data = await response.json();
+        const results = Array.isArray(data?.results)
+          ? data.results.filter(
+              (item) => item?.name && !containsBlockedGameTerm(item.name),
+            )
+          : [];
+
+        results.sort((a, b) => scoreResult(b) - scoreResult(a));
+
+        if (results[0]) {
+          best = results[0];
+          break;
+        }
+      }
+
+      if (
+        best?.id &&
+        !best?.clip?.clip &&
+        !best?.clip?.clips?.["640"] &&
+        !best?.clip?.clips?.["320"]
+      ) {
+        const detailResponse = await fetchWithTimeout(
+          `https://api.rawg.io/api/games/${best.id}?key=${encodeURIComponent(
+            RAWG_API_KEY,
+          )}`,
+          { method: "GET", cache: "no-store" },
+        );
+
+        if (detailResponse.ok) {
+          best = await detailResponse.json();
+        }
+      }
+
+      const clipUrl =
+        best?.clip?.clips?.["640"] ||
+        best?.clip?.clips?.["320"] ||
+        best?.clip?.clip ||
+        "";
+
+      const clipPreview = best?.clip?.preview || game?.image || "";
+
+      if (clipUrl) {
+        if (
+          trailerSession !== trailerSessionRef.current ||
+          !showTrailerRef.current
+        )
+          return;
+        setSelectedGame((current) => ({
+          ...(current || game),
+          trailerUrl: clipUrl,
+          trailerType: "video",
+          trailerPreview: clipPreview,
+          trailerSearchUrl,
+        }));
+      } else if (best?.id) {
+        try {
+          const moviesResponse = await fetchWithTimeout(
+            `https://api.rawg.io/api/games/${best.id}/movies?key=${encodeURIComponent(
+              RAWG_API_KEY,
+            )}`,
+            { method: "GET", cache: "no-store" },
+          );
+
+          if (moviesResponse.ok) {
+            const moviesData = await moviesResponse.json();
+            const movies = Array.isArray(moviesData?.results)
+              ? moviesData.results
+              : [];
+            const movie = movies.find((item) => {
+              const data = item?.data || {};
+              return (
+                data?.max || data?.["640"] || data?.["480"] || data?.["320"]
+              );
+            });
+            const rawMovieUrl =
+              movie?.data?.max ||
+              movie?.data?.["640"] ||
+              movie?.data?.["480"] ||
+              movie?.data?.["320"] ||
+              "";
+
+            if (
+              /\.(mp4|webm)(\?|$)/i.test(rawMovieUrl) ||
+              rawMovieUrl.includes("media.rawg.io")
+            ) {
+              if (
+                trailerSession !== trailerSessionRef.current ||
+                !showTrailerRef.current
+              )
+                return;
+              setSelectedGame((current) => ({
+                ...(current || game),
+                trailerUrl: rawMovieUrl,
+                trailerType: "video",
+                trailerPreview: movie?.preview || game?.image || "",
+                trailerSearchUrl,
+              }));
+              return;
+            }
+
+            const youtubeId = extractYouTubeId(rawMovieUrl);
+            if (youtubeId) {
+              if (
+                trailerSession !== trailerSessionRef.current ||
+                !showTrailerRef.current
+              )
+                return;
+              setSelectedGame((current) => ({
+                ...(current || game),
+                trailerUrl: `https://www.youtube.com/embed/${youtubeId}`,
+                trailerType: "youtube",
+                trailerPreview:
+                  movie?.preview ||
+                  game?.image ||
+                  `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`,
+                trailerSearchUrl,
+              }));
+              return;
+            }
+          }
+        } catch (movieError) {
+          console.warn("RAWG movie lookup failed:", movieError);
+        }
+
+        if (
+          trailerSession !== trailerSessionRef.current ||
+          !showTrailerRef.current
+        )
+          return;
+        setSelectedGame((current) => ({
+          ...(current || game),
+          trailerUrl: knownYoutubeTrailer,
+          trailerType: knownYoutubeTrailer ? "youtube" : "search",
+          trailerPreview: game?.image || "",
+          trailerSearchUrl,
+        }));
+      } else {
+        if (
+          trailerSession !== trailerSessionRef.current ||
+          !showTrailerRef.current
+        )
+          return;
+        setSelectedGame((current) => ({
+          ...(current || game),
+          trailerUrl: knownYoutubeTrailer,
+          trailerType: knownYoutubeTrailer ? "youtube" : "search",
+          trailerPreview: game?.image || "",
+          trailerSearchUrl,
+        }));
+      }
+    } catch (error) {
+      console.warn("Trailer lookup failed:", error);
+      if (
+        trailerSession !== trailerSessionRef.current ||
+        !showTrailerRef.current
+      )
+        return;
+      setSelectedGame((current) => ({
+        ...(current || game),
+        trailerUrl: knownYoutubeTrailer,
+        trailerType: knownYoutubeTrailer ? "youtube" : "search",
+        trailerPreview: game?.image || "",
+        trailerSearchUrl,
+      }));
+    } finally {
+      if (trailerSession === trailerSessionRef.current) {
+        setTrailerLoading(false);
+      }
+    }
+  };
+  const openPoster = (game) => {
+    if (!game?.image) return;
+
+    // Poster click must NEVER open or retain the trailer.
+    trailerSessionRef.current += 1;
+    showTrailerRef.current = false;
+    setShowTrailer(false);
+    setTrailerLoading(false);
+    setShowPoster(true);
+  };
+
+  const closePoster = () => {
+    setShowPoster(false);
   };
 
   const closeTrailer = () => {
+    trailerSessionRef.current += 1;
+    showTrailerRef.current = false;
     setShowTrailer(false);
+    setTrailerLoading(false);
+    setShowDetails(false);
+    setSelectedGame(null);
+    setReviewMessage("");
+    setSelectedReview(null);
   };
   const closeMeter = () => {
     if (reviewLoading) return;
@@ -4122,9 +5013,9 @@ function Games() {
                   <button
                     className="view-all"
                     type="button"
-                    onClick={() => setActiveCategory("All")}
+                    onClick={() => setShowAllFeaturedGames((prev) => !prev)}
                   >
-                    View All →
+                    {showAllFeaturedGames ? "Show Less ↑" : "View All →"}
                   </button>
                 </div>
               </div>
@@ -4132,6 +5023,10 @@ function Games() {
               <div className="horizontal-grid">
                 {filteredHorizontal
                   .filter((game) => !containsBlockedGameTerm(game.name))
+                  .slice(
+                    0,
+                    showAllFeaturedGames ? filteredHorizontal.length : 3,
+                  )
                   .map((game, index) => {
                     const requiredAge = getRequiredGameAge(game.name);
                     const accessible = canAccessGame(game, userAge);
@@ -4351,15 +5246,16 @@ function Games() {
                 <button
                   className="view-all"
                   type="button"
-                  onClick={() => setActiveCategory("All")}
+                  onClick={() => setShowAllCatalogueGames((prev) => !prev)}
                 >
-                  View All →
+                  {showAllCatalogueGames ? "Show Less ↑" : "View All →"}
                 </button>
               </div>
 
               <div className="poster-grid">
                 {filteredPosters
                   .filter((game) => !containsBlockedGameTerm(game.name))
+                  .slice(0, showAllCatalogueGames ? filteredPosters.length : 6)
                   .map((game, index) => {
                     const requiredAge = getRequiredGameAge(game.name);
                     const accessible = canAccessGame(game, userAge);
@@ -5289,32 +6185,146 @@ function Games() {
 
             {(() => {
               const details = getGameDetails(selectedGame.name);
+              const trailerKey = normalizeTrailerGameName(selectedGame.name);
+              const liveTrailerMedia = trailerMediaMap[trailerKey];
+              const heroTrailerUrl =
+                (liveTrailerMedia?.type === "youtube"
+                  ? liveTrailerMedia.url
+                  : "") ||
+                getVerifiedTrailerUrl(selectedGame.name) ||
+                String(
+                  selectedGame?.trailerUrl ||
+                    details.trailerUrl ||
+                    getGameMediaFallback(selectedGame.name)?.trailer ||
+                    "",
+                ).trim();
+              const heroYoutubeUrl = toYouTubeEmbedUrl(heroTrailerUrl);
+              const heroTrailerId = extractYouTubeId(heroTrailerUrl);
+              const heroThumbnailUrl = heroTrailerId
+                ? `https://i.ytimg.com/vi/${heroTrailerId}/maxresdefault.jpg`
+                : selectedGame?.heroImage ||
+                  selectedGame?.image ||
+                  getGameMediaFallback(selectedGame.name)?.hero ||
+                  "";
+
               return (
                 <>
-                  {/* Compact game header inspired by the reference layout */}
-                  <div className="reference-game-header">
-                    <img
-                      className="reference-game-poster"
-                      src={selectedGame.image}
-                      alt={selectedGame.name}
-                    />
+                  <section className="reference-game-hero">
+                    <div className="reference-game-hero-media">
+                      <img
+                        className="reference-game-hero-thumbnail-image"
+                        src={
+                          heroThumbnailUrl ||
+                          selectedGame?.heroImage ||
+                          selectedGame?.image ||
+                          getGameMediaFallback(selectedGame.name)?.hero ||
+                          ""
+                        }
+                        alt=""
+                        aria-hidden="true"
+                        onError={(event) => {
+                          const fallbackImage =
+                            selectedGame?.heroImage ||
+                            selectedGame?.image ||
+                            getGameMediaFallback(selectedGame.name)?.hero ||
+                            "";
+                          if (
+                            fallbackImage &&
+                            event.currentTarget.src !== fallbackImage
+                          ) {
+                            event.currentTarget.src = fallbackImage;
+                          }
+                        }}
+                      />
+                      <div className="reference-game-hero-thumbnail-shade" />
 
-                    <div className="reference-game-header-content">
-                      <span className="reference-eyebrow">
-                        GAMINGVERSE GAME GUIDE
-                      </span>
+                      {/* Always show the trailer control on the game details hero.
+                          openTrailer() resolves a verified/RAWG trailer when needed. */}
+                      <button
+                        className="reference-game-hero-play"
+                        type="button"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          openTrailer(selectedGame);
+                        }}
+                        aria-label={`Play ${details.title} trailer`}
+                      >
+                        ▶
+                      </button>
+                    </div>
 
-                      <h2>{details.title}</h2>
+                    <div className="reference-game-hero-scrim" />
 
-                      <p className="reference-tagline">{details.description}</p>
+                    <div className="reference-game-hero-content">
+                      <div className="reference-game-hero-left">
+                        <button
+                          className="reference-game-hero-poster-button"
+                          type="button"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            openPoster(selectedGame);
+                          }}
+                          aria-label={`View ${selectedGame.name} poster`}
+                        >
+                          <img
+                            className="reference-game-hero-poster"
+                            src={
+                              selectedGame.image ||
+                              getGameMediaFallback(selectedGame.name)?.poster ||
+                              (() => {
+                                const trailer =
+                                  getVerifiedTrailerUrl(selectedGame.name) ||
+                                  selectedGame.trailerUrl ||
+                                  "";
+                                const id = extractYouTubeId(trailer);
+                                return id
+                                  ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+                                  : "";
+                              })()
+                            }
+                            alt={selectedGame.name}
+                            onError={(event) => {
+                              const fallbackPoster =
+                                getGameMediaFallback(selectedGame.name)
+                                  ?.poster ||
+                                (() => {
+                                  const trailer =
+                                    getVerifiedTrailerUrl(selectedGame.name) ||
+                                    selectedGame.trailerUrl ||
+                                    "";
+                                  const id = extractYouTubeId(trailer);
+                                  return id
+                                    ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg`
+                                    : "";
+                                })();
+                              if (
+                                fallbackPoster &&
+                                event.currentTarget.src !== fallbackPoster
+                              ) {
+                                event.currentTarget.src = fallbackPoster;
+                              }
+                            }}
+                          />
+                        </button>
 
-                      <div className="reference-meta-row">
-                        <span>🎯 {details.genre}</span>
-                        <span>🎮 {details.platforms}</span>
-                        <span>📅 {details.releaseDate}</span>
+                        <div className="reference-game-hero-copy">
+                          <span className="reference-hero-eyebrow">
+                            GAMINGVERSE GAME GUIDE
+                          </span>
+                          <h2>{details.title}</h2>
+                          <p>{details.description}</p>
+
+                          <div className="reference-hero-meta">
+                            <span>🎯 {details.genre}</span>
+                            <span>🎮 {details.platforms}</span>
+                            <span>📅 {details.releaseDate}</span>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="reference-actions reference-actions-stack">
+                      <div className="reference-hero-actions">
                         <button
                           className={`reference-watch-button ${
                             watchedGames.includes(selectedGame.name)
@@ -5326,8 +6336,8 @@ function Games() {
                         >
                           👁{" "}
                           {watchedGames.includes(selectedGame.name)
-                            ? "Marked as watched"
-                            : "Mark as watched"}
+                            ? "Marked as Played"
+                            : "Mark as Played"}
                         </button>
 
                         <div className="reference-secondary-actions">
@@ -5358,36 +6368,19 @@ function Games() {
                             ◷{" "}
                             {watchLaterGames.includes(selectedGame.name)
                               ? "Saved for Later"
-                              : "Play Later"}
+                              : "Watch Later"}
                           </button>
                         </div>
                       </div>
                     </div>
+                  </section>
 
-                    <div className="reference-actions-side">
-                      <button
-                        className="primary-detail-action"
-                        type="button"
-                        onClick={() => {
-                          openMeter(selectedGame);
-                        }}
-                      >
-                        💜 GamingVerse Meter
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="reference-divider" />
-
-                  {/* Main content area */}
                   <div className="reference-content-grid">
                     <main className="reference-overview">
                       <div className="reference-overview-kicker">
                         GAME OVERVIEW
                       </div>
-
                       <h3>Overview</h3>
-
                       <p className="reference-overview-text">
                         {details.about || details.description}
                       </p>
@@ -5436,27 +6429,22 @@ function Games() {
 
                     <aside className="reference-info-panel">
                       <h3>Game Info</h3>
-
                       <div className="reference-info-item">
                         <span>Genre</span>
                         <strong>{details.genre}</strong>
                       </div>
-
                       <div className="reference-info-item">
                         <span>Platforms</span>
                         <strong>{details.platforms}</strong>
                       </div>
-
                       <div className="reference-info-item">
                         <span>Release Date</span>
                         <strong>{details.releaseDate}</strong>
                       </div>
-
                       <div className="reference-info-item">
                         <span>Developer</span>
                         <strong>{details.developer}</strong>
                       </div>
-
                       <div className="reference-info-item">
                         <span>Publisher</span>
                         <strong>{details.publisher}</strong>
@@ -5464,405 +6452,434 @@ function Games() {
                     </aside>
                   </div>
 
-                  {details.trailerUrl && (
-                    <div className="reference-trailer">
-                      <h3>Official Trailer</h3>
-                      <div className="trailer-frame">
-                        <iframe
-                          src={details.trailerUrl}
-                          title={`${details.title} official trailer`}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                          allowFullScreen
-                        />
+                  <section
+                    className="inline-gv-meter"
+                    aria-label="GamingVerse Meter"
+                  >
+                    <div className="inline-gv-meter-heading">
+                      <div>
+                        <span className="inline-gv-meter-eyebrow">
+                          GAMINGVERSE METER
+                        </span>
+                        <h3>GamingVerse Meter</h3>
                       </div>
                     </div>
-                  )}
+
+                    <div className="inline-gv-meter-gauge-wrap">
+                      <div className="inline-gv-meter-gauge">
+                        <div
+                          className="inline-gv-meter-arc"
+                          style={{
+                            background: `conic-gradient(
+                              from 270deg,
+                              #ef476f 0deg,
+                              #ef476f ${Math.max(meterPercent * 1.8, 2)}deg,
+                              #ffbd17 ${Math.max(meterPercent * 1.8, 2)}deg,
+                              #ffbd17 180deg,
+                              #0bd58f 180deg,
+                              #0bd58f 360deg
+                            )`,
+                          }}
+                        >
+                          <div className="inline-gv-meter-inner">
+                            <strong>{meterPercent}%</strong>
+                            <span>
+                              {totalVotes
+                                ? `${top100FormatVotes(totalVotes)} Votes`
+                                : "No votes yet"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="inline-gv-meter-breakdown">
+                      <div className="inline-gv-meter-legend skip">
+                        <span className="inline-gv-meter-dot" />
+                        <span>Skip</span>
+                        <strong>
+                          {totalVotes
+                            ? Math.round((reviewCounts.skip / totalVotes) * 100)
+                            : 0}
+                          %
+                        </strong>
+                      </div>
+                      <div className="inline-gv-meter-legend timepass">
+                        <span className="inline-gv-meter-dot" />
+                        <span>Timepass</span>
+                        <strong>
+                          {totalVotes
+                            ? Math.round(
+                                (reviewCounts.timepass / totalVotes) * 100,
+                              )
+                            : 0}
+                          %
+                        </strong>
+                      </div>
+                      <div className="inline-gv-meter-legend go">
+                        <span className="inline-gv-meter-dot" />
+                        <span>Go for it</span>
+                        <strong>
+                          {totalVotes
+                            ? Math.round(
+                                (reviewCounts["go-for-it"] / totalVotes) * 100,
+                              )
+                            : 0}
+                          %
+                        </strong>
+                      </div>
+                      <div className="inline-gv-meter-legend perfection">
+                        <span className="inline-gv-meter-dot" />
+                        <span>Perfection</span>
+                        <strong>
+                          {totalVotes
+                            ? Math.round(
+                                (reviewCounts.perfection / totalVotes) * 100,
+                              )
+                            : 0}
+                          %
+                        </strong>
+                      </div>
+                    </div>
+
+                    <div className="inline-gv-meter-divider" />
+
+                    <section className="inline-gv-review-section">
+                      <div className="inline-gv-review-heading">
+                        <div>
+                          <span>COMMUNITY</span>
+                          <h4>Write a Review</h4>
+                        </div>
+                      </div>
+
+                      <div className="community-review-box inline-gv-review-box">
+                        <div className="community-review-top">
+                          <div className="community-user">
+                            <div className="community-avatar">
+                              {(
+                                auth.currentUser?.displayName
+                                  ?.trim()
+                                  ?.charAt(0) ||
+                                auth.currentUser?.email?.charAt(0) ||
+                                "G"
+                              ).toUpperCase()}
+                            </div>
+                            <div>
+                              <strong>
+                                {auth.currentUser?.displayName ||
+                                  auth.currentUser?.email?.split("@")[0] ||
+                                  "Gamer"}
+                              </strong>
+                              <span>Share your experience</span>
+                            </div>
+                          </div>
+
+                          <div
+                            className="community-verdict-toggle"
+                            role="group"
+                            aria-label="Choose verdict"
+                          >
+                            {reviewOptions.map((option) => (
+                              <button
+                                key={`inline-composer-${option.id}`}
+                                type="button"
+                                className={
+                                  composerVerdict === option.id
+                                    ? `active ${option.id}`
+                                    : option.id
+                                }
+                                onClick={() => setComposerVerdict(option.id)}
+                              >
+                                {option.title
+                                  .replace("GO FOR IT", "Go for it")
+                                  .replace("SKIP", "Skip")
+                                  .replace("PERFECTION", "Perfection")}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        <textarea
+                          className="community-review-input"
+                          value={reviewText}
+                          onChange={(e) =>
+                            setReviewText(e.target.value.slice(0, 1000))
+                          }
+                          placeholder="Write your review here..."
+                          maxLength={1000}
+                        />
+
+                        <div className="community-review-footer">
+                          <span>{reviewText.length}/1000</span>
+                          <button
+                            type="button"
+                            onClick={postCommunityReview}
+                            disabled={!reviewText.trim() || reviewLoading}
+                          >
+                            {reviewLoading ? "Posting..." : "Post"}
+                          </button>
+                        </div>
+                      </div>
+
+                      {reviewMessage && (
+                        <div className="meter-message inline-gv-message">
+                          {reviewMessage}
+                        </div>
+                      )}
+
+                      <div className="community-reviews-heading inline-gv-user-reviews-heading">
+                        <h3>User Reviews</h3>
+                        <div className="community-review-filters">
+                          <button
+                            type="button"
+                            className="review-sort-button"
+                            onClick={() =>
+                              setReviewFilter(
+                                reviewFilter === "Most Liked"
+                                  ? "Newest"
+                                  : "Most Liked",
+                              )
+                            }
+                          >
+                            ↕ {reviewFilter}⌄
+                          </button>
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={showSpoilers}
+                              onChange={(e) =>
+                                setShowSpoilers(e.target.checked)
+                              }
+                            />
+                            <span>Show Spoilers</span>
+                          </label>
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={followingOnly}
+                              onChange={(e) =>
+                                setFollowingOnly(e.target.checked)
+                              }
+                            />
+                            <span>Following Only</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="community-review-list">
+                        {visibleCommunityReviews.length === 0 ? (
+                          <div className="community-empty">
+                            No user reviews yet. Be the first to share your
+                            experience.
+                          </div>
+                        ) : (
+                          visibleCommunityReviews.map((review) => {
+                            const verdict = reviewOptions.find(
+                              (option) => option.id === review.verdict,
+                            );
+                            return (
+                              <article
+                                className="community-review-card"
+                                key={`inline-${review.id}`}
+                              >
+                                <div className="community-review-head">
+                                  <div className="community-user">
+                                    <div className="community-avatar">
+                                      {review.initials}
+                                    </div>
+                                    <div>
+                                      <strong>@{review.userName}</strong>
+                                      <span>
+                                        {formatReviewAge(review.createdAt)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <span
+                                    className={`community-verdict-pill ${review.verdict}`}
+                                  >
+                                    {verdict?.title
+                                      ?.replace("GO FOR IT", "Go for it")
+                                      .replace("SKIP", "Skip")
+                                      .replace("PERFECTION", "Perfection") ||
+                                      "Review"}
+                                  </span>
+                                </div>
+                                <p
+                                  className={
+                                    review.spoilers && !showSpoilers
+                                      ? "community-review-spoiler"
+                                      : ""
+                                  }
+                                >
+                                  {review.text}
+                                </p>
+                                <div className="community-review-actions">
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleReviewLike(review.id)}
+                                  >
+                                    ♥ {review.likes || 0}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setReviewMessage(
+                                        "Comments will be added next.",
+                                      )
+                                    }
+                                  >
+                                    ◯ {review.comments || 0}
+                                  </button>
+                                  <span className="community-more">•••</span>
+                                </div>
+                              </article>
+                            );
+                          })
+                        )}
+                      </div>
+                    </section>
+                  </section>
                 </>
               );
             })()}
           </section>
         </div>
       )}
+      {showPoster && selectedGame && (
+        <div
+          className="gv-poster-backdrop"
+          onClick={closePoster}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${getGameDetails(selectedGame.name).title} poster`}
+        >
+          <button
+            className="gv-poster-close"
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              closePoster();
+            }}
+            aria-label="Close poster"
+          >
+            ×
+          </button>
+          <div
+            className="gv-poster-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <img
+              src={
+                selectedGame.image ||
+                getGameMediaFallback(selectedGame.name)?.poster ||
+                ""
+              }
+              alt={selectedGame.name}
+              className="gv-poster-image"
+              onError={(event) => {
+                const fallbackPoster = getGameMediaFallback(
+                  selectedGame.name,
+                )?.poster;
+                if (
+                  fallbackPoster &&
+                  event.currentTarget.src !== fallbackPoster
+                ) {
+                  event.currentTarget.src = fallbackPoster;
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
 
-      {/* ===================================================
-            YOUTUBE TRAILER MODAL
-        =================================================== */}
       {showTrailer && selectedGame && (
-        <div className="game-trailer-backdrop" onClick={closeTrailer}>
+        <div className="gv-trailer-backdrop" onClick={closeTrailer}>
           <section
-            className="game-trailer-modal"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
+            className="gv-trailer-modal"
+            onClick={(event) => event.stopPropagation()}
             aria-label={`${getGameDetails(selectedGame.name).title} trailer`}
           >
-            <div className="game-trailer-header">
-              <div>
-                <span className="game-trailer-kicker">OFFICIAL TRAILER</span>
+            <header className="gv-trailer-header">
+              <div className="gv-trailer-heading">
+                <span className="gv-trailer-eyebrow">GAMINGVERSE TRAILER</span>
                 <h2>{getGameDetails(selectedGame.name).title}</h2>
-                <p>Watch the trailer without leaving GamingVerse.</p>
+                <span>Watch the trailer without leaving GamingVerse.</span>
               </div>
-
               <button
-                className="game-trailer-close"
+                className="gv-trailer-close"
                 type="button"
                 onClick={closeTrailer}
                 aria-label="Close trailer"
               >
                 ×
               </button>
-            </div>
+            </header>
 
-            <div className="game-trailer-frame">
-              <iframe
-                src={`${getGameDetails(selectedGame.name).trailerUrl}?rel=0&modestbranding=1`}
-                title={`${getGameDetails(selectedGame.name).title} official trailer`}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              />
-            </div>
-
-            <div className="game-trailer-footer">
-              <div>
-                <strong>{getGameDetails(selectedGame.name).title}</strong>
-                <span>Official trailer • YouTube</span>
-              </div>
-
-              <a
-                href={getGameDetails(selectedGame.name).trailerUrl.replace(
-                  "https://www.youtube.com/embed/",
-                  "https://www.youtube.com/watch?v=",
-                )}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="game-trailer-youtube"
-              >
-                Open on YouTube ↗
-              </a>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {/* ===================================================
-            GAMINGVERSE METER MODAL
-        =================================================== */}
-
-      {selectedGame && !showDetails && (
-        <div className="meter-backdrop" onClick={closeMeter}>
-          <section className="meter-modal" onClick={(e) => e.stopPropagation()}>
-            <button
-              className="meter-close"
-              type="button"
-              onClick={closeMeter}
-              disabled={reviewLoading}
-              aria-label="Close"
-            >
-              ×
-            </button>
-            <div className="meter-game-header">
-              <img src={selectedGame.image} alt={selectedGame.name} />
-
-              <div>
-                <span className="meter-eyebrow">GAMINGVERSE REVIEW</span>
-
-                <h2>{selectedGame.name}</h2>
-
-                <p>Community verdict from GamingVerse players</p>
-              </div>
-            </div>
-            {/* METER */}
-            <div className="meter-section">
-              <h3>GamingVerse Meter</h3>
-
-              <div className="meter-gauge">
-                <div
-                  className="meter-arc"
-                  style={{
-                    background: `conic-gradient(
-                      from 270deg,
-                      #ef476f 0deg,
-                      #ef476f ${Math.max(meterPercent * 1.8, 2)}deg,
-                      #ffd166 ${Math.max(meterPercent * 1.8, 2)}deg,
-                      #ffd166 180deg,
-                      #0bd58f 180deg,
-                      #0bd58f 360deg
-                    )`,
-                  }}
-                >
-                  <div className="meter-inner">
-                    <strong>{meterPercent}%</strong>
-                    <span>{meterText}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* VOTE BREAKDOWN */}
-              <div className="meter-breakdown">
-                <div className="meter-legend-item skip">
-                  <span className="legend-dot"></span>
-                  <span>Skip</span>
-                  <strong>
-                    {totalVotes
-                      ? Math.round((reviewCounts.skip / totalVotes) * 100)
-                      : 0}
-                    %
-                  </strong>
-                </div>
-
-                <div className="meter-legend-item timepass">
-                  <span className="legend-dot"></span>
-                  <span>Timepass</span>
-                  <strong>
-                    {totalVotes
-                      ? Math.round((reviewCounts.timepass / totalVotes) * 100)
-                      : 0}
-                    %
-                  </strong>
-                </div>
-
-                <div className="meter-legend-item go">
-                  <span className="legend-dot"></span>
-                  <span>Go For It</span>
-                  <strong>
-                    {totalVotes
-                      ? Math.round(
-                          (reviewCounts["go-for-it"] / totalVotes) * 100,
-                        )
-                      : 0}
-                    %
-                  </strong>
-                </div>
-
-                <div className="meter-legend-item perfection">
-                  <span className="legend-dot"></span>
-                  <span>Perfection</span>
-                  <strong>
-                    {totalVotes
-                      ? Math.round((reviewCounts.perfection / totalVotes) * 100)
-                      : 0}
-                    %
-                  </strong>
-                </div>
-              </div>
-
-              {/* ===================================================
-                WRITE A REVIEW + USER REVIEWS
-                =================================================== */}
-              <section className="community-review-section">
-                <div className="community-review-heading">
-                  <div>
-                    <span className="community-review-eyebrow">COMMUNITY</span>
-                    <h3>Write a Review</h3>
-                  </div>
-
-                  <div className="community-review-summary">
-                    <span>
-                      <span className="community-dot skip"></span>
-                      Skip
-                    </span>
-                    <span>
-                      <span className="community-dot timepass"></span>
-                      Timepass
-                    </span>
-                    <span>
-                      <span className="community-dot go-for-it"></span>
-                      Go for it
-                    </span>
-                    <span>
-                      <span className="community-dot perfection"></span>
-                      Perfection
-                    </span>
-                  </div>
-                </div>
-
-                <div className="community-review-box">
-                  <div className="community-review-top">
-                    <div className="community-user">
-                      <div className="community-avatar">
-                        {(
-                          auth.currentUser?.displayName?.trim()?.charAt(0) ||
-                          auth.currentUser?.email?.charAt(0) ||
-                          "G"
-                        ).toUpperCase()}
-                      </div>
-
-                      <div>
-                        <strong>
-                          {auth.currentUser?.displayName ||
-                            auth.currentUser?.email?.split("@")[0] ||
-                            "Gamer"}
-                        </strong>
-                        <span>Share your experience</span>
-                      </div>
-                    </div>
-
-                    <div
-                      className="community-verdict-toggle"
-                      role="group"
-                      aria-label="Choose verdict"
-                    >
-                      {reviewOptions.map((option) => (
-                        <button
-                          key={`composer-${option.id}`}
-                          type="button"
-                          className={
-                            composerVerdict === option.id
-                              ? `active ${option.id}`
-                              : option.id
-                          }
-                          onClick={() => setComposerVerdict(option.id)}
-                        >
-                          {option.title
-                            .replace("GO FOR IT", "Go for it")
-                            .replace("SKIP", "Skip")
-                            .replace("PERFECTION", "Perfection")}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <textarea
-                    className="community-review-input"
-                    value={reviewText}
-                    onChange={(e) =>
-                      setReviewText(e.target.value.slice(0, 1000))
-                    }
-                    placeholder="Write your review here..."
-                    maxLength={1000}
+            <div className="gv-trailer-player-shell">
+              {(() => {
+                const gameName = String(selectedGame.name || "").trim();
+                const fallbackTrailer =
+                  getVerifiedTrailerUrl(gameName) ||
+                  getGameDetails(gameName)?.trailerUrl ||
+                  getGameMediaFallback(gameName)?.trailer ||
+                  "";
+                const trailerUrl = String(
+                  selectedGame.trailerUrl || fallbackTrailer,
+                ).trim();
+                const youtubeId = extractYouTubeId(trailerUrl);
+                const embedUrl = youtubeId
+                  ? toYouTubeEmbedUrl(trailerUrl)
+                  : trailerUrl;
+                return selectedGame.trailerType === "video" && !youtubeId ? (
+                  <video
+                    className="gv-trailer-player"
+                    src={embedUrl}
+                    controls
+                    autoPlay
+                    playsInline
+                    preload="metadata"
                   />
-
-                  <div className="community-review-footer">
-                    <span>{reviewText.length}/1000</span>
-
-                    <button
-                      type="button"
-                      onClick={postCommunityReview}
-                      disabled={!reviewText.trim() || reviewLoading}
-                    >
-                      {reviewLoading ? "Posting..." : "Post"}
-                    </button>
+                ) : embedUrl ? (
+                  <iframe
+                    key={embedUrl}
+                    className="gv-trailer-player"
+                    src={embedUrl}
+                    title={`${getGameDetails(selectedGame.name).title} official trailer`}
+                    allow="autoplay; encrypted-media; picture-in-picture; web-share; fullscreen"
+                    allowFullScreen
+                    loading="eager"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                  />
+                ) : (
+                  <div className="gv-trailer-empty">
+                    <strong>Trailer not available in embedded playback.</strong>
+                    <span>Use the YouTube button below to watch it.</span>
                   </div>
-                </div>
+                );
+              })()}
+            </div>
 
-                {reviewMessage && (
-                  <div className="meter-message">{reviewMessage}</div>
-                )}
-
-                <div className="community-reviews-heading">
-                  <h3>User Reviews</h3>
-
-                  <div className="community-review-filters">
-                    <button
-                      type="button"
-                      className="review-sort-button"
-                      onClick={() =>
-                        setReviewFilter(
-                          reviewFilter === "Most Liked"
-                            ? "Newest"
-                            : "Most Liked",
-                        )
-                      }
-                    >
-                      ↕ {reviewFilter}⌄
-                    </button>
-
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={showSpoilers}
-                        onChange={(e) => setShowSpoilers(e.target.checked)}
-                      />
-                      <span>Show Spoilers</span>
-                    </label>
-
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={followingOnly}
-                        onChange={(e) => setFollowingOnly(e.target.checked)}
-                      />
-                      <span>Following Only</span>
-                    </label>
-                  </div>
-                </div>
-
-                <div className="community-review-list">
-                  {visibleCommunityReviews.length === 0 ? (
-                    <div className="community-empty">
-                      No user reviews yet. Be the first to share your
-                      experience.
-                    </div>
-                  ) : (
-                    visibleCommunityReviews.map((review) => {
-                      const verdict = reviewOptions.find(
-                        (option) => option.id === review.verdict,
-                      );
-
-                      return (
-                        <article
-                          className="community-review-card"
-                          key={review.id}
-                        >
-                          <div className="community-review-head">
-                            <div className="community-user">
-                              <div className="community-avatar">
-                                {review.initials}
-                              </div>
-
-                              <div>
-                                <strong>@{review.userName}</strong>
-                                <span>{formatReviewAge(review.createdAt)}</span>
-                              </div>
-                            </div>
-
-                            <span
-                              className={`community-verdict-pill ${review.verdict}`}
-                            >
-                              {verdict?.title
-                                ?.replace("GO FOR IT", "Go for it")
-                                .replace("SKIP", "Skip")
-                                .replace("PERFECTION", "Perfection") ||
-                                "Review"}
-                            </span>
-                          </div>
-
-                          <p
-                            className={
-                              review.spoilers && !showSpoilers
-                                ? "community-review-spoiler"
-                                : ""
-                            }
-                          >
-                            {review.text}
-                          </p>
-
-                          <div className="community-review-actions">
-                            <button
-                              type="button"
-                              onClick={() => toggleReviewLike(review.id)}
-                            >
-                              {likedReviewIds.includes(review.id) ? "♥" : "♡"}{" "}
-                              {review.likes || 0}
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setReviewMessage("Comments will be added next.")
-                              }
-                            >
-                              ◯ {review.comments || 0}
-                            </button>
-
-                            <span className="community-more">•••</span>
-                          </div>
-                        </article>
-                      );
-                    })
-                  )}
-                </div>
-              </section>
+            <div className="gv-trailer-footer">
+              <div className="gv-trailer-footer-title">
+                <strong>{getGameDetails(selectedGame.name).title}</strong>
+                <span>Official Trailer</span>
+              </div>
+              <button
+                type="button"
+                className="gv-trailer-youtube-link"
+                onClick={() => {
+                  const id = extractYouTubeId(selectedGame.trailerUrl || "");
+                  if (id) {
+                    window.open(
+                      `https://www.youtube.com/watch?v=${id}`,
+                      "_blank",
+                      "noopener,noreferrer",
+                    );
+                  }
+                }}
+              >
+                ▶ YouTube
+              </button>
             </div>
           </section>
         </div>
