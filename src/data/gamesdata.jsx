@@ -993,5 +993,16 @@ Object.entries(gamesDataAliases).forEach(([alias, target]) => {
     gamesData[alias] = gamesData[target];
   }
 });
+// ============================================================
+// GAME DATA ALIASES
+// ============================================================
 
+// Create aliases inside the existing gamesData object
+Object.entries(gamesDataAliases).forEach(([alias, target]) => {
+  if (gamesData[target]) {
+    gamesData[alias] = gamesData[target];
+  }
+});
+
+// Default export
 export default gamesData;
