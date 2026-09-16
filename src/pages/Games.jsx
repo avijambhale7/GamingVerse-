@@ -22,7 +22,7 @@ import Marketplace from "./Marketplace";
 import Cafe from "./Cafe";
 import { onValue, push, ref, serverTimestamp, set } from "firebase/database";
 import { db, auth } from "../firebase";
-import gamesData from "../data/gamesData.jsx";
+import gamesData from "../data/gamesdata.jsx";
 /* =========================================================
    LOAD ALL GAME IMAGES
 ========================================================= */

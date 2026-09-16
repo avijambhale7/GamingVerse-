@@ -987,16 +987,6 @@ const gamesDataAliases = {
   "Spider-Man": "Spider-Man Remastered",
 };
 
-// Create aliases inside the exported object
-Object.entries(gamesDataAliases).forEach(([alias, target]) => {
-  if (gamesData[target]) {
-    gamesData[alias] = gamesData[target];
-  }
-});
-// ============================================================
-// GAME DATA ALIASES
-// ============================================================
-
 // Create aliases inside the existing gamesData object
 Object.entries(gamesDataAliases).forEach(([alias, target]) => {
   if (gamesData[target]) {
