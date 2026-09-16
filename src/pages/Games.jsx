@@ -18,8 +18,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "./Games.css";
+import Marketplace from "./Marketplace";
+import Cafe from "./Cafe";
 import { onValue, push, ref, serverTimestamp, set } from "firebase/database";
 import { db, auth } from "../firebase";
+import gamesData from "../data/gamesData";
 /* =========================================================
    LOAD ALL GAME IMAGES
 ========================================================= */
@@ -200,6 +203,62 @@ const posterGames = Object.entries(posterImages)
     image,
   }))
   .filter((game) => !containsBlockedGameTerm(game.name));
+
+const databaseGames = Object.entries(gamesData || {})
+  .map(([key, details]) => ({
+    id: `database-${key}`,
+    name: details?.title || key,
+    image: "",
+    genre: details?.genre || "Game",
+    platforms: details?.platforms || "PC • Console • Mobile",
+    releaseDate: details?.releaseDate || "",
+    developer: details?.developer || "—",
+    publisher: details?.publisher || "—",
+    description: details?.description || "",
+    trailerSearchUrl: details?.trailerSearchUrl || "",
+    source: "GamingVerse Database",
+    databaseKey: key,
+  }))
+  .filter((game) => !containsBlockedGameTerm(game.name))
+  .filter((game, index, list) => {
+    const normalized = normalizeGameSearchText(game.name);
+    return (
+      list.findIndex(
+        (item) => normalizeGameSearchText(item.name) === normalized,
+      ) === index
+    );
+  });
+
+const completeGameCatalogue = (() => {
+  const result = [];
+  const seen = new Set();
+
+  const addGame = (game) => {
+    if (!game?.name) return;
+
+    const key = normalizeGameSearchText(game.name);
+    if (!key || seen.has(key) || containsBlockedGameTerm(game.name)) return;
+
+    const matchingImage =
+      horizontalGames.find((item) => normalizeGameSearchText(item.name) === key)
+        ?.image ||
+      posterGames.find((item) => normalizeGameSearchText(item.name) === key)
+        ?.image ||
+      "";
+
+    result.push({
+      ...game,
+      image: game.image || matchingImage,
+    });
+    seen.add(key);
+  };
+
+  databaseGames.forEach(addGame);
+  horizontalGames.forEach(addGame);
+  posterGames.forEach(addGame);
+
+  return result;
+})();
 /* =========================================================
    REVIEW OPTIONS
 ========================================================= */
@@ -1055,8 +1114,17 @@ const richGameDetails = {
   },
 };
 function getGameDetails(gameName) {
+  const databaseDetails =
+    gamesData?.[gameName] ||
+    Object.values(gamesData || {}).find(
+      (item) =>
+        normalizeGameSearchText(item?.title) ===
+        normalizeGameSearchText(gameName),
+    );
+
   const details = gameDetails[gameName] ||
-    automaticGameDetailsCache[gameName] || {
+    automaticGameDetailsCache[gameName] ||
+    databaseDetails || {
       title: gameName,
       description:
         "Explore the game, discover its world, gameplay, platforms and community verdict on GamingVerse.",
@@ -1075,6 +1143,19 @@ function getGameDetails(gameName) {
   return {
     ...details,
     ...rich,
+    title: details.title || databaseDetails?.title || gameName,
+    description:
+      details.description ||
+      databaseDetails?.description ||
+      "Explore the game, discover its world, gameplay, platforms and community verdict on GamingVerse.",
+    genre: details.genre || databaseDetails?.genre || "Game",
+    platforms:
+      details.platforms ||
+      databaseDetails?.platforms ||
+      "PC • Console • Mobile",
+    releaseDate: details.releaseDate || databaseDetails?.releaseDate || "—",
+    developer: details.developer || databaseDetails?.developer || "—",
+    publisher: details.publisher || databaseDetails?.publisher || "—",
     trailerSearchUrl,
   };
 }
@@ -1158,6 +1239,14 @@ function GVIcon({ name, size = 21 }) {
   return <svg {...common}>{paths[name]}</svg>;
 }
 
+function normalizeLibraryGameName(value = "") {
+  return String(value)
+    .toLowerCase()
+    .replace(/['’:!.,-]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function formatActivityDate(timestamp) {
   const diff = Math.max(0, Date.now() - Number(timestamp || 0));
   const minutes = Math.floor(diff / 60000);
@@ -1197,7 +1286,7 @@ function Games() {
     const view = searchParams.get("view");
     setActiveView(
       view === "collections"
-        ? "collections"
+        ? "home"
         : view === "following"
           ? "following"
           : view === "top100"
@@ -2058,7 +2147,7 @@ function Games() {
   }, []);
   const filteredPosters = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return posterGames.filter(
+    return completeGameCatalogue.filter(
       (game) =>
         game.name.toLowerCase().includes(query) &&
         matchesHomeCategory(game, activeCategory),
@@ -2109,7 +2198,7 @@ function Games() {
       return [];
     }
 
-    const combined = [...automaticGames, ...horizontalGames, ...posterGames];
+    const combined = [...automaticGames, ...completeGameCatalogue];
     const seen = new Set();
 
     return combined.filter((game) => {
@@ -2293,11 +2382,65 @@ function Games() {
     setReviewMessage("");
     setSelectedReview(null);
   };
+
+  useEffect(() => {
+    if (ageLoading) return;
+
+    const requestedGameName = searchParams.get("openGame");
+    if (!requestedGameName) return;
+
+    const requestedKey = normalizeLibraryGameName(requestedGameName);
+    const allGameSources = [
+      ...horizontalGames,
+      ...posterGames,
+      ...automaticGames,
+      ...upcomingGames,
+    ];
+
+    const targetGame =
+      allGameSources.find(
+        (game) => normalizeLibraryGameName(game?.name) === requestedKey,
+      ) ||
+      allGameSources.find((game) => {
+        const candidateKey = normalizeLibraryGameName(game?.name);
+        return (
+          candidateKey.includes(requestedKey) ||
+          requestedKey.includes(candidateKey)
+        );
+      });
+
+    if (!targetGame) return;
+
+    setActiveView("home");
+    setActiveCategory("All");
+    setSearch("");
+    openDetails(targetGame);
+    const returnQuery = new URLSearchParams();
+    const returnTarget = searchParams.get("return");
+    const returnTab = searchParams.get("tab");
+    if (returnTarget) returnQuery.set("return", returnTarget);
+    if (returnTab) returnQuery.set("tab", returnTab);
+
+    const nextUrl = returnQuery.toString()
+      ? `/games?${returnQuery.toString()}`
+      : "/games";
+
+    navigate(nextUrl, { replace: true });
+  }, [ageLoading, automaticGames, upcomingGames, searchParams, navigate]);
+
   const closeDetails = () => {
+    const returnToProfile = searchParams.get("return") === "profile";
+    const profileTab =
+      searchParams.get("tab") === "reviews" ? "reviews" : "collections";
+
     setShowDetails(false);
     setSelectedGame(null);
     setReviewMessage("");
     setSelectedReview(null);
+
+    if (returnToProfile) {
+      navigate(`/profile?tab=${profileTab}`, { replace: true });
+    }
   };
   const openTrailer = (game) => {
     if (!canAccessGame(game, userAge)) {
@@ -2450,14 +2593,6 @@ function Games() {
     totalVotes === 0 ? "No votes yet" : `${positiveVotes}/${totalVotes} Votes`;
   const focusSearch = () => {
     searchInputRef.current?.focus();
-  };
-
-  const scrollToCollections = () => {
-    window.setTimeout(() => {
-      document
-        .querySelector(".collections-section")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 0);
   };
 
   /* =======================================================
@@ -2737,6 +2872,26 @@ function Games() {
     const match = String(releaseDate || "").match(/(\d{4})/);
     return match ? match[1] : "—";
   };
+  const directOpenGameName = searchParams.get("openGame");
+
+  if (directOpenGameName && !selectedGame) {
+    return (
+      <div
+        className="games-page"
+        style={{
+          minHeight: "100vh",
+          display: "grid",
+          placeItems: "center",
+          background: "#050509",
+          color: "#b45cff",
+          fontWeight: 800,
+        }}
+      >
+        Opening {decodeURIComponent(directOpenGameName)}...
+      </div>
+    );
+  }
+
   return (
     <div className="games-page">
       {/* ===================================================
@@ -2744,17 +2899,44 @@ function Games() {
         =================================================== */}
 
       <header className="games-navbar">
-        <div className="brand">
-          <div className="brand-icon">🎮</div>
+        <button
+          className="brand brand-home-button"
+          type="button"
+          title="GamingVerse Home"
+          aria-label="GamingVerse Home"
+          style={{
+            border: "none",
+            outline: "none",
+            padding: 0,
+            margin: 0,
+            background: "transparent",
+            color: "inherit",
+            font: "inherit",
+            textAlign: "left",
+            cursor: "pointer",
+          }}
+          onClick={() => {
+            setActiveView("home");
+            setActiveCategory("All");
+            setSearch("");
+            setShowNotifications(false);
+            setShowDiscoverMenu(false);
+            setShowProfileMenu(false);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+        >
+          <span className="brand-icon" aria-hidden="true">
+            🎮
+          </span>
 
-          <div>
+          <span className="brand-text">
             <h2>
               Gaming<span>Verse</span>
             </h2>
 
             <small>Level up your gaming experience</small>
-          </div>
-        </div>
+          </span>
+        </button>
 
         <nav className="games-main-nav">
           <button
@@ -2809,11 +2991,18 @@ function Games() {
 
           {/* CD MARKETPLACE */}
           <button
-            className="nav-icon-link marketplace-nav-button"
+            className={`nav-icon-link marketplace-nav-button ${
+              activeView === "marketplace" ? "active" : ""
+            }`}
             type="button"
             title="CD Marketplace"
             aria-label="CD Marketplace"
-            onClick={() => navigate("/marketplace")}
+            onClick={() => {
+              setActiveView("marketplace");
+              setActiveCategory("All");
+              setSearch("");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
           >
             <GVIcon name="cart" />
             <span className="nav-icon-label">Marketplace</span>
@@ -2821,32 +3010,23 @@ function Games() {
 
           {/* GAMING CAFÉ BOOKING */}
           <button
-            className="nav-icon-link cafe-nav-button"
+            className={`nav-icon-link cafe-nav-button ${
+              activeView === "cafe" ? "active" : ""
+            }`}
             type="button"
             title="Gaming Café Booking"
             aria-label="Gaming Café Booking"
-            onClick={() => navigate("/cafe")}
+            onClick={() => {
+              setActiveView("cafe");
+              setActiveCategory("All");
+              setSearch("");
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
           >
             <span className="cafe-navbar-icon" aria-hidden="true">
               🎮
             </span>
             <span className="nav-icon-label">Café</span>
-          </button>
-
-          <button
-            className={`nav-icon-link nav-collections-button ${
-              activeView === "collections" ? "active" : ""
-            }`}
-            type="button"
-            title="Collections"
-            aria-label="Collections"
-            onClick={() => {
-              setActiveView("collections");
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          >
-            <GVIcon name="bookmark" />
-            <span className="nav-icon-label">Collections</span>
           </button>
         </nav>
 
@@ -3158,17 +3338,6 @@ function Games() {
                   }}
                 >
                   👤 Profile
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowProfileMenu(false);
-                    setActiveView("collections");
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                >
-                  ♧ My Library
                 </button>
 
                 <button
@@ -4214,7 +4383,14 @@ function Games() {
                               : game.name
                           }
                         >
-                          <img src={game.image} alt={game.name} />
+                          {game.image ? (
+                            <img src={game.image} alt={game.name} />
+                          ) : (
+                            <div className="database-game-fallback">
+                              <span>🎮</span>
+                              <strong>{game.name}</strong>
+                            </div>
+                          )}
 
                           {!accessible && (
                             <div
@@ -4305,152 +4481,6 @@ function Games() {
             </section>
           </main>
         </>
-      )}
-
-      {activeView === "collections" && (
-        <section className="collections-hub">
-          <div className="collections-hub-header">
-            <div>
-              <span className="section-label">YOUR LIBRARY</span>
-              <h1>Collections</h1>
-              <p>
-                Everything you save is organized here so you can find it
-                quickly.
-              </p>
-            </div>
-          </div>
-
-          <div className="collections-three-column">
-            {/* COLLECTIONS */}
-            <section className="collection-library-panel">
-              <div className="collection-library-heading">
-                <div>
-                  <span className="section-label">SAVED</span>
-                  <h2>Collections</h2>
-                </div>
-                <span>{collectionGames.length}</span>
-              </div>
-
-              {collectionGames.length > 0 ? (
-                <div className="collection-library-list">
-                  {collectionGames.map((gameName) => {
-                    const game =
-                      automaticGames.find((item) => item.name === gameName) ||
-                      horizontalGames.find((item) => item.name === gameName) ||
-                      posterGames.find((item) => item.name === gameName);
-                    if (!game) return null;
-                    return (
-                      <button
-                        type="button"
-                        className="collection-library-item"
-                        key={`collection-${gameName}`}
-                        onClick={() => openDetails(game)}
-                      >
-                        <img src={game.image} alt={game.name} />
-                        <span>
-                          <strong>{game.name}</strong>
-                          <small>Saved to collection</small>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="collection-library-empty">
-                  <span>♧</span>
-                  <strong>No saved games</strong>
-                  <small>Use Collections on any game to add it here.</small>
-                </div>
-              )}
-            </section>
-
-            {/* WATCHED */}
-            <section className="collection-library-panel watched-panel">
-              <div className="collection-library-heading">
-                <div>
-                  <span className="section-label">HISTORY</span>
-                  <h2>Marked as Watched</h2>
-                </div>
-                <span>{watchedGames.length}</span>
-              </div>
-
-              {watchedGames.length > 0 ? (
-                <div className="collection-library-list">
-                  {watchedGames.map((gameName) => {
-                    const game =
-                      automaticGames.find((item) => item.name === gameName) ||
-                      horizontalGames.find((item) => item.name === gameName) ||
-                      posterGames.find((item) => item.name === gameName);
-                    if (!game) return null;
-                    return (
-                      <button
-                        type="button"
-                        className="collection-library-item"
-                        key={`watched-${gameName}`}
-                        onClick={() => openDetails(game)}
-                      >
-                        <img src={game.image} alt={game.name} />
-                        <span>
-                          <strong>{game.name}</strong>
-                          <small>Marked as watched</small>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="collection-library-empty">
-                  <span>✓</span>
-                  <strong>No watched games</strong>
-                  <small>Use Mark as watched from a game's details.</small>
-                </div>
-              )}
-            </section>
-
-            {/* PLAY LATER */}
-            <section className="collection-library-panel later-panel">
-              <div className="collection-library-heading">
-                <div>
-                  <span className="section-label">UP NEXT</span>
-                  <h2>Play Later</h2>
-                </div>
-                <span>{watchLaterGames.length}</span>
-              </div>
-
-              {watchLaterGames.length > 0 ? (
-                <div className="collection-library-list">
-                  {watchLaterGames.map((gameName) => {
-                    const game =
-                      automaticGames.find((item) => item.name === gameName) ||
-                      horizontalGames.find((item) => item.name === gameName) ||
-                      posterGames.find((item) => item.name === gameName);
-                    if (!game) return null;
-                    return (
-                      <button
-                        type="button"
-                        className="collection-library-item"
-                        key={`later-${gameName}`}
-                        onClick={() => openDetails(game)}
-                      >
-                        <img src={game.image} alt={game.name} />
-                        <span>
-                          <strong>{game.name}</strong>
-                          <small>Saved for later</small>
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="collection-library-empty">
-                  <span>◷</span>
-                  <strong>No games for later</strong>
-                  <small>Use Play Later on a game you want to return to.</small>
-                </div>
-              )}
-            </section>
-          </div>
-        </section>
       )}
 
       {(activeView === "trailers" || activeView === "news") && (
@@ -5344,16 +5374,6 @@ function Games() {
                       >
                         💜 GamingVerse Meter
                       </button>
-
-                      {details.trailerUrl ? (
-                        <button
-                          className="secondary-detail-action"
-                          type="button"
-                          onClick={() => openTrailer(selectedGame)}
-                        >
-                          ▶ Watch Trailer
-                        </button>
-                      ) : null}
                     </div>
                   </div>
 
@@ -5847,6 +5867,16 @@ function Games() {
           </section>
         </div>
       )}
+
+      {/* ===================================================
+            MARKETPLACE — SAME GAMES PAGE VIEW
+        =================================================== */}
+      {activeView === "marketplace" && <Marketplace embedded />}
+
+      {/* ===================================================
+            CAFÉ — SAME GAMES PAGE VIEW
+        =================================================== */}
+      {activeView === "cafe" && <Cafe embedded />}
 
       {/* ===================================================
             FOOTER

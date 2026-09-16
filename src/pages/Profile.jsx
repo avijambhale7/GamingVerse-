@@ -273,8 +273,44 @@ function Profile() {
   });
 
   const [myReviews, setMyReviews] = useState([]);
-  const [activeTab, setActiveTab] = useState("reviews");
+  const [activeTab, setActiveTab] = useState(() => {
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    return tab === "collections" ? "collections" : "reviews";
+  });
   const [filter, setFilter] = useState("all");
+
+  const [collectionGames, setCollectionGames] = useState(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("gamingverse_collections") || "[]",
+      );
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [playedGames, setPlayedGames] = useState(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("gamingverse_watched") || "[]",
+      );
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [playLaterGames, setPlayLaterGames] = useState(() => {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("gamingverse_watch_later") || "[]",
+      );
+      return Array.isArray(saved) ? saved : [];
+    } catch {
+      return [];
+    }
+  });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [photoFile, setPhotoFile] = useState(null);
@@ -287,6 +323,11 @@ function Profile() {
   const [socialModal, setSocialModal] = useState(null);
   const [socialMembers, setSocialMembers] = useState([]);
   const [socialLoading, setSocialLoading] = useState(false);
+
+  useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get("tab");
+    setActiveTab(tab === "collections" ? "collections" : "reviews");
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -1041,14 +1082,6 @@ function Profile() {
           </button>
 
           <button
-            className="library-profile-button"
-            type="button"
-            onClick={() => navigate("/games?view=collections")}
-          >
-            🎮 My Library
-          </button>
-
-          <button
             className="logout-profile-button"
             type="button"
             onClick={handleLogout}
@@ -1076,7 +1109,7 @@ function Profile() {
                   : "profile-tab"
               }
               type="button"
-              onClick={() => navigate("/games?view=collections")}
+              onClick={() => setActiveTab("collections")}
             >
               ▱ <span>Collections</span>
             </button>
@@ -1142,7 +1175,29 @@ function Profile() {
               ) : (
                 <div className="my-reviews-list">
                   {filteredReviews.map((review) => (
-                    <article className="my-review-card" key={review.id}>
+                    <article
+                      className="my-review-card my-review-card-clickable"
+                      key={review.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() =>
+                        navigate(
+                          `/games?openGame=${encodeURIComponent(
+                            review.gameName,
+                          )}&return=profile&tab=reviews`,
+                        )
+                      }
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          navigate(
+                            `/games?openGame=${encodeURIComponent(
+                              review.gameName,
+                            )}&return=profile&tab=reviews`,
+                          );
+                        }
+                      }}
+                    >
                       <div className="my-review-head">
                         <div className="my-review-game">
                           <div className="my-review-game-icon">
@@ -1188,58 +1243,197 @@ function Profile() {
               )}
             </>
           ) : (
-            <div className="profile-empty-state collections-empty">
-              <div className="empty-icon">🔖</div>
-              <h2>No Collections Yet</h2>
-              <p>Your saved games and public collections will appear here.</p>
+            <div className="profile-collections-view">
+              <div className="profile-collections-header">
+                <div>
+                  <span className="profile-collections-kicker">
+                    YOUR LIBRARY
+                  </span>
+                  <h2>Collections</h2>
+                  <p>
+                    Everything you save is organized here so you can find it
+                    quickly.
+                  </p>
+                </div>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => navigate("/games?view=collections")}
-              >
-                Explore Games
-              </button>
+              <div className="profile-collections-three-column">
+                {/* COLLECTIONS */}
+                <section className="profile-library-panel">
+                  <div className="profile-library-heading">
+                    <div>
+                      <span>SAVED</span>
+                      <h3>Collections</h3>
+                    </div>
+                    <b>{collectionGames.length}</b>
+                  </div>
+
+                  {collectionGames.length > 0 ? (
+                    <div className="profile-library-list">
+                      {collectionGames.map((gameName) => {
+                        const image = getGameImage(gameName);
+                        return (
+                          <button
+                            className="profile-library-item profile-library-item-button"
+                            type="button"
+                            title={`Open ${formatGameName(gameName)}`}
+                            onClick={() => {
+                              sessionStorage.setItem(
+                                "gamingverse_open_game",
+                                gameName,
+                              );
+                              navigate(
+                                `/games?openGame=${encodeURIComponent(gameName)}&return=profile`,
+                              );
+                            }}
+                          >
+                            <div className="profile-library-image">
+                              {image ? (
+                                <img
+                                  src={image}
+                                  alt={gameName}
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <span aria-hidden="true">🎮</span>
+                              )}
+                            </div>
+                            <div className="profile-library-copy">
+                              <strong>{formatGameName(gameName)}</strong>
+                              <small>Saved to collection</small>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="profile-library-empty">
+                      <span>♧</span>
+                      <strong>No saved games</strong>
+                      <small>Use Collections on a game to add it here.</small>
+                    </div>
+                  )}
+                </section>
+
+                {/* PLAYED */}
+                <section className="profile-library-panel profile-played-panel">
+                  <div className="profile-library-heading">
+                    <div>
+                      <span>HISTORY</span>
+                      <h3>Marked as Played</h3>
+                    </div>
+                    <b>{playedGames.length}</b>
+                  </div>
+
+                  {playedGames.length > 0 ? (
+                    <div className="profile-library-list">
+                      {playedGames.map((gameName) => {
+                        const image = getGameImage(gameName);
+                        return (
+                          <button
+                            className="profile-library-item profile-library-item-button"
+                            type="button"
+                            title={`Open ${formatGameName(gameName)}`}
+                            onClick={() => {
+                              sessionStorage.setItem(
+                                "gamingverse_open_game",
+                                gameName,
+                              );
+                              navigate(
+                                `/games?openGame=${encodeURIComponent(gameName)}&return=profile`,
+                              );
+                            }}
+                          >
+                            <div className="profile-library-image">
+                              {image ? (
+                                <img
+                                  src={image}
+                                  alt={gameName}
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <span aria-hidden="true">🎮</span>
+                              )}
+                            </div>
+                            <div className="profile-library-copy">
+                              <strong>{formatGameName(gameName)}</strong>
+                              <small>Marked as played</small>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="profile-library-empty">
+                      <span>✓</span>
+                      <strong>No played games</strong>
+                      <small>Use Mark as played from a game's details.</small>
+                    </div>
+                  )}
+                </section>
+
+                {/* PLAY LATER */}
+                <section className="profile-library-panel profile-later-panel">
+                  <div className="profile-library-heading">
+                    <div>
+                      <span>UP NEXT</span>
+                      <h3>Play Later</h3>
+                    </div>
+                    <b>{playLaterGames.length}</b>
+                  </div>
+
+                  {playLaterGames.length > 0 ? (
+                    <div className="profile-library-list">
+                      {playLaterGames.map((gameName) => {
+                        const image = getGameImage(gameName);
+                        return (
+                          <button
+                            className="profile-library-item profile-library-item-button"
+                            type="button"
+                            title={`Open ${formatGameName(gameName)}`}
+                            onClick={() => {
+                              sessionStorage.setItem(
+                                "gamingverse_open_game",
+                                gameName,
+                              );
+                              navigate(
+                                `/games?openGame=${encodeURIComponent(gameName)}&return=profile`,
+                              );
+                            }}
+                          >
+                            <div className="profile-library-image">
+                              {image ? (
+                                <img
+                                  src={image}
+                                  alt={gameName}
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <span aria-hidden="true">🎮</span>
+                              )}
+                            </div>
+                            <div className="profile-library-copy">
+                              <strong>{formatGameName(gameName)}</strong>
+                              <small>Saved for later</small>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="profile-library-empty">
+                      <span>◷</span>
+                      <strong>No games for later</strong>
+                      <small>
+                        Use Play Later on a game you want to return to.
+                      </small>
+                    </div>
+                  )}
+                </section>
+              </div>
             </div>
           )}
         </section>
-
-        <aside className="profile-right">
-          <h2>Interested In</h2>
-
-          <div className="interested-card">
-            <div className="interest-item">
-              <span>🎮</span>
-              <div>
-                <strong>Video Games</strong>
-                <small>Gaming</small>
-              </div>
-            </div>
-
-            <div className="interest-item">
-              <span>🏆</span>
-              <div>
-                <strong>Game Reviews</strong>
-                <small>Community</small>
-              </div>
-            </div>
-
-            <div className="interest-item">
-              <span>🔥</span>
-              <div>
-                <strong>New Releases</strong>
-                <small>Discover</small>
-              </div>
-            </div>
-
-            <div className="interest-item">
-              <span>🌐</span>
-              <div>
-                <strong>Gaming News</strong>
-                <small>Latest updates</small>
-              </div>
-            </div>
-          </div>
-        </aside>
       </main>
 
       {socialModal && (

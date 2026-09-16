@@ -372,9 +372,7 @@ export const gamesData = {
     trailerSearchUrl: yt(
       "Marvel's Spider-Man Miles Morales official trailer PlayStation",
     ),
-  },
-
-  // ==========================================================
+  }, // ==========================================================
   // THE LAST OF US / UNCHARTED
   // ==========================================================
 
@@ -715,7 +713,6 @@ export const gamesData = {
     publisher: "Blizzard Entertainment",
     trailerSearchUrl: yt("Overwatch 2 official trailer Blizzard"),
   },
-
   "Dota 2": {
     title: "Dota 2",
     description:
@@ -971,7 +968,7 @@ export const gamesData = {
 // ALIASES FOR COMMON FILE NAMES
 // ============================================================
 
-gamesDataAliases = {
+const gamesDataAliases = {
   ACS: "Assassin's Creed Shadows",
   AU: "AU",
   Wukong: "Black Myth Wukong",

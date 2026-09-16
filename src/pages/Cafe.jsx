@@ -373,7 +373,7 @@ function localSlotCount(cafeId, date, time, uid) {
   ).length;
 }
 
-export default function Cafe() {
+export default function Cafe({ embedded = false }) {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -758,31 +758,33 @@ export default function Cafe() {
 
   return (
     <div className="cafe-page">
-      <header className="cafe-header">
-        <button
-          className="cafe-brand"
-          type="button"
-          onClick={() => navigate("/games")}
-        >
-          <span className="cafe-brand-icon">🎮</span>
-          <span>
-            <strong>GamingVerse</strong>
-            <small>Level up your gaming experience</small>
-          </span>
-        </button>
-        <div className="cafe-header-actions">
-          <button type="button" onClick={() => navigate("/games")}>
-            ← Games
-          </button>
+      {!embedded && (
+        <header className="cafe-header">
           <button
+            className="cafe-brand"
             type="button"
-            className="cafe-bookings-btn"
-            onClick={() => setShowBookings((v) => !v)}
+            onClick={() => navigate("/games")}
           >
-            📅 My Bookings{bookings.length ? ` (${bookings.length})` : ""}
+            <span className="cafe-brand-icon">🎮</span>
+            <span>
+              <strong>GamingVerse</strong>
+              <small>Level up your gaming experience</small>
+            </span>
           </button>
-        </div>
-      </header>
+          <div className="cafe-header-actions">
+            <button type="button" onClick={() => navigate("/games")}>
+              ← Games
+            </button>
+            <button
+              type="button"
+              className="cafe-bookings-btn"
+              onClick={() => setShowBookings((v) => !v)}
+            >
+              📅 My Bookings{bookings.length ? ` (${bookings.length})` : ""}
+            </button>
+          </div>
+        </header>
+      )}
 
       <main className="cafe-main">
         <section className="cafe-hero">
@@ -801,6 +803,24 @@ export default function Cafe() {
             <small>cafés listed</small>
           </div>
         </section>
+
+        {embedded && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              margin: "0 0 14px",
+            }}
+          >
+            <button
+              type="button"
+              className="cafe-bookings-btn"
+              onClick={() => setShowBookings((v) => !v)}
+            >
+              📅 My Bookings{bookings.length ? ` (${bookings.length})` : ""}
+            </button>
+          </div>
+        )}
 
         <section className="cafe-search-bar">
           <input

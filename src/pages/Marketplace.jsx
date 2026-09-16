@@ -470,7 +470,7 @@ function money(value) {
   return `₹${Number(value || 0).toLocaleString("en-IN")}`;
 }
 
-export default function Marketplace() {
+export default function Marketplace({ embedded = false }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -2288,7 +2288,9 @@ export default function Marketplace() {
   }
 
   return (
-    <div className="gamingverse-marketplace">
+    <div
+      className={`gamingverse-marketplace ${embedded ? "marketplace-embedded" : ""}`}
+    >
       {toast && <div className="market-toast">{toast}</div>}
 
       {renderHeader()}
