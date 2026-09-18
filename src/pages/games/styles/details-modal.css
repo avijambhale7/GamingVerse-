@@ -1,0 +1,347 @@
+/* =========================================================
+   GAME DETAILS MODAL
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =========================================================
+   GAME DETAILS BUTTON
+========================================================= */
+
+.card-details-button,
+.details-button-small {
+  margin-top: 8px;
+  padding: 8px 14px;
+
+  border: 1px solid rgba(168, 77, 255, 0.5);
+  border-radius: 8px;
+
+  background: rgba(168, 77, 255, 0.12);
+  color: var(--gv-accent-bright);
+
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.card-details-button:hover,
+.details-button-small:hover {
+  background: var(--gv-accent);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.poster-actions {
+  display: flex;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.poster-actions .meter-button,
+.poster-actions .details-button-small {
+  flex: 1;
+  margin-top: 0;
+}
+
+/* =========================================================
+   GAME DETAILS MODAL
+========================================================= */
+
+.details-backdrop {
+  position: fixed;
+  inset: 0;
+
+  z-index: 10000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 25px;
+
+  background: rgba(0, 0, 0, 0.84);
+
+  backdrop-filter: blur(10px);
+}
+
+.details-modal {
+  position: relative;
+
+  width: min(950px, 95vw);
+  max-height: 92vh;
+
+  overflow-y: auto;
+
+  border-radius: 22px;
+
+  background: var(--gv-surface-1);
+
+  border: 1px solid rgba(166, 72, 255, 0.35);
+
+  box-shadow:
+    0 30px 100px rgba(0, 0, 0, 0.9),
+    0 0 60px rgba(155, 50, 255, 0.12);
+}
+
+/* =========================================================
+   DETAILS CLOSE
+========================================================= */
+
+.details-close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+
+  z-index: 20;
+
+  width: 40px;
+  height: 40px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
+
+  background: rgba(0, 0, 0, 0.65);
+
+  color: white;
+
+  font-size: 24px;
+
+  cursor: pointer;
+}
+
+.details-close:hover {
+  background: var(--gv-accent);
+}
+
+/* =========================================================
+   DETAILS HERO
+========================================================= */
+
+.details-hero-content p {
+  max-width: 680px;
+
+  margin: 0 0 20px;
+
+  color: #c0c0c9;
+
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+/* =========================================================
+   DETAILS ACTIONS
+========================================================= */
+
+/* =========================================================
+   DETAILS INFORMATION
+========================================================= */
+
+.details-grid {
+  display: grid;
+
+  grid-template-columns: repeat(4, 1fr);
+
+  gap: 12px;
+
+  padding: 25px 30px;
+}
+
+.detail-item {
+  padding: 15px;
+
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.035);
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.detail-item span {
+  display: block;
+
+  margin-bottom: 6px;
+
+  color: #858592;
+
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.detail-item strong {
+  color: white;
+
+  font-size: 12px;
+
+  line-height: 1.4;
+}
+
+/* =========================================================
+   TRAILER
+========================================================= */
+
+.details-trailer {
+  padding: 0 30px 30px;
+}
+
+.details-trailer h3 {
+  margin-bottom: 15px;
+
+  color: white;
+
+  font-size: 21px;
+}
+
+.trailer-frame {
+  position: relative;
+
+  width: 100%;
+
+  aspect-ratio: 16 / 9;
+
+  overflow: hidden;
+
+  border-radius: 14px;
+
+  background: var(--gv-bg);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.trailer-frame iframe {
+  width: 100%;
+  height: 100%;
+
+  border: 0;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 800px) {
+  .details-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .details-hero-content h2 {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 500px) {
+  .details-backdrop {
+    padding: 10px;
+  }
+
+  .details-hero {
+    min-height: 360px;
+  }
+
+  .details-hero > img {
+    height: 360px;
+  }
+
+  .details-hero-content {
+    left: 20px;
+    right: 20px;
+  }
+
+  .details-hero-content h2 {
+    font-size: 25px;
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .details-trailer {
+    padding: 0 18px 18px;
+  }
+}
+/* =========================================================
+   ENHANCED GAME HERO
+========================================================= */
+
+/* Genre / Platform chips */
+
+/* Description */
+
+/* Quick information */
+
+.details-quick-info {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 9px;
+
+  margin-bottom: 18px;
+}
+
+.quick-info-item {
+  min-width: 150px;
+
+  padding: 9px 13px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9px;
+
+  background: rgba(8, 8, 14, 0.7);
+
+  backdrop-filter: blur(8px);
+}
+
+.quick-info-item span {
+  display: block;
+
+  margin-bottom: 4px;
+
+  color: #888896;
+
+  font-size: 8px;
+  font-weight: 800;
+
+  letter-spacing: 1.2px;
+}
+
+.quick-info-item strong {
+  display: block;
+
+  color: white;
+
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+/* Buttons */
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 700px) {
+  .details-hero-content {
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+  }
+
+  .details-hero-content h2 {
+    font-size: 29px;
+  }
+
+  .details-hero-description {
+    font-size: 13px;
+  }
+
+  .details-quick-info {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-info-item {
+    min-width: 0;
+  }
+}

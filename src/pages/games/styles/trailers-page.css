@@ -1,0 +1,266 @@
+/* =========================================================
+   TRAILERS PAGE
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =========================================================
+                    TRAILERS PAGE 
+   ========================================================= */
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.trailers-page {
+  width: 100%;
+  min-height: calc(100vh - 78px);
+  margin: 0;
+  padding: 42px 32px 80px;
+  overflow-x: hidden;
+}
+
+.trailers-layout {
+  width: min(1380px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 210px minmax(0, 1fr);
+  justify-content: center;
+  gap: 28px;
+  align-items: start;
+}
+
+.trailers-sidebar,
+.trailers-feed,
+.trailers-promo {
+  min-width: 0;
+}
+
+.trailers-sidebar {
+  position: sticky;
+  top: 100px;
+  padding: 0;
+}
+
+.trailers-side-item {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  min-height: 50px;
+  margin: 0 0 6px;
+  padding: 0 15px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #a7a7b2;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+  box-shadow: none;
+}
+
+.trailers-side-item:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.trailers-side-item.active {
+  color: #fff;
+  background: rgba(168, 50, 255, 0.11);
+  border-color: rgba(168, 50, 255, 0.18);
+  box-shadow: inset 3px 0 0 #a832ff;
+}
+
+.trailers-sidebar-title {
+  margin: 0 0 12px 15px;
+  color: #696a75;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+}
+
+.trailers-feed-head {
+  width: 100%;
+  margin: 0 0 24px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.trailers-feed-head h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 32px;
+  line-height: 1.1;
+}
+
+.trailers-feed-head p {
+  margin: 8px 0 0;
+  color: #8e8f99;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.trailers-list {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 20px;
+}
+
+.trailer-post {
+  width: 100%;
+  min-width: 0;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.trailer-media {
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 16 / 9;
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--gv-surface-2);
+}
+
+.trailer-media img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.trailer-post-copy {
+  width: 100%;
+}
+
+.trailer-post-copy h2 {
+  margin: 16px 0 8px;
+  color: #ededf1;
+  font-size: 20px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.trailer-post-copy p {
+  margin: 0;
+  color: #92939d;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.trailer-post-actions {
+  width: 100%;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.trailers-promo {
+  display: none !important;
+  position: sticky;
+  top: 100px;
+  width: 100%;
+}
+
+.trailers-promo-card {
+  width: 100%;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #111116;
+}
+
+.trailers-promo-image {
+  width: 100%;
+  height: 420px;
+  min-height: 0;
+  display: block;
+  object-fit: cover;
+}
+
+/* Keep the home hero untouched when the trailers page is open. */
+.games-home-view {
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .trailers-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tablet */
+@media (max-width: 1180px) {
+  .trailers-layout {
+    grid-template-columns: 190px minmax(0, 1fr);
+    width: min(100%, 980px);
+  }
+
+  .trailers-promo {
+    display: none;
+  }
+}
+
+/* Mobile */
+@media (max-width: 760px) {
+  .trailers-page {
+    padding: 28px 16px 55px;
+  }
+
+  .trailers-layout {
+    width: 100%;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .trailers-sidebar {
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .trailers-sidebar-title {
+    grid-column: 1 / -1;
+    margin-left: 2px;
+  }
+
+  .trailers-side-item {
+    justify-content: center;
+    gap: 7px;
+    padding: 0 8px;
+  }
+
+  .trailers-side-item span:last-child {
+    font-size: 11px;
+  }
+
+  .trailers-feed-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .trailers-search-pill {
+    width: 100%;
+    justify-content: center;
+  }
+}

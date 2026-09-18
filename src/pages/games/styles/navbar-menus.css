@@ -1,0 +1,353 @@
+/* =========================================================
+   NAVBAR NOTIFICATIONS + PROFILE MENU
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =========================================================
+   NAVBAR — NOTIFICATIONS + PROFILE MENU
+========================================================= */
+
+.navbar-icon-button {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: #aaaab4;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.navbar-icon-button:hover,
+.navbar-icon-button.active {
+  color: #fff;
+  background: rgba(168, 50, 255, 0.1);
+  border-color: rgba(168, 50, 255, 0.22);
+}
+
+.navbar-icon {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #a832ff;
+  box-shadow: 0 0 10px rgba(168, 50, 255, 0.75);
+}
+
+.navbar-popover {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: 45px;
+  z-index: 500;
+
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 14px;
+
+  background: rgba(10, 10, 14, 0.97);
+  box-shadow:
+    0 25px 70px rgba(0, 0, 0, 0.55),
+    0 0 35px rgba(168, 50, 255, 0.08);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.notifications-popover {
+  width: min(555px, calc(100vw - 30px));
+  margin-top: 0;
+}
+
+.popover-header {
+  min-height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.popover-header h3 {
+  margin: 0;
+  color: var(--gv-text);
+  font-size: 18px;
+}
+
+.popover-header-action {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #858692;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.popover-header-action:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+}
+
+.notification-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.notification-tabs button {
+  position: relative;
+  min-height: 66px;
+  border: 0;
+  background: transparent;
+  color: #8e8f99;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.notification-tabs button:hover,
+.notification-tabs button.active {
+  color: #fff;
+}
+
+.notification-tabs button.active::after {
+  content: "";
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  bottom: 0;
+  height: 2px;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.notification-body {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.notification-period {
+  padding: 18px 20px 10px;
+  color: #e9e9ed;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.notification-item {
+  display: flex;
+  gap: 12px;
+  padding: 15px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.notification-avatar {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #697488;
+  color: white;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.notification-avatar.purple {
+  background: linear-gradient(135deg, #7520dc, #b12bff);
+}
+
+.notification-copy {
+  min-width: 0;
+}
+
+.notification-copy strong {
+  color: var(--gv-text);
+  font-size: 13px;
+}
+
+.notification-copy p {
+  margin: 4px 0;
+  color: #a1a1ab;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.notification-copy span {
+  color: var(--gv-text-dim);
+  font-size: 10px;
+}
+
+.notification-empty-state {
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 25px;
+  text-align: center;
+}
+
+.notification-empty-state > span {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 10px;
+  border-radius: 50%;
+  background: rgba(168, 50, 255, 0.1);
+  color: var(--gv-accent-bright);
+}
+
+.notification-empty-state strong {
+  color: #efeff2;
+  font-size: 13px;
+}
+
+.notification-empty-state p {
+  margin: 6px 0 0;
+  color: #777883;
+  font-size: 11px;
+}
+
+.notification-footer {
+  padding: 13px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  color: #666771;
+  text-align: center;
+  font-size: 10px;
+}
+
+.profile-popover {
+  width: 240px;
+  padding: 10px;
+}
+
+.profile-popover-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px;
+  margin-bottom: 5px;
+}
+
+.profile-popover-head .profile-avatar {
+  width: 42px;
+  height: 42px;
+}
+
+.profile-popover-head strong {
+  display: block;
+  color: white;
+  font-size: 13px;
+}
+
+.profile-popover-head span {
+  display: block;
+  margin-top: 3px;
+  color: #42dc8a;
+  font-size: 10px;
+}
+
+.profile-popover > button {
+  width: 100%;
+  min-height: 43px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gv-text-soft);
+  text-align: left;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.profile-popover > button:hover {
+  background: rgba(168, 50, 255, 0.09);
+  color: white;
+}
+
+@media (max-width: 750px) {
+  .navbar-icon-actions {
+    gap: 3px;
+  }
+
+  .profile {
+    display: none;
+  }
+
+  .navbar-popover {
+    right: 15px;
+  }
+
+  .notifications-popover {
+    width: min(440px, calc(100vw - 30px));
+  }
+}
+
+@media (max-width: 520px) {
+  .notifications-popover {
+    right: 10px;
+    width: calc(100vw - 20px);
+  }
+
+  .notification-tabs button {
+    font-size: 11px;
+  }
+}
+
+/* =========================================================
+   SINGLE PROFILE ICON
+   The navbar uses one clickable profile only.
+========================================================= */
+
+.navbar-icon-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-avatar-button {
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  border: 0;
+  font-size: 14px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+}
+
+/* =========================================================
+   CLICK-OUTSIDE PROFILE / NOTIFICATION LAYER
+========================================================= */
+
+.navbar-profile-layer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar-profile-layer .navbar-popover {
+  right: 0;
+}
+
+@media (max-width: 750px) {
+  .navbar-profile-layer {
+    position: relative;
+  }
+}

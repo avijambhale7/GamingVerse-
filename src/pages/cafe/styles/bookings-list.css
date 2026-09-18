@@ -1,0 +1,89 @@
+/* =========================================================
+   MY BOOKINGS, EMPTY, LOADING
+   Part of GamingVerse Cafe booking styles
+========================================================= */
+
+.cafe-bookings-list {
+  display: grid;
+  gap: 11px;
+}
+.cafe-booking-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 17px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 15px;
+  background: var(--gv-surface-2);
+}
+.cafe-booking-card h3 {
+  margin: 7px 0;
+  font-size: 17px;
+}
+.cafe-booking-card p,
+.cafe-booking-card small {
+  color: #85818f;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.cafe-booking-card > div:last-child {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+.cafe-booking-card a {
+  color: var(--gv-accent-bright);
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 11px;
+}
+.cancel-booking {
+  border: 1px solid rgba(255, 90, 115, 0.2);
+  border-radius: 9px;
+  background: rgba(255, 90, 115, 0.07);
+  color: #ff91a2;
+  padding: 8px 10px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
+.booking-status {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(72, 200, 130, 0.1);
+  color: #7ce2a8;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+.cafe-empty {
+  min-height: 270px;
+  border: 1px dashed rgba(255, 255, 255, 0.09);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.02);
+}
+.cafe-empty > div {
+  font-size: 45px;
+}
+.cafe-empty h3 {
+  margin: 10px 0 6px;
+}
+.cafe-empty p {
+  color: #74717d;
+  font-size: 12px;
+}
+.cafe-loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: var(--gv-surface-1);
+  color: #fff;
+  font-size: 18px;
+}

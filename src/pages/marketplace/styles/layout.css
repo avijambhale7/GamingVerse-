@@ -1,0 +1,124 @@
+/* =========================================================
+   PAGE SHELL + HEADER
+   Part of GamingVerse Marketplace styles
+========================================================= */
+
+/* =========================================================
+   GAMINGVERSE CD MARKETPLACE
+========================================================= */
+
+.gamingverse-marketplace {
+  min-height: 100vh;
+  width: 100%;
+  color: #f5f3ff;
+  background:
+    radial-gradient(
+      circle at 15% 0%,
+      rgba(151, 72, 255, 0.16),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 90% 15%,
+      rgba(83, 42, 143, 0.12),
+      transparent 25%
+    ),
+    var(--gv-surface-1);
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  padding-bottom: 70px;
+}
+
+.market-header,
+.market-main {
+  width: min(1400px, calc(100% - 70px));
+  margin: 0 auto;
+}
+
+/* HEADER */
+
+.market-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+  padding: 30px 0 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.market-kicker {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--gv-accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.17em;
+}
+
+.market-header h1 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 46px);
+  line-height: 1;
+  font-weight: 850;
+}
+
+.market-header p {
+  margin: 10px 0 0;
+  color: #858391;
+  font-size: 15px;
+}
+
+.market-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.market-nav button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #aaa7b5;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  transition: 0.2s ease;
+}
+
+.market-nav button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.market-nav button.active {
+  color: #fff;
+  border-color: rgba(169, 108, 255, 0.35);
+  background: linear-gradient(135deg, #7a35ff, var(--gv-accent));
+  box-shadow: 0 8px 28px rgba(126, 58, 255, 0.22);
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 20px;
+  background: #fff;
+  color: #18121f;
+  font-size: 10px;
+  font-weight: 900;
+}

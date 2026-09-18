@@ -1,0 +1,55 @@
+/* =========================================================
+   RESPONSIVE BREAKPOINTS
+   Part of GamingVerse Cafe booking styles
+========================================================= */
+
+@media (max-width: 1000px) {
+  .cafe-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cafe-detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .slots-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .cafe-header,
+  .cafe-main {
+    width: min(100% - 30px, 1400px);
+  }
+  .cafe-header {
+    align-items: flex-start;
+  }
+  .cafe-header-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .cafe-hero {
+    padding: 28px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .cafe-hero-stat {
+    align-self: flex-end;
+    width: 110px;
+    height: 110px;
+    flex-basis: 110px;
+  }
+  .cafe-search-bar {
+    grid-template-columns: 1fr;
+  }
+  .cafe-grid {
+    grid-template-columns: 1fr;
+  }
+  .slots-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .cafe-booking-card {
+    flex-direction: column;
+  }
+  .cafe-booking-card > div:last-child {
+    align-items: flex-start;
+  }
+}

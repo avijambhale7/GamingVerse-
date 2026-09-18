@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -28,9 +28,15 @@ const gameImages = Object.values(gameImageModules);
 function Login() {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
+  // Seed from the remembered address on the first render so the field does
+  // not flash empty before the effect runs.
+  const [email, setEmail] = useState(
+    () => localStorage.getItem("gamingVerseEmail") || "",
+  );
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(
+    () => Boolean(localStorage.getItem("gamingVerseEmail")),
+  );
   const [showPassword, setShowPassword] = useState(false);
 
   const [modal, setModal] = useState(null);
@@ -47,15 +53,6 @@ function Login() {
   const [confirmationResult, setConfirmationResult] = useState(null);
   const recaptchaVerifierRef = useRef(null);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const savedEmail = localStorage.getItem("gamingVerseEmail");
-
-    if (savedEmail) {
-      setEmail(savedEmail);
-      setRememberMe(true);
-    }
-  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -289,7 +286,9 @@ function Login() {
     } catch (error) {
       try {
         verifier.clear();
-      } catch {}
+      } catch {
+        // Best effort: the reCAPTCHA widget may already be torn down.
+      }
       recaptchaVerifierRef.current = null;
       container.innerHTML = "";
       throw error;
@@ -554,7 +553,7 @@ function Login() {
 
         <button
           type="button"
-          onClick={() => navigate("/owner-login")}
+          onClick={() => navigate("/owner-dashboard")}
           style={{
             width: "100%",
             marginTop: "14px",

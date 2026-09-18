@@ -1,0 +1,125 @@
+/* =========================================================
+   GAMINGVERSE DESIGN TOKENS
+   The single source of truth for colour, type, spacing,
+   radius, elevation and motion.
+
+   Everything else in the app should reference these instead
+   of hardcoding values, so a change here updates the whole
+   product. Add a token rather than a one-off hex.
+========================================================= */
+
+:root {
+  /* ---------------------------------------------- brand */
+  --gv-accent: #a855f7;
+  --gv-accent-strong: #9333ea;
+  --gv-accent-bright: #c084fc;
+  --gv-accent-soft: rgba(168, 85, 247, 0.12);
+  --gv-accent-line: rgba(168, 85, 247, 0.34);
+
+  /* ------------------------------------------- verdicts
+     Shared by the meter arc, legend, verdict chips and the
+     badge on every review card, so the colour that means
+     "Go for it" is the same everywhere it appears. */
+  --gv-skip: #f43f5e;
+  --gv-timepass: #f5b301;
+  --gv-go: #0ad48b;
+  --gv-perfection: #a855f7;
+
+  --gv-skip-soft: rgba(244, 63, 94, 0.14);
+  --gv-timepass-soft: rgba(245, 179, 1, 0.14);
+  --gv-go-soft: rgba(10, 212, 139, 0.14);
+  --gv-perfection-soft: rgba(168, 85, 247, 0.14);
+
+  /* ------------------------------------------- surfaces
+     1 is the page, climbing to 4 for the most raised
+     control. Keep the ladder in order when nesting. */
+  --gv-bg: #000000;
+  --gv-surface-1: #08080b;
+  --gv-surface-2: #0e0e12;
+  --gv-surface-3: #16161c;
+  --gv-surface-4: #1e1e26;
+  --gv-surface-hover: #24242e;
+
+  /* ----------------------------------------------- lines */
+  --gv-border: rgba(255, 255, 255, 0.08);
+  --gv-border-strong: rgba(255, 255, 255, 0.15);
+  --gv-border-faint: rgba(255, 255, 255, 0.05);
+
+  /* ------------------------------------------------ text */
+  --gv-text: #f5f5f7;
+  --gv-text-soft: #c9c9d2;
+  --gv-text-muted: #9a9aa4;
+  --gv-text-dim: #6e6e78;
+  --gv-text-inverse: #08080b;
+
+  /* ---------------------------------------------- radius */
+  --gv-r-xs: 6px;
+  --gv-r-sm: 10px;
+  --gv-r-md: 14px;
+  --gv-r-lg: 18px;
+  --gv-r-xl: 24px;
+  --gv-r-pill: 999px;
+
+  /* ------------------------------------------- elevation */
+  --gv-shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.45);
+  --gv-shadow-md: 0 10px 32px rgba(0, 0, 0, 0.55);
+  --gv-shadow-lg: 0 24px 68px rgba(0, 0, 0, 0.65);
+  --gv-glow-accent: 0 10px 30px rgba(168, 85, 247, 0.32);
+
+  /* ---------------------------------------------- motion */
+  --gv-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --gv-t-fast: 0.15s;
+  --gv-t: 0.22s;
+  --gv-t-slow: 0.4s;
+
+  /* ------------------------------------------------ type
+     Inter is loaded in index.html; the stack degrades to
+     the platform UI font if that request never lands. */
+  --gv-font: "Inter", "Segoe UI Variable Text", "Segoe UI", system-ui,
+    -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --gv-eyebrow-size: 10px;
+  --gv-eyebrow-track: 2px;
+
+  /* --------------------------------------------- spacing */
+  --gv-s-1: 4px;
+  --gv-s-2: 8px;
+  --gv-s-3: 12px;
+  --gv-s-4: 16px;
+  --gv-s-5: 22px;
+  --gv-s-6: 30px;
+  --gv-s-7: 44px;
+  --gv-s-8: 64px;
+
+  /* Width the page content settles at on large screens. */
+  --gv-container: 1120px;
+}
+
+/* Verdict helper classes. Any element that represents a
+   verdict can carry .skip/.timepass/.go/.perfection and read
+   --gv-verdict instead of repeating four colour rules. */
+.skip {
+  --gv-verdict: var(--gv-skip);
+  --gv-verdict-soft: var(--gv-skip-soft);
+}
+.timepass {
+  --gv-verdict: var(--gv-timepass);
+  --gv-verdict-soft: var(--gv-timepass-soft);
+}
+.go,
+.go-for-it {
+  --gv-verdict: var(--gv-go);
+  --gv-verdict-soft: var(--gv-go-soft);
+}
+.perfection {
+  --gv-verdict: var(--gv-perfection);
+  --gv-verdict-soft: var(--gv-perfection-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --gv-t-fast: 0.01ms;
+    --gv-t: 0.01ms;
+    --gv-t-slow: 0.01ms;
+  }
+}

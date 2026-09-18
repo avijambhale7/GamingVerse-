@@ -1,0 +1,122 @@
+/* =========================================================
+   OVERLAY, LOGIN CARD, ICON, TITLE
+   Part of GamingVerse Login page styles
+========================================================= */
+
+/* =========================================
+   DARK OVERLAY
+========================================= */
+
+.background-overlay {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 1;
+
+  pointer-events: none;
+
+  /* MUCH LIGHTER OVERLAY */
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.42),
+    rgba(0, 0, 0, 0.18),
+    rgba(0, 0, 0, 0.42)
+  );
+
+  backdrop-filter: blur(1px);
+}
+
+/* =========================================
+   LOGIN CARD
+========================================= */
+
+.login-card {
+  position: relative;
+
+  z-index: 10;
+
+  width: 100%;
+
+  max-width: 530px;
+
+  padding: 40px 46px 34px;
+
+  /* BLACK TRANSPARENT LOGIN WINDOW */
+  background: rgba(8, 8, 12, 0.76);
+
+  border-radius: 22px;
+
+  /* Glass effect */
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  /* Border */
+  border: 1px solid rgba(255, 255, 255, 0.14);
+
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.85),
+    0 0 45px rgba(150, 45, 255, 0.16);
+
+  color: #ffffff;
+}
+
+/* =========================================
+   GAME ICON
+========================================= */
+
+.game-icon {
+  width: 82px;
+  height: 82px;
+
+  margin: 0 auto 18px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  font-size: 42px;
+
+  border-radius: 22px;
+
+  background: linear-gradient(135deg, #8b24ed, #a932ff);
+
+  box-shadow:
+    0 15px 35px rgba(142, 35, 238, 0.45),
+    0 0 35px rgba(155, 50, 255, 0.22);
+}
+
+/* =========================================
+   TITLE
+========================================= */
+
+.login-title {
+  margin: 0;
+
+  text-align: center;
+
+  font-size: 34px;
+
+  font-weight: 800;
+
+  color: #ffffff;
+
+  letter-spacing: -1px;
+
+  text-shadow: 0 0 20px rgba(160, 55, 255, 0.35);
+}
+
+/* =========================================
+   SUBTITLE
+========================================= */
+
+.login-subtitle {
+  margin: 8px 0 30px;
+
+  text-align: center;
+
+  color: #b5b5c2;
+
+  font-size: 16px;
+}

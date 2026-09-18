@@ -1,0 +1,74 @@
+/* =========================================================
+   CHECKOUT
+   Part of GamingVerse Marketplace styles
+========================================================= */
+
+/* CHECKOUT */
+
+.checkout-left {
+  display: grid;
+  gap: 14px;
+}
+
+.form-card {
+  padding: 21px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 17px;
+  background: var(--gv-surface-2);
+}
+
+.form-card h3 {
+  margin: 0 0 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #898692;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.form-grid .full {
+  grid-column: 1 / -1;
+}
+
+.payment-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 14px;
+  margin-top: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+  cursor: pointer;
+}
+
+.payment-option input {
+  margin-top: 3px;
+  accent-color: var(--gv-accent);
+}
+
+.payment-option strong,
+.payment-option span {
+  display: block;
+}
+
+.payment-option strong {
+  color: #fff;
+  font-size: 13px;
+}
+
+.payment-option span {
+  margin-top: 4px;
+  color: var(--gv-text-dim);
+  font-size: 11px;
+}

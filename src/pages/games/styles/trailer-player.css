@@ -1,0 +1,297 @@
+/* =========================================================
+   YOUTUBE-STYLE TRAILER PLAYER
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =========================================================
+   YOUTUBE-STYLE TRAILER PLAYER INSIDE GAMINGVERSE POPUP
+========================================================= */
+.game-trailer-youtube-player {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--gv-bg);
+  pointer-events: auto;
+}
+
+.game-trailer-youtube-iframe {
+  position: relative;
+  z-index: 3;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: block;
+  border: 0;
+  background: var(--gv-bg);
+  pointer-events: auto;
+}
+
+@media (max-width: 900px) {
+  .game-trailer-youtube-player,
+  .game-trailer-youtube-iframe {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .game-trailer-youtube-player,
+  .game-trailer-youtube-iframe {
+    min-height: 0;
+  }
+}
+
+/* =========================================================
+   GAME DETAILS - TRAILER PREVIEW
+   Matches the requested reference card style.
+========================================================= */
+.reference-trailer {
+  padding: 0 38px 34px;
+}
+
+.reference-trailer h3 {
+  margin: 0 0 14px;
+  color: #fff;
+  font-size: 21px;
+  line-height: 1.2;
+}
+
+.reference-trailer-trigger {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  background: var(--gv-surface-1);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  isolation: isolate;
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.45),
+    0 0 28px rgba(145, 40, 255, 0.08);
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.reference-trailer-trigger:hover {
+  transform: translateY(-2px);
+  border-color: rgba(180, 92, 255, 0.65);
+  box-shadow:
+    0 22px 55px rgba(0, 0, 0, 0.55),
+    0 0 32px rgba(145, 40, 255, 0.14);
+}
+
+.reference-trailer-trigger > img,
+.reference-trailer-trigger-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.reference-trailer-trigger > img {
+  transition:
+    transform 0.45s ease,
+    filter 0.35s ease;
+  filter: brightness(0.72) saturate(1.02);
+}
+
+.reference-trailer-trigger:hover > img {
+  transform: scale(1.025);
+  filter: brightness(0.82) saturate(1.05);
+}
+
+.reference-trailer-trigger-fallback {
+  background:
+    radial-gradient(
+      circle at 72% 22%,
+      rgba(180, 77, 255, 0.3),
+      transparent 34%
+    ),
+    linear-gradient(145deg, #24132f 0%, var(--gv-surface-2) 60%, #17101f 100%);
+}
+
+.reference-trailer-trigger-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.58) 0%,
+    rgba(0, 0, 0, 0.06) 38%,
+    rgba(0, 0, 0, 0.2) 60%,
+    rgba(0, 0, 0, 0.78) 100%
+  );
+
+  pointer-events: none;
+}
+
+.reference-trailer-play {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 3;
+  width: 76px;
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  padding-left: 4px;
+  border-radius: 50%;
+  background: #ff003d;
+  color: #fff;
+  font-size: 31px;
+  line-height: 1;
+  box-shadow: 0 14px 35px rgba(255, 0, 61, 0.35);
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease;
+
+  pointer-events: none;
+}
+
+.reference-trailer-trigger:hover .reference-trailer-play {
+  transform: translate(-50%, -50%) scale(1.06);
+  box-shadow: 0 18px 44px rgba(255, 0, 61, 0.48);
+}
+
+.reference-trailer-trigger-title {
+  position: absolute;
+  top: 22px;
+  left: 26px;
+  right: 26px;
+  z-index: 3;
+  color: #fff;
+  font-size: clamp(20px, 2.4vw, 30px);
+  font-weight: 900;
+  line-height: 1.1;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.7);
+
+  pointer-events: none;
+}
+
+.reference-trailer-trigger-caption {
+  position: absolute;
+  left: 26px;
+  bottom: 20px;
+  z-index: 3;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.75);
+
+  pointer-events: none;
+}
+
+.reference-trailer-trigger-caption::before {
+  content: "▶  ";
+}
+
+@media (max-width: 850px) {
+  .reference-trailer {
+    padding: 0 24px 28px;
+  }
+
+  .reference-trailer-trigger-title {
+    top: 18px;
+    left: 20px;
+    right: 20px;
+  }
+
+  .reference-trailer-trigger-caption {
+    left: 20px;
+    bottom: 16px;
+  }
+
+  .reference-trailer-play {
+    width: 58px;
+    height: 58px;
+    font-size: 27px;
+  }
+}
+
+@media (max-width: 600px) {
+  .reference-trailer {
+    padding: 0 18px 22px;
+  }
+
+  .reference-trailer-trigger-title {
+    top: 14px;
+    left: 16px;
+    right: 16px;
+    font-size: 18px;
+  }
+
+  .reference-trailer-trigger-caption {
+    left: 16px;
+    bottom: 14px;
+    font-size: 11px;
+  }
+
+  .reference-trailer-play {
+    width: 58px;
+    height: 58px;
+    font-size: 23px;
+  }
+}
+
+.reference-trailer-watch-button {
+  width: 100%;
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 18px 24px;
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    rgba(168, 85, 247, 0.18),
+    rgba(236, 72, 153, 0.12)
+  );
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  font-size: 18px;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.reference-trailer-watch-button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(236, 72, 153, 0.75);
+  background: linear-gradient(
+    135deg,
+    rgba(168, 85, 247, 0.28),
+    rgba(236, 72, 153, 0.2)
+  );
+}
+
+.reference-trailer-watch-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #ff004f;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  padding-left: 2px;
+}

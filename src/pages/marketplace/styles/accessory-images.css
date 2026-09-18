@@ -1,0 +1,40 @@
+/* =========================================================
+   ACCESSORY IMAGE FALLBACK
+   Part of GamingVerse Marketplace styles
+========================================================= */
+
+/* =========================================================
+   ACCESSORY IMAGE FALLBACK
+========================================================= */
+
+.product-image.image-fallback-active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(
+      circle at 50% 40%,
+      rgba(157, 83, 255, 0.28),
+      transparent 48%
+    ),
+    linear-gradient(145deg, #171220, var(--gv-surface-2));
+}
+
+.product-image.image-fallback-active::before {
+  content: "🖱️";
+  font-size: 68px;
+  opacity: 0.95;
+}
+
+/* Give real accessory images more visual presence. */
+.market-type-card + .market-type-card {
+  min-width: 0;
+}
+
+.product-card .product-image {
+  height: 240px;
+}
+
+.product-card .product-image img {
+  object-fit: cover;
+}

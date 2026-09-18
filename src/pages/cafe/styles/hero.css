@@ -1,0 +1,109 @@
+/* =========================================================
+   HERO + SEARCH BAR
+   Part of GamingVerse Cafe booking styles
+========================================================= */
+
+.cafe-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 30px;
+  padding: 42px 46px;
+  min-height: 270px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 26px;
+  background:
+    linear-gradient(120deg, rgba(108, 52, 188, 0.2), rgba(10, 10, 17, 0.92)),
+    #101017;
+  overflow: hidden;
+  position: relative;
+}
+.cafe-hero:after {
+  content: "";
+  position: absolute;
+  width: 450px;
+  height: 450px;
+  right: -180px;
+  top: -190px;
+  border-radius: 50%;
+  background: rgba(162, 77, 255, 0.1);
+  filter: blur(5px);
+}
+.cafe-hero > div:first-child {
+  position: relative;
+  z-index: 2;
+}
+.cafe-hero span,
+.cafe-section-title > div > span,
+.cafe-step {
+  color: var(--gv-accent);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  font-weight: 900;
+}
+.cafe-hero h1 {
+  font-size: clamp(42px, 5vw, 68px);
+  line-height: 0.98;
+  margin: 16px 0 12px;
+}
+.cafe-hero h1 b {
+  display: block;
+  color: var(--gv-accent);
+}
+.cafe-hero p {
+  max-width: 670px;
+  color: #93909e;
+  line-height: 1.65;
+  margin: 0;
+}
+.cafe-hero-stat {
+  position: relative;
+  z-index: 2;
+  width: 150px;
+  height: 150px;
+  flex: 0 0 150px;
+  border: 1px solid rgba(164, 91, 255, 0.3);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(132, 60, 255, 0.06);
+}
+.cafe-hero-stat strong {
+  font-size: 42px;
+}
+.cafe-hero-stat small {
+  color: #898693;
+}
+.cafe-search-bar {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 10px;
+  margin: 18px 0;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+}
+.cafe-search-bar input,
+.cafe-search-bar select {
+  height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: #111118;
+  color: #fff;
+  padding: 0 14px;
+  font: inherit;
+}
+.cafe-search-bar input::placeholder {
+  color: #696774;
+}
+.cafe-message {
+  margin: 10px 0 18px;
+  padding: 12px 15px;
+  border: 1px solid rgba(169, 108, 255, 0.25);
+  border-radius: 12px;
+  background: rgba(140, 70, 255, 0.08);
+  color: #c8b2ff;
+}

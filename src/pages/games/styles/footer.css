@@ -1,0 +1,40 @@
+/* =========================================================
+   FOOTER
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =====================================================
+   FOOTER
+===================================================== */
+
+.games-footer {
+  padding: 35px 45px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+
+  background: #030307;
+
+  color: #666;
+}
+
+.footer-brand {
+  color: white;
+
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.footer-brand span {
+  color: #a832ff;
+}
+
+.games-footer p {
+  margin: 0;
+
+  font-size: 12px;
+}

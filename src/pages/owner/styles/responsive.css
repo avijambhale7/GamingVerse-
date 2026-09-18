@@ -1,0 +1,55 @@
+/* =========================================================
+   RESPONSIVE BREAKPOINTS
+   Part of GamingVerse Owner dashboard styles
+========================================================= */
+
+@media (max-width: 1000px) {
+  .owner-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .owner-accessory-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 760px) {
+  .owner-dashboard-header {
+    width: calc(100% - 28px);
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .owner-dashboard-tabs,
+  .owner-dashboard-main,
+  .owner-dashboard-message {
+    width: calc(100% - 28px);
+  }
+  .owner-overview-grid {
+    grid-template-columns: 1fr;
+  }
+  .owner-booking-row {
+    flex-direction: column;
+  }
+  .owner-row-actions {
+    justify-content: flex-start;
+  }
+  .owner-stat-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 500px) {
+  .owner-stat-grid {
+    grid-template-columns: 1fr;
+  }
+  .owner-section-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .owner-sales-stats {
+    width: 100%;
+  }
+  .owner-sales-stats div {
+    flex: 1;
+  }
+  .owner-form-two {
+    grid-template-columns: 1fr;
+  }
+}

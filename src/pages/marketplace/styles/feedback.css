@@ -1,0 +1,38 @@
+/* =========================================================
+   TOAST + LOADING
+   Part of GamingVerse Marketplace styles
+========================================================= */
+
+/* TOAST */
+
+.market-toast {
+  position: fixed;
+  z-index: 2000;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 18px;
+  border: 1px solid rgba(165, 92, 255, 0.3);
+  border-radius: 11px;
+  background: var(--gv-surface-3);
+  color: #fff;
+  box-shadow: 0 16px 45px rgba(0, 0, 0, 0.4);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+/* LOADING */
+
+.market-loading {
+  min-height: 75vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--gv-surface-1);
+  color: #fff;
+  text-align: center;
+}
+
+.market-loading h2 {
+  font-size: 20px;
+}

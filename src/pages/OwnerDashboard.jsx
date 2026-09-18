@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./OwnerDashboard.css";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { get, onValue, push, ref, remove, update } from "firebase/database";
@@ -89,7 +89,7 @@ export default function OwnerDashboard() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (!currentUser) {
-        navigate("/owner-login", { replace: true });
+        navigate("/login", { replace: true });
         return;
       }
 
@@ -100,7 +100,7 @@ export default function OwnerDashboard() {
         const nextRole = String(data.role || "").toLowerCase();
         if (!OWNER_ROLES.has(nextRole)) {
           await signOut(auth);
-          navigate("/owner-login", { replace: true });
+          navigate("/login", { replace: true });
           return;
         }
         setRole(nextRole);
@@ -224,22 +224,72 @@ export default function OwnerDashboard() {
   );
 
   const updateBookingStatus = async (booking, status) => {
+    const currentStatus = String(booking.status || "Pending");
+    const nextStatus = String(status || "Pending");
+    if (currentStatus === nextStatus) return;
+
+    const occupiedStatuses = new Set(["Pending", "Confirmed"]);
+    const wasOccupied = occupiedStatuses.has(currentStatus);
+    const willBeOccupied = occupiedStatuses.has(nextStatus);
+    const slotKey = String(booking.time || "")
+      .replace(/[^a-z0-9]/gi, "_")
+      .toLowerCase();
+
     try {
+      if (
+        wasOccupied !== willBeOccupied &&
+        booking.cafeId &&
+        booking.date &&
+        slotKey
+      ) {
+        const slotRef = ref(
+          db,
+          `cafeSlots/${booking.cafeId}/${booking.date}/${slotKey}`,
+        );
+        const tx = await import("firebase/database").then(
+          ({ runTransaction }) =>
+            runTransaction(slotRef, (current) => {
+              const booked = Math.max(0, Number(current?.booked || 0));
+              const nextBooked = willBeOccupied
+                ? booked + 1
+                : Math.max(0, booked - 1);
+              return {
+                ...(current || {}),
+                booked: nextBooked,
+                updatedAt: Date.now(),
+              };
+            }),
+        );
+
+        if (!tx.committed) {
+          setMessage("Could not update the café slot availability.");
+          return;
+        }
+      }
+
       await update(
         ref(db, `cafeBookings/${booking.customerId}/${booking.id}`),
         {
-          status,
+          status: nextStatus,
           ownerUpdatedAt: Date.now(),
           ownerId: user.uid,
+          ...(nextStatus === "Confirmed" ? { confirmedAt: Date.now() } : {}),
+          ...(nextStatus === "Rejected" ? { rejectedAt: Date.now() } : {}),
+          ...(nextStatus === "Completed" ? { completedAt: Date.now() } : {}),
         },
       );
-      setMessage(`Booking updated to ${status}.`);
+
+      setMessage(
+        `${booking.customerName || "Customer"}'s ${booking.time || ""} booking is now ${nextStatus}.`,
+      );
     } catch (error) {
       console.error("Booking status update error:", error);
       setMessage("Could not update booking status.");
     }
   };
 
+  const acceptBooking = (booking) => updateBookingStatus(booking, "Confirmed");
+  const rejectBooking = (booking) => updateBookingStatus(booking, "Rejected");
   const saveAccessory = async (event) => {
     event.preventDefault();
     const name = productForm.name.trim();
@@ -342,7 +392,7 @@ export default function OwnerDashboard() {
 
   const logout = async () => {
     await signOut(auth);
-    navigate("/owner-login", { replace: true });
+    navigate("/login", { replace: true });
   };
 
   if (loading)
@@ -376,7 +426,7 @@ export default function OwnerDashboard() {
       <nav className="owner-dashboard-tabs">
         {(role === "owner"
           ? ["overview", "cafe", "accessories"]
-          : role === "cafe_owner"
+          : canCafe && canAccessories
             ? ["cafe", "accessories"]
             : canCafe
               ? ["cafe"]
@@ -486,50 +536,107 @@ export default function OwnerDashboard() {
             {bookings.length === 0 ? (
               <div className="owner-empty">
                 <span>☕</span>
-                <strong>No café bookings found</strong>
+                <strong>No café booking requests</strong>
                 <p>
-                  Bookings will appear here when customers reserve one of your
-                  cafés.
+                  Customer requests will appear here with hourly slot, date and
+                  customer details.
                 </p>
               </div>
             ) : (
               <div className="owner-booking-list">
-                {bookings.map((booking) => (
-                  <article
-                    key={`${booking.customerId}-${booking.id}`}
-                    className="owner-booking-row"
-                  >
-                    <div>
-                      <span className="owner-small-label">
-                        {booking.status || "Confirmed"}
-                      </span>
-                      <h3>
-                        {booking.cafeName ||
-                          CAFE_NAMES[booking.cafeId] ||
-                          "Gaming Café"}
-                      </h3>
-                      <p>
-                        {booking.date} • {booking.time} •{" "}
-                        {booking.station || "Gaming station"}
-                      </p>
-                      <small>{booking.address || "Address unavailable"}</small>
-                    </div>
-                    <div className="owner-row-actions">
-                      <select
-                        value={booking.status || "Confirmed"}
-                        onChange={(event) =>
-                          updateBookingStatus(booking, event.target.value)
-                        }
-                      >
-                        {["Pending", "Confirmed", "Completed", "Cancelled"].map(
-                          (status) => (
-                            <option key={status}>{status}</option>
-                          ),
+                {bookings.map((booking) => {
+                  const status = String(booking.status || "Pending");
+                  const pending = status === "Pending";
+                  const confirmed = status === "Confirmed";
+                  return (
+                    <article
+                      key={`${booking.customerId}-${booking.id}`}
+                      className={`owner-booking-row owner-booking-${status.toLowerCase()}`}
+                    >
+                      <div className="owner-booking-details">
+                        <span className="owner-small-label">{status}</span>
+                        <h3>
+                          {booking.cafeName ||
+                            CAFE_NAMES[booking.cafeId] ||
+                            "Gaming Café"}
+                        </h3>
+                        <p>
+                          📅 {booking.date} &nbsp; • &nbsp; 🕐 {booking.time}{" "}
+                          &nbsp; • &nbsp; 🎮{" "}
+                          {booking.station || "Gaming station"}
+                        </p>
+                        <small>
+                          {booking.address || "Address unavailable"}
+                        </small>
+                        <small className="owner-customer-info">
+                          Customer:{" "}
+                          <strong>
+                            {booking.customerName || "GamingVerse User"}
+                          </strong>
+                          {booking.customerEmail
+                            ? ` • ${booking.customerEmail}`
+                            : ""}
+                          {booking.customerPhone
+                            ? ` • ${booking.customerPhone}`
+                            : ""}
+                        </small>
+                        {booking.createdAt && (
+                          <small className="owner-request-time">
+                            Requested{" "}
+                            {new Date(booking.createdAt).toLocaleString(
+                              "en-IN",
+                            )}
+                          </small>
                         )}
-                      </select>
-                    </div>
-                  </article>
-                ))}
+                      </div>
+                      <div className="owner-row-actions owner-booking-actions">
+                        {pending && (
+                          <>
+                            <button
+                              type="button"
+                              className="owner-confirm-btn"
+                              onClick={() => acceptBooking(booking)}
+                            >
+                              ✓ Accept
+                            </button>
+                            <button
+                              type="button"
+                              className="danger"
+                              onClick={() => rejectBooking(booking)}
+                            >
+                              ✕ Reject
+                            </button>
+                          </>
+                        )}
+                        {confirmed && (
+                          <>
+                            <button
+                              type="button"
+                              className="owner-complete-btn"
+                              onClick={() =>
+                                updateBookingStatus(booking, "Completed")
+                              }
+                            >
+                              ✓ Completed
+                            </button>
+                            <button
+                              type="button"
+                              className="danger"
+                              onClick={() =>
+                                updateBookingStatus(booking, "Cancelled")
+                              }
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        )}
+                        {!pending && !confirmed && (
+                          <span className="owner-final-status">{status}</span>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </section>

@@ -1,0 +1,444 @@
+/* =========================================================
+   TRAILER POPUP
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =========================================================
+   TRAILER POPUP - MOCTALE STYLE
+========================================================= */
+.reference-game-hero-clickable {
+  cursor: pointer;
+}
+
+.reference-game-hero-thumbnail-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  transform: scale(1.002);
+}
+
+.reference-game-hero-thumbnail-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.04) 0%,
+    rgba(0, 0, 0, 0.08) 42%,
+    rgba(0, 0, 0, 0.58) 68%,
+    rgba(0, 0, 0, 0.94) 100%
+  );
+  pointer-events: none;
+}
+
+reference-game-hero-thumbnail {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.002);
+}
+
+.reference-game-hero-thumbnail::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.06) 0%,
+    rgba(0, 0, 0, 0.1) 42%,
+    rgba(0, 0, 0, 0.68) 100%
+  );
+}
+
+.reference-game-hero-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 20;
+  width: 58px;
+  height: 58px;
+  transform: translate(-50%, -50%);
+  border: 0;
+  border-radius: 50%;
+  background: rgba(12, 12, 16, 0.86);
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.34);
+}
+
+.reference-game-hero-play:hover {
+  transform: translate(-50%, -50%) scale(1.04);
+}
+
+.gv-trailer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: rgba(0, 0, 0, 0.82);
+  backdrop-filter: blur(8px);
+}
+
+.gv-trailer-modal {
+  width: min(1100px, 94vw);
+  max-height: 90vh;
+  overflow: hidden;
+  background: var(--gv-surface-1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.65);
+  display: flex;
+  flex-direction: column;
+}
+
+.gv-trailer-header {
+  min-height: 82px;
+  padding: 18px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--gv-surface-1);
+}
+
+.gv-trailer-heading {
+  min-width: 0;
+}
+
+.gv-trailer-eyebrow {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--gv-accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.gv-trailer-heading h2 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(18px, 2vw, 28px);
+  line-height: 1.15;
+}
+
+.gv-trailer-heading > span:last-child {
+  display: block;
+  margin-top: 5px;
+  color: var(--gv-text-muted);
+  font-size: 12px;
+}
+
+.gv-trailer-close {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--gv-surface-3);
+  color: #fff;
+  font-size: 27px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gv-trailer-player-shell {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: var(--gv-bg);
+}
+
+.gv-trailer-player {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: var(--gv-bg);
+}
+
+.gv-trailer-empty {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #aaa;
+  font-size: 15px;
+}
+
+.gv-trailer-footer {
+  min-height: 72px;
+  padding: 13px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--gv-surface-1);
+}
+
+.gv-trailer-footer-title {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.gv-trailer-footer-title strong {
+  color: #fff;
+  font-size: 15px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gv-trailer-footer-title span {
+  color: #8f919c;
+  font-size: 11px;
+}
+
+.gv-trailer-youtube-link {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--gv-surface-3);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 700px) {
+  .gv-trailer-backdrop {
+    padding: 10px;
+  }
+
+  .gv-trailer-modal {
+    width: 100%;
+    max-height: 88vh;
+    border-radius: 14px;
+  }
+
+  .gv-trailer-header {
+    padding: 13px 15px;
+  }
+
+  .gv-trailer-heading h2 {
+    font-size: 18px;
+  }
+
+  .gv-trailer-close {
+    width: 40px;
+    height: 40px;
+    font-size: 23px;
+  }
+
+  .gv-trailer-footer {
+    padding: 10px 12px;
+  }
+}
+
+/* Moctale-style trailer playback: the player is the focal point and starts immediately. */
+.gv-trailer-backdrop {
+  padding: 28px;
+  background: rgba(0, 0, 0, 0.86);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+}
+
+.gv-trailer-modal {
+  width: min(1280px, 96vw);
+  max-height: 92vh;
+  background: #050507;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.65);
+}
+
+.gv-trailer-player-shell {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  background: var(--gv-bg);
+}
+
+.gv-trailer-player-shell .gv-trailer-player {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: block;
+  border: 0;
+  background: var(--gv-bg);
+}
+
+@media (max-width: 700px) {
+  .gv-trailer-backdrop {
+    padding: 10px;
+  }
+  .gv-trailer-modal {
+    width: 100%;
+    border-radius: 10px;
+  }
+}
+
+/* Poster preview modal — clicking the poster opens the artwork only. */
+.gv-poster-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+}
+
+.gv-poster-modal {
+  max-width: min(520px, 86vw);
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gv-poster-image {
+  display: block;
+  max-width: min(520px, 86vw);
+  max-height: 88vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.72);
+}
+
+.gv-poster-close {
+  position: fixed;
+  top: 28px;
+  right: 30px;
+  z-index: 10002;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(18, 18, 22, 0.82);
+  color: #fff;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gv-poster-close:hover {
+  background: rgba(45, 45, 52, 0.95);
+}
+
+.reference-game-hero-poster {
+  transition: transform 0.18s ease;
+}
+
+@media (max-width: 760px) {
+  .gv-poster-backdrop {
+    padding: 18px;
+  }
+  .gv-poster-image {
+    max-width: 88vw;
+    max-height: 84vh;
+  }
+  .gv-poster-close {
+    top: 18px;
+    right: 18px;
+    width: 44px;
+    height: 44px;
+    font-size: 24px;
+  }
+}
+
+/* Poster preview: clicking the poster opens ONLY this image modal. */
+.gv-poster-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.gv-poster-modal {
+  position: relative;
+  z-index: 100001;
+  width: min(440px, 82vw);
+  max-height: 88vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.65);
+}
+
+.gv-poster-image {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+  max-height: 88vh;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.gv-poster-close {
+  position: fixed;
+  top: 24px;
+  right: 28px;
+  z-index: 100002;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(20, 20, 24, 0.82);
+  color: #fff;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gv-poster-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* FINAL interaction fix: the hero background is visual only.
+   The trailer starts only from the explicit play button. */
+.reference-game-hero-media {
+  pointer-events: none;
+}
+.reference-game-hero-play {
+  pointer-events: auto;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 10 !important;
+  cursor: pointer;
+}
+.reference-game-hero-play:hover {
+  transform: translate(-50%, -50%) scale(1.04) !important;
+}
+.reference-game-hero-poster-button {
+  pointer-events: auto;
+  cursor: zoom-in;
+}

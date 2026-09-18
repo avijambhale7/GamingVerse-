@@ -1,0 +1,158 @@
+/* =========================================================
+   LEFT PROFILE CARD
+   Part of GamingVerse Profile page styles
+========================================================= */
+
+/* =========================================================
+   LEFT PROFILE CARD
+========================================================= */
+
+.profile-left-card {
+  background: #161616;
+  border: 1px solid #2b2b2b;
+  border-radius: 15px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.18);
+}
+
+.profile-avatar {
+  width: 166px;
+  height: 166px;
+  margin: 0 auto 25px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #3a465c;
+  border: 0;
+  box-shadow:
+    0 0 0 1px #5c315f,
+    0 0 28px rgba(171, 54, 255, 0.28);
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-avatar span {
+  font-size: 46px;
+  font-weight: 500;
+}
+
+.profile-left-card h1 {
+  margin: 0;
+  font-size: 23px;
+  font-weight: 800;
+}
+
+.profile-username {
+  margin: 7px 0 15px;
+  color: #ddd;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.profile-bio {
+  color: #999;
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0 0 20px;
+}
+
+.profile-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: 20px 0 18px;
+  padding: 17px 0;
+  border-top: 1px solid #303030;
+  border-bottom: 1px solid #303030;
+}
+
+.profile-stats div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.profile-stats div + div {
+  border-left: 1px solid #303030;
+}
+
+.profile-stats strong {
+  font-size: 20px;
+}
+
+.profile-stats span {
+  color: #c5c5c5;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 23px;
+  text-align: left;
+}
+
+.profile-detail-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ddd;
+  font-size: 12px;
+}
+
+.profile-detail-line span {
+  color: #ddd;
+  width: 18px;
+  text-align: center;
+}
+
+.profile-detail-line b {
+  color: #888;
+  font-weight: 400;
+}
+
+.profile-detail-line strong {
+  font-weight: 600;
+}
+
+.edit-profile-button,
+.library-profile-button,
+.logout-profile-button {
+  width: 100%;
+  min-height: 45px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+  margin-top: 9px;
+  transition: 0.2s ease;
+}
+
+.edit-profile-button {
+  background: #535353;
+  border: 1px solid #535353;
+  color: #fff;
+}
+
+.edit-profile-button:hover {
+  background: #626262;
+}
+
+.logout-profile-button {
+  background: transparent;
+  border: 1px solid #292929;
+  color: #888;
+}
+
+.logout-profile-button:hover {
+  color: #ff7373;
+  border-color: #5b2a2a;
+}

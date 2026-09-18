@@ -1,0 +1,127 @@
+/* =========================================================
+   PAGE SHELL, HEADER, TABS, MESSAGES
+   Part of GamingVerse Owner dashboard styles
+========================================================= */
+
+.owner-dashboard-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at 10% 0%,
+      rgba(132, 43, 255, 0.13),
+      transparent 28%
+    ),
+    var(--gv-surface-1);
+  color: #fff;
+  padding-bottom: 80px;
+}
+.owner-dashboard-header {
+  width: min(1260px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 46px 0 25px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+}
+.owner-dashboard-kicker {
+  color: var(--gv-accent);
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: 900;
+}
+.owner-dashboard-header h1,
+.owner-section-head h2 {
+  margin: 7px 0 5px;
+}
+.owner-dashboard-header p,
+.owner-section-head p {
+  margin: 0;
+  color: #888894;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.owner-dashboard-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.owner-dashboard-header-actions button {
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 10px;
+  padding: 10px 13px;
+  background: var(--gv-surface-2);
+  color: #ddd;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.owner-dashboard-header-actions .owner-logout {
+  color: #ff9eab;
+  border-color: rgba(255, 92, 115, 0.2);
+}
+.owner-role-pill {
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(168, 50, 255, 0.1);
+  border: 1px solid rgba(168, 50, 255, 0.2);
+  color: #d9b5ff;
+  font-size: 11px;
+  font-weight: 900;
+}
+.owner-dashboard-tabs {
+  width: min(1260px, calc(100% - 48px));
+  margin: 0 auto 20px;
+  display: flex;
+  gap: 10px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.owner-dashboard-tabs button {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: #7f7f8b;
+  padding: 11px 15px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+.owner-dashboard-tabs button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.035);
+}
+.owner-dashboard-tabs button.active {
+  color: #fff;
+  border-color: rgba(166, 59, 255, 0.35);
+  background: rgba(166, 59, 255, 0.1);
+  box-shadow: 0 7px 22px rgba(120, 35, 200, 0.12);
+}
+.owner-dashboard-main {
+  width: min(1260px, calc(100% - 48px));
+  margin: 0 auto;
+}
+.owner-dashboard-message {
+  width: min(1260px, calc(100% - 48px));
+  margin: 0 auto 18px;
+  padding: 11px 13px;
+  border: 1px solid rgba(168, 50, 255, 0.18);
+  border-radius: 11px;
+  background: rgba(168, 50, 255, 0.07);
+  color: #d7c1ea;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+}
+.owner-dashboard-message button {
+  border: 0;
+  background: transparent;
+  color: #999;
+  font-size: 18px;
+  cursor: pointer;
+}

@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"C:/Users/amitj/AppData/Local/Temp/claude/c--Users-amitj-OneDrive-Desktop-GamingVerse/22649ae1-31dd-4e56-8dee-1b5eae881262/scratchpad/baseline\")",
+      "Bash(cp dist/assets/index-*.css \"C:/Users/amitj/AppData/Local/Temp/claude/c--Users-amitj-OneDrive-Desktop-GamingVerse/22649ae1-31dd-4e56-8dee-1b5eae881262/scratchpad/baseline/base.css\")",
+      "Bash(cp dist/assets/index-*.js \"C:/Users/amitj/AppData/Local/Temp/claude/c--Users-amitj-OneDrive-Desktop-GamingVerse/22649ae1-31dd-4e56-8dee-1b5eae881262/scratchpad/baseline/base.js\")",
+      "Bash(awk '/^\\\\/\\\\* =+$/{getline t; print NR-1 \": \" t}' src/pages/Games.css)",
+      "Bash(cp src/pages/Games.css \"C:/Users/amitj/AppData/Local/Temp/claude/c--Users-amitj-OneDrive-Desktop-GamingVerse/22649ae1-31dd-4e56-8dee-1b5eae881262/scratchpad/baseline/Games.css.orig\")",
+      "Bash(node \"C:/Users/amitj/AppData/Local/Temp/claude/c--Users-amitj-OneDrive-Desktop-GamingVerse/22649ae1-31dd-4e56-8dee-1b5eae881262/scratchpad/split-css.mjs\")",
+      "Bash(grep -n \"^/\\\\*\" src/pages/Marketplace.css)",
+      "Bash(grep -n \"^/\\\\*\" src/pages/Cafe.css)",
+      "Bash(grep -n \"^/\\\\*\" src/pages/OwnerLogin.css)",
+      "Bash(grep -n \"^/\\\\*\" src/pages/OwnerDashboard.css)",
+      "Bash(node \"C:/Users/amitj/AppData/Local/Temp/claude/c--Users-amitj-OneDrive-Desktop-GamingVerse/22649ae1-31dd-4e56-8dee-1b5eae881262/scratchpad/split-css2.mjs\")",
+      "Bash(node \"C:/Users/amitj/AppData/Local/Temp/claude/c--Users-amitj-OneDrive-Desktop-GamingVerse/22649ae1-31dd-4e56-8dee-1b5eae881262/scratchpad/verify-css.mjs\")",
+      "Bash(git checkout *)",
+      "Bash(node \"C:/Users/amitj/AppData/Local/Temp/claude/c--Users-amitj-OneDrive-Desktop-GamingVerse/22649ae1-31dd-4e56-8dee-1b5eae881262/scratchpad/split-owner.mjs\")",
+      "Bash(cd \"c:/Users/amitj/OneDrive/Desktop/GamingVerse\" && rm -f dist/assets/index-*.css dist/assets/index-*.js && npm run build 2>&1 | grep -E \"index-.*\\\\.\\(css|js\\)|error|Error|✓ built\" ; SP=\"C:/Users/amitj/AppData/Local/Temp/claude/c--Users-amitj-OneDrive-Desktop-GamingVerse/22649ae1-31dd-4e56-8dee-1b5eae881262/scratchpad/baseline\"; echo \"--- CSS ---\"; cmp dist/assets/index-*.css \"$SP/base.css\" && echo \"CSS IDENTICAL\"; echo \"--- JS ---\"; cmp dist/assets/index-*.js \"$SP/base.js\" && echo \"JS IDENTICAL\")",
+      "Bash(node \"C:/Users/amitj/AppData/Local/Temp/claude/c--Users-amitj-OneDrive-Desktop-GamingVerse/22649ae1-31dd-4e56-8dee-1b5eae881262/scratchpad/split-games-js.mjs\")",
+      "Bash(node \"C:/Users/amitj/AppData/Local/Temp/claude/c--Users-amitj-OneDrive-Desktop-GamingVerse/22649ae1-31dd-4e56-8dee-1b5eae881262/scratchpad/rewrite-games-jsx.mjs\")",
+      "Bash(npx eslint *)",
+      "Bash(cp __TRACKED_VAR__/baseline/Games.jsx.orig src/pages/__GamesOrig.jsx)",
+      "Bash(grep -oE \"\\(no-unused-vars|no-undef|no-dupe-keys|react-hooks/[a-z-]+|react-refresh/[a-z-]+\\)$\")",
+      "Bash(node __TRACKED_VAR__/analyze-views.mjs __TRACKED_VAR__/blocks.json)",
+      "Bash(node -e ' *)",
+      "Bash(node \"C:/Users/amitj/AppData/Local/Temp/claude/c--Users-amitj-OneDrive-Desktop-GamingVerse/22649ae1-31dd-4e56-8dee-1b5eae881262/scratchpad/make-views.mjs\")",
+      "Bash(node \"C:/Users/amitj/AppData/Local/Temp/claude/c--Users-amitj-OneDrive-Desktop-GamingVerse/22649ae1-31dd-4e56-8dee-1b5eae881262/scratchpad/rewire-games.mjs\")",
+      "Bash(node \"C:/Users/amitj/AppData/Local/Temp/claude/c--Users-amitj-OneDrive-Desktop-GamingVerse/22649ae1-31dd-4e56-8dee-1b5eae881262/scratchpad/verify-views.mjs\")",
+      "Bash(perl -0pi -e 's/^  search,\\\\n//m' src/pages/games/views/HomeView.jsx src/pages/games/views/SpacesView.jsx)",
+      "Bash(perl -0pi -e 's/^\\(      <\\(?:HomeView|SpacesView\\)\\\\n\\(?:        \\\\w+=\\\\{\\\\w+\\\\}\\\\n\\)*?\\)        search=\\\\{search\\\\}\\\\n/$1/mg' src/pages/Games.jsx)",
+      "Bash(perl -0pi -e ' *)",
+      "Bash(grep -n \"^  const render\\\\|^  function render\\\\|^  const .* = \\(\\) => \\(\\\\|^  \\);$\" src/pages/Marketplace.jsx)",
+      "Bash(node \"C:/Users/amitj/AppData/Local/Temp/claude/c--Users-amitj-OneDrive-Desktop-GamingVerse/22649ae1-31dd-4e56-8dee-1b5eae881262/scratchpad/split-pages.mjs\")",
+      "Bash(perl -pi -e 's{\"\\\\.\\\\./assets/\\\\*\\\\*}{\"../../../assets/**}' src/pages/profile/utils/gameImages.js)"
+    ]
+  }
+}

@@ -1,0 +1,125 @@
+/* =========================================================
+   CAFE LISTING GRID + CARDS
+   Part of GamingVerse Cafe booking styles
+========================================================= */
+
+.cafe-section-page {
+  padding-top: 12px;
+}
+.cafe-section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin: 0 0 17px;
+}
+.cafe-section-title h2 {
+  font-size: 29px;
+  margin: 7px 0 3px;
+}
+.cafe-section-title p {
+  margin: 0;
+  color: #726f7d;
+  font-size: 12px;
+}
+.cafe-section-title button {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 13px;
+  cursor: pointer;
+  font-weight: 800;
+}
+.cafe-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.cafe-card {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: var(--gv-surface-2);
+  transition: 0.2s ease;
+}
+.cafe-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(163, 92, 255, 0.32);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+}
+.cafe-card-image {
+  height: 165px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle, rgba(143, 67, 255, 0.3), transparent 55%), var(--gv-surface-3);
+  position: relative;
+}
+.cafe-card-image > div {
+  font-size: 70px;
+}
+.cafe-card-image > span {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(7, 7, 11, 0.75);
+  border-radius: 9px;
+  padding: 7px 9px;
+  color: #ffd66d;
+  font-weight: 850;
+  font-size: 12px;
+}
+.cafe-card-content {
+  padding: 16px;
+}
+.cafe-card-content > small {
+  color: #777381;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+.cafe-card-content h3 {
+  font-size: 18px;
+  line-height: 1.2;
+  margin: 8px 0;
+}
+.cafe-card-content > p {
+  font-size: 12px;
+  color: #85818d;
+  line-height: 1.55;
+  min-height: 56px;
+  margin: 0 0 10px;
+}
+.cafe-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #777480;
+  font-size: 10px;
+}
+.cafe-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 15px;
+}
+.cafe-card-actions button,
+.cafe-card-actions a {
+  flex: 1;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 9px;
+  padding: 10px 11px;
+  font: inherit;
+  font-weight: 850;
+  cursor: pointer;
+}
+.cafe-card-actions button {
+  border: 0;
+  color: #fff;
+  background: linear-gradient(135deg, #792cff, var(--gv-accent));
+}
+.cafe-card-actions a {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #d8d3e2;
+  background: rgba(255, 255, 255, 0.035);
+}

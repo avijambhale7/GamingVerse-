@@ -1,0 +1,185 @@
+/* =========================================================
+   FORM, INPUTS, PASSWORD TOGGLE, OPTIONS
+   Part of GamingVerse Login page styles
+========================================================= */
+
+/* =========================================
+   FORM
+========================================= */
+
+.form-group {
+  margin-bottom: 24px;
+}
+
+.form-group label {
+  display: block;
+
+  margin-bottom: 9px;
+
+  font-size: 15px;
+
+  font-weight: 700;
+
+  color: #ffffff;
+}
+
+/* =========================================
+   INPUT
+========================================= */
+
+.input-wrapper {
+  position: relative;
+
+  width: 100%;
+}
+
+.input-wrapper input {
+  width: 100%;
+
+  height: 54px;
+
+  padding: 0 48px;
+
+  border: 1px solid #343440;
+
+  border-radius: 10px;
+
+  outline: none;
+
+  background: #111118;
+
+  color: #ffffff;
+
+  font-size: 16px;
+
+  transition: 0.25s ease;
+}
+
+.input-wrapper input::placeholder {
+  color: #92929d;
+}
+
+.input-wrapper input:focus {
+  border-color: #a02cff;
+
+  box-shadow: 0 0 0 3px rgba(155, 44, 255, 0.16);
+}
+
+.input-icon {
+  position: absolute;
+
+  left: 18px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  font-size: 18px;
+
+  z-index: 2;
+}
+
+/* =========================================
+   PASSWORD TOGGLE
+========================================= */
+
+.password-toggle {
+  position: absolute;
+
+  right: 15px;
+
+  top: 50%;
+
+  transform: translateY(-50%);
+
+  border: none;
+
+  background: transparent;
+
+  color: #aaa;
+
+  cursor: pointer;
+
+  font-size: 18px;
+
+  padding: 4px;
+
+  transition: 0.2s;
+}
+
+.password-toggle:hover {
+  color: var(--gv-accent-bright);
+}
+
+/* =========================================
+   OPTIONS
+========================================= */
+
+.login-options {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  margin-top: 3px;
+
+  margin-bottom: 25px;
+}
+
+/* Remember */
+
+.remember {
+  display: flex;
+
+  align-items: center;
+
+  gap: 9px;
+
+  cursor: pointer;
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  color: #eeeeee;
+}
+
+.remember input {
+  width: 18px !important;
+  height: 18px !important;
+
+  min-width: 18px !important;
+  min-height: 18px !important;
+
+  margin: 0 !important;
+  padding: 0 !important;
+
+  cursor: pointer;
+
+  accent-color: #9b2cff;
+}
+
+/* Forgot */
+
+.forgot-password {
+  border: none;
+
+  background: none;
+
+  color: var(--gv-accent);
+
+  font-size: 15px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  padding: 0;
+}
+
+.forgot-password:hover {
+  color: var(--gv-accent-bright);
+
+  text-decoration: underline;
+}

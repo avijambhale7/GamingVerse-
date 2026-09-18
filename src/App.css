@@ -17,7 +17,7 @@ body {
       rgba(111, 40, 180, 0.12),
       transparent 35%
     ),
-    #050509;
+    var(--gv-surface-1);
 
   color: white;
 
@@ -94,7 +94,7 @@ body {
 
   background: rgba(139, 92, 246, 0.08);
 
-  color: #c084fc;
+  color: var(--gv-accent-bright);
 
   font-size: 12px;
 
@@ -118,7 +118,7 @@ body {
 .gv-hero h1 span {
   display: block;
 
-  background: linear-gradient(90deg, #8b5cf6, #d946ef, #a855f7);
+  background: linear-gradient(90deg, var(--gv-accent), #d946ef, var(--gv-accent));
 
   -webkit-background-clip: text;
 
@@ -191,7 +191,7 @@ body {
 .gv-secondary-btn:hover {
   background: rgba(139, 92, 246, 0.15);
 
-  border-color: #a855f7;
+  border-color: var(--gv-accent);
 }
 
 /* =========================================

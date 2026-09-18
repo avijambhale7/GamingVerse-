@@ -1,0 +1,66 @@
+/* =========================================================
+   RESPONSIVE + DISABLED STATE
+   Part of GamingVerse Login page styles
+========================================================= */
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 700px) {
+  .login-page {
+    padding: 25px 15px;
+  }
+
+  .login-card {
+    max-width: 470px;
+
+    padding: 34px 28px;
+  }
+
+  .image-row img {
+    width: 220px;
+    height: 135px;
+  }
+}
+
+@media (max-width: 450px) {
+  .login-card {
+    padding: 30px 20px;
+
+    border-radius: 18px;
+  }
+
+  .game-icon {
+    width: 70px;
+    height: 70px;
+
+    font-size: 34px;
+  }
+
+  .login-title {
+    font-size: 29px;
+  }
+
+  .login-subtitle {
+    font-size: 14px;
+  }
+
+  .login-options {
+    gap: 10px;
+  }
+
+  .forgot-password {
+    font-size: 13px;
+  }
+}
+/* =========================================
+   DISABLED BUTTON
+========================================= */
+
+.login-button:disabled,
+.social-button:disabled,
+.modal-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

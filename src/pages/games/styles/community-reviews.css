@@ -1,0 +1,585 @@
+/* =========================================================
+   COMMUNITY REVIEWS
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =========================================================
+   GAMINGVERSE COMMUNITY REVIEWS
+   Reference-style review composer + user reviews
+========================================================= */
+.community-review-section {
+  margin-top: 22px;
+  padding: 0 10px 8px;
+}
+
+.community-review-box {
+  padding: 20px;
+  background: var(--gv-surface-2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.25);
+}
+
+.community-review-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.community-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.community-avatar {
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #687386, #8b95a8);
+  color: white;
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.community-user strong {
+  display: block;
+  color: var(--gv-text);
+  font-size: 15px;
+}
+
+.community-user span {
+  display: block;
+  margin-top: 3px;
+  color: #8f909a;
+  font-size: 11px;
+}
+
+.community-verdict-toggle {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.community-verdict-toggle button {
+  min-width: 0;
+  padding: 4px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  color: #b7b7bf;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease;
+  box-shadow: none !important;
+}
+
+.community-verdict-toggle button:hover {
+  color: #ffffff;
+}
+
+.community-verdict-toggle button.active {
+  color: #ffffff;
+  position: relative;
+}
+
+.community-verdict-toggle button.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 2px;
+  border-radius: 2px;
+}
+
+.community-verdict-toggle button.active.skip::after {
+  background: var(--gv-skip);
+}
+.community-verdict-toggle button.active.timepass::after {
+  background: var(--gv-timepass);
+}
+.community-verdict-toggle button.active.go-for-it::after {
+  background: var(--gv-go);
+}
+.community-verdict-toggle button.active.perfection::after {
+  background: var(--gv-accent);
+}
+
+.community-review-input {
+  width: 100%;
+  min-height: 118px;
+  resize: vertical;
+  padding: 4px 0 12px;
+  border: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  outline: none;
+  background: transparent;
+  color: #e7e7eb;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.community-review-input::placeholder {
+  color: #8b8c96;
+}
+
+.community-review-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 12px;
+}
+
+.community-review-footer span {
+  color: #73747f;
+  font-size: 11px;
+}
+
+.community-review-footer button {
+  min-width: 95px;
+  min-height: 42px;
+  padding: 9px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: #f2f2f2;
+  color: var(--gv-text-inverse);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.community-review-footer button:hover {
+  transform: translateY(-1px);
+  background: white;
+}
+
+/* Title and count sit together now that the filter row is gone;
+   space-between would strand the count on the far right. */
+.community-reviews-heading {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--gv-s-3);
+  margin: 34px 0 16px;
+}
+
+.community-reviews-heading h3 {
+  margin: 0;
+  color: var(--gv-text);
+  font-size: 22px;
+}
+
+.community-review-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.review-sort-button,
+.community-review-filters label {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gv-s-2);
+  padding: 0 var(--gv-s-3);
+  border: 1px solid var(--gv-border);
+  border-radius: var(--gv-r-sm);
+  background: var(--gv-surface-3);
+  color: var(--gv-text-soft);
+  font-size: 12px;
+  font-weight: 700;
+  transition:
+    border-color var(--gv-t) var(--gv-ease),
+    background-color var(--gv-t) var(--gv-ease);
+}
+
+.review-sort-button:hover,
+.community-review-filters label:hover {
+  border-color: var(--gv-border-strong);
+  background: var(--gv-surface-4);
+}
+
+.review-sort-button {
+  cursor: pointer;
+}
+
+.community-review-filters input {
+  width: 17px;
+  height: 17px;
+  accent-color: var(--gv-accent);
+  margin: 0;
+}
+
+.community-review-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.community-review-card {
+  padding: var(--gv-s-5) 0;
+  border-bottom: 1px solid var(--gv-border);
+}
+
+.community-review-card:last-child {
+  border-bottom: 0;
+}
+
+.community-review-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gv-s-4);
+}
+
+.community-review-card .community-user strong {
+  color: var(--gv-text);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.community-review-card .community-user span {
+  color: var(--gv-text-dim);
+  font-size: 12px;
+}
+
+/* A tinted badge rather than a solid block: it names the
+   verdict without competing with the review text. Colour
+   comes from the verdict class via tokens.css. */
+.community-verdict-pill {
+  padding: 6px 13px;
+  border-radius: var(--gv-r-pill);
+  background: var(--gv-verdict-soft, var(--gv-surface-3));
+  color: var(--gv-verdict, var(--gv-text));
+  border: 1px solid var(--gv-verdict-soft, transparent);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.community-review-card > p {
+  margin: var(--gv-s-4) 0 var(--gv-s-4);
+  color: var(--gv-text-soft);
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* Hidden until the reader opts in, but still selectable-safe:
+   the text is masked rather than removed from the DOM. */
+.community-review-spoiler {
+  padding: var(--gv-s-3) var(--gv-s-4);
+  border-radius: var(--gv-r-sm);
+  background: var(--gv-surface-3);
+  color: transparent !important;
+  user-select: none;
+}
+
+.community-review-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--gv-s-5);
+}
+
+.community-review-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gv-s-2);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--gv-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition: color var(--gv-t) var(--gv-ease);
+}
+
+.community-review-actions button:hover {
+  color: var(--gv-text);
+}
+
+/* Liking is the one action with a persistent on-state, so it
+   gets the accent to make that state legible at a glance. */
+.community-review-actions button.liked {
+  color: var(--gv-skip);
+}
+
+.community-more {
+  margin-left: auto;
+  color: var(--gv-text-dim);
+  letter-spacing: 3px;
+}
+
+
+.community-empty {
+  padding: 34px 10px;
+  color: #868792;
+  text-align: center;
+  font-size: 13px;
+}
+
+@media (max-width: 850px) {
+  .community-review-top,
+  .community-reviews-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .community-verdict-toggle {
+    width: 100%;
+  }
+
+  .community-verdict-toggle button {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .community-review-filters {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .community-review-box {
+    padding: 16px;
+  }
+
+  .community-review-filters label,
+  .review-sort-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* =========================================================
+   FINAL CLEANUP
+========================================================= */
+
+/* Keep hero/detail action buttons predictable. */
+.details-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+  align-items: center;
+  justify-content: flex-start;
+
+  margin-top: 17px;
+  padding-right: 25px;
+}
+
+@media (max-width: 700px) {
+  .details-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* =========================================================
+   REVIEW CARD EXTRAS
+   Your own review, the delete control, and the comment
+   thread that expands underneath a review.
+========================================================= */
+
+/* The count replaces the filter row that used to sit here. */
+.community-review-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  height: 26px;
+  padding: 0 var(--gv-s-2);
+  border-radius: var(--gv-r-pill);
+  background: var(--gv-surface-3);
+  border: 1px solid var(--gv-border);
+  color: var(--gv-text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* A quiet accent rail marks the review written by this account. */
+.community-review-card.is-mine {
+  padding-left: var(--gv-s-4);
+  border-left: 2px solid var(--gv-accent);
+  background: linear-gradient(
+    90deg,
+    var(--gv-accent-soft),
+    transparent 38%
+  );
+}
+
+.review-you-tag {
+  margin-left: var(--gv-s-2);
+  padding: 2px 7px;
+  border-radius: var(--gv-r-pill);
+  background: var(--gv-accent-soft);
+  color: var(--gv-accent-bright);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+.community-review-actions button.is-active {
+  color: var(--gv-accent-bright);
+}
+
+.review-delete-button {
+  margin-left: auto;
+  color: var(--gv-text-dim) !important;
+}
+
+.review-delete-button:hover {
+  color: var(--gv-skip) !important;
+}
+
+/* ------------------------------------------- comment thread */
+.review-comments {
+  margin-top: var(--gv-s-4);
+  padding-left: var(--gv-s-5);
+  border-left: 1px solid var(--gv-border);
+}
+
+.review-comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gv-s-4);
+  margin: 0 0 var(--gv-s-4);
+  padding: 0;
+  list-style: none;
+}
+
+.review-comment {
+  display: flex;
+  gap: var(--gv-s-3);
+}
+
+.community-avatar.small {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  font-size: 12px;
+}
+
+.review-comment-body {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.review-comment-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--gv-s-2);
+}
+
+.review-comment-meta strong {
+  color: var(--gv-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.review-comment-meta span {
+  color: var(--gv-text-dim);
+  font-size: 11px;
+}
+
+.review-comment-delete {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--gv-text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  transition: color var(--gv-t) var(--gv-ease);
+}
+
+.review-comment-delete:hover {
+  color: var(--gv-skip);
+}
+
+.review-comment-body p {
+  margin: var(--gv-s-1) 0 0;
+  color: var(--gv-text-soft);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.review-comment-form {
+  display: flex;
+  gap: var(--gv-s-2);
+}
+
+.review-comment-form input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 10px var(--gv-s-4);
+  border: 1px solid var(--gv-border);
+  border-radius: var(--gv-r-pill);
+  background: var(--gv-surface-3);
+  color: var(--gv-text);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--gv-t) var(--gv-ease);
+}
+
+.review-comment-form input:focus {
+  border-color: var(--gv-accent-line);
+}
+
+.review-comment-form input::placeholder {
+  color: var(--gv-text-dim);
+}
+
+.review-comment-form button {
+  flex: 0 0 auto;
+  padding: 10px var(--gv-s-5);
+  border: 0;
+  border-radius: var(--gv-r-pill);
+  background: var(--gv-accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  transition:
+    background-color var(--gv-t) var(--gv-ease),
+    opacity var(--gv-t) var(--gv-ease);
+}
+
+.review-comment-form button:hover:not(:disabled) {
+  background: var(--gv-accent-strong);
+}
+
+.review-comment-form button:disabled {
+  opacity: 0.45;
+}
+
+@media (max-width: 520px) {
+  .review-comments {
+    padding-left: var(--gv-s-3);
+  }
+
+  .review-comment-form {
+    flex-wrap: wrap;
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
@@ -8,7 +8,6 @@ import Cafe from "./pages/Cafe";
 import Login from "./pages/Login";
 import Games from "./pages/Games";
 import Profile from "./pages/Profile";
-import OwnerLogin from "./pages/OwnerLogin";
 import OwnerDashboard from "./pages/OwnerDashboard";
 
 import "./App.css";
@@ -74,7 +73,12 @@ function App() {
         ================================================= */}
         <Route path="/login" element={<Login />} />
 
-        <Route path="/owner-login" element={<OwnerLogin />} />
+        {/* Legacy entry point. Owners sign in through /login like everyone
+            else; the dashboard itself checks their role. */}
+        <Route
+          path="/owner-login"
+          element={<Navigate to="/owner-dashboard" replace />}
+        />
 
         {/* =================================================
             GAMINGVERSE / GAMES

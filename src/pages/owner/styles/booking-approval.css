@@ -1,0 +1,70 @@
+/* =========================================================
+   CAFÉ OWNER — BOOKING REQUEST APPROVAL
+   Status colouring and accept / reject / complete controls
+   for the café booking queue.
+   Part of GamingVerse Owner dashboard styles
+========================================================= */
+
+.owner-booking-details {
+  min-width: 0;
+}
+
+.owner-booking-pending {
+  border-color: rgba(255, 196, 73, 0.18);
+  box-shadow: inset 3px 0 0 rgba(255, 196, 73, 0.7);
+}
+
+.owner-booking-confirmed {
+  border-color: rgba(86, 220, 157, 0.15);
+  box-shadow: inset 3px 0 0 rgba(86, 220, 157, 0.62);
+}
+
+.owner-booking-rejected,
+.owner-booking-cancelled {
+  box-shadow: inset 3px 0 0 rgba(255, 92, 115, 0.52);
+}
+
+.owner-booking-completed {
+  box-shadow: inset 3px 0 0 rgba(145, 126, 255, 0.56);
+}
+
+.owner-booking-actions {
+  min-width: 230px;
+}
+
+.owner-confirm-btn {
+  border-color: rgba(86, 220, 157, 0.26) !important;
+  background: rgba(86, 220, 157, 0.09) !important;
+  color: #8ef0b6 !important;
+}
+
+.owner-confirm-btn:hover {
+  background: rgba(86, 220, 157, 0.17) !important;
+  border-color: rgba(86, 220, 157, 0.42) !important;
+}
+
+.owner-complete-btn {
+  border-color: rgba(145, 126, 255, 0.26) !important;
+  background: rgba(145, 126, 255, 0.09) !important;
+  color: #c7bfff !important;
+}
+
+.owner-complete-btn:hover {
+  background: rgba(145, 126, 255, 0.16) !important;
+}
+
+.owner-final-status {
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: #aaa6b4;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.owner-request-time {
+  display: block;
+  margin-top: 5px;
+  color: #5f5c67 !important;
+}

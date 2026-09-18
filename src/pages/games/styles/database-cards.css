@@ -1,0 +1,133 @@
+/* =========================================================
+   BRAND HOME TARGET + DATABASE GAME CARDS
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =========================================================
+   GAMINGVERSE BRAND — FULL HOME CLICK TARGET
+   Works with:
+   <button className="brand brand-home-button">...</button>
+========================================================= */
+
+.games-navbar .brand-home-button {
+  appearance: none;
+  -webkit-appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+
+  margin: 0;
+  padding: 0;
+
+  border: 0;
+  outline: 0;
+  border-radius: 14px;
+
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.games-navbar .brand-home-button:hover {
+  background: transparent;
+}
+
+.games-navbar .brand-home-button:focus {
+  outline: none;
+}
+
+.games-navbar .brand-home-button:focus-visible {
+  outline: 2px solid rgba(169, 50, 255, 0.75);
+  outline-offset: 5px;
+}
+
+.games-navbar .brand-home-button .brand-icon,
+.games-navbar .brand-home-button .brand-text {
+  pointer-events: none;
+}
+
+/* =========================================================
+   GAMINGVERSE DATABASE GAME CARD SUPPORT
+   Used by the full game catalogue from gamesData.js
+========================================================= */
+
+.poster-grid {
+  align-items: start;
+}
+
+.poster-card {
+  min-width: 0;
+  width: 100%;
+}
+
+.poster-image-wrapper {
+  min-height: 0;
+  aspect-ratio: 2 / 3;
+}
+
+.poster-image-wrapper > div[style] {
+  overflow: hidden;
+}
+
+/* Fallback artwork for database games that do not yet have
+   a local poster image. */
+.poster-image-wrapper .database-game-fallback {
+  width: 100%;
+  height: 100%;
+  min-height: 250px;
+  display: flex;
+  align-items: flex-end;
+  padding: 18px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(
+      circle at 75% 20%,
+      rgba(181, 44, 255, 0.28),
+      transparent 38%
+    ),
+    linear-gradient(145deg, #24122f 0%, var(--gv-surface-2) 62%, #1a1022 100%);
+}
+
+.database-game-fallback strong {
+  color: #fff;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+/* Database metadata shown underneath cards. */
+.poster-info .database-game-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 7px;
+  color: #777783;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.poster-info .database-game-meta span strong {
+  color: #aaaab5;
+  font-weight: 700;
+}
+
+/* Detail-information cards remain readable for longer values. */
+.details-grid .detail-item strong {
+  overflow-wrap: anywhere;
+}
+
+/* Keep the full catalogue usable on smaller screens. */
+@media (max-width: 1100px) {
+  .poster-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 750px) {
+  .poster-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

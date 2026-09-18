@@ -1,0 +1,30 @@
+/* =========================================================
+   ORDERS + LOADING
+   Part of GamingVerse Owner dashboard styles
+========================================================= */
+
+.owner-orders-card {
+  margin-top: 16px;
+}
+
+.owner-booking-actions {
+  min-width: 195px;
+}
+.owner-confirm-btn,
+.owner-complete-btn {
+  border: 1px solid rgba(86, 220, 157, 0.28) !important;
+  background: rgba(86, 220, 157, 0.1) !important;
+  color: #87efb1 !important;
+}
+.owner-confirm-btn:hover,
+.owner-complete-btn:hover {
+  background: rgba(86, 220, 157, 0.17) !important;
+}
+
+.owner-dashboard-loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: var(--gv-surface-1);
+  color: #fff;
+}

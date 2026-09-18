@@ -1,0 +1,332 @@
+/* =========================================================
+   INLINE GAMINGVERSE METER
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* ==========================================================
+   INLINE GAMINGVERSE METER — MOCTALE-STYLE PAGE SECTION
+   The meter lives on the game detail screen; there is no
+   meter popup from the game-detail page.
+========================================================== */
+.details-modal-reference {
+  font-family: Arial, Helvetica, sans-serif !important;
+}
+
+.details-modal-reference .reference-game-hero-copy h2 {
+  font-size: clamp(34px, 3.2vw, 46px) !important;
+  line-height: 1.04 !important;
+  letter-spacing: -0.8px !important;
+  font-weight: 700 !important;
+}
+
+.details-modal-reference .reference-game-hero-copy p {
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  font-weight: 400 !important;
+}
+
+.details-modal-reference .reference-hero-meta span {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
+.details-modal-reference .reference-watch-button,
+.details-modal-reference .reference-utility-button {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.details-modal-reference .reference-overview-kicker {
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 2px !important;
+}
+
+.details-modal-reference .reference-overview h3,
+.details-modal-reference .reference-info-panel h3 {
+  font-size: 28px !important;
+  line-height: 1.2 !important;
+  font-weight: 600 !important;
+}
+
+.details-modal-reference .reference-overview-text,
+.details-modal-reference .reference-text-card p,
+.details-modal-reference .reference-info-item strong {
+  font-size: 14px !important;
+  line-height: 1.65 !important;
+}
+
+/* Hide the old hero Meter button completely. */
+.reference-meter-hero-button {
+  display: none !important;
+}
+.inline-gv-meter {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: var(--gv-s-8) 0 calc(var(--gv-s-8) + var(--gv-s-2));
+  border-top: 1px solid var(--gv-border);
+  background: var(--gv-surface-1);
+}
+
+.inline-gv-meter-heading {
+  max-width: var(--gv-container);
+  margin: 0 auto;
+  padding: 0 var(--gv-s-6);
+}
+
+.inline-gv-meter-eyebrow {
+  display: block;
+  margin-bottom: var(--gv-s-2);
+  color: var(--gv-accent);
+  font-size: var(--gv-eyebrow-size);
+  font-weight: 800;
+  letter-spacing: var(--gv-eyebrow-track);
+  text-transform: uppercase;
+}
+
+.inline-gv-meter-heading h3 {
+  margin: 0;
+  color: var(--gv-text);
+  font-size: clamp(21px, 2vw, 26px);
+  font-weight: 600;
+}
+
+/* =========================================================
+   GAUGE
+   An SVG semicircle: a muted track with one rounded arc per
+   verdict layered on top, each sized to its share of the
+   vote by the component. The readout sits in the well.
+========================================================= */
+.inline-gv-meter-gauge-wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--gv-s-6);
+}
+
+.inline-gv-meter-gauge {
+  position: relative;
+  width: min(420px, 100%);
+}
+
+.gv-gauge {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.gv-gauge-track,
+.gv-gauge-segment {
+  fill: none;
+  stroke-width: 18;
+  stroke-linecap: round;
+}
+
+.gv-gauge-track {
+  stroke: var(--gv-surface-3);
+}
+
+/* Each segment inherits its colour from the verdict helper
+   classes in tokens.css, so there is one rule, not four. */
+.gv-gauge-segment {
+  stroke: var(--gv-verdict, var(--gv-go));
+  transition:
+    stroke-dasharray 0.55s var(--gv-ease),
+    stroke-dashoffset 0.55s var(--gv-ease);
+}
+
+.inline-gv-meter-inner {
+  position: absolute;
+  left: 50%;
+  bottom: 4%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.inline-gv-meter-inner strong {
+  color: var(--gv-verdict, var(--gv-text-muted));
+  font-size: clamp(38px, 5vw, 54px);
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.inline-gv-meter-inner span {
+  margin-top: var(--gv-s-2);
+  color: var(--gv-text-soft);
+  font-size: clamp(13px, 1.3vw, 16px);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================================
+   LEGEND
+========================================================= */
+.inline-gv-meter-breakdown {
+  width: min(var(--gv-container), calc(100% - var(--gv-s-7)));
+  margin: var(--gv-s-6) auto 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gv-s-3);
+}
+
+.inline-gv-meter-legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gv-s-2);
+  color: var(--gv-text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.inline-gv-meter-legend strong {
+  color: var(--gv-text);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.inline-gv-meter-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  border-radius: 50%;
+  background: var(--gv-verdict, var(--gv-text-dim));
+}
+
+.inline-gv-meter-divider {
+  width: min(var(--gv-container), calc(100% - var(--gv-s-7)));
+  height: 1px;
+  margin: var(--gv-s-7) auto 0;
+  background: var(--gv-border);
+}
+
+/* =========================================================
+   WRITE A REVIEW
+========================================================= */
+.inline-gv-review-section {
+  width: min(var(--gv-container), calc(100% - var(--gv-s-7)));
+  margin: var(--gv-s-7) auto 0;
+}
+
+.inline-gv-review-heading {
+  margin-bottom: var(--gv-s-5);
+}
+
+.inline-gv-review-heading span {
+  display: block;
+  margin-bottom: var(--gv-s-2);
+  color: var(--gv-accent);
+  font-size: var(--gv-eyebrow-size);
+  font-weight: 800;
+  letter-spacing: var(--gv-eyebrow-track);
+}
+
+.inline-gv-review-heading h4 {
+  margin: 0;
+  color: var(--gv-text);
+  font-size: clamp(22px, 2.2vw, 30px);
+  font-weight: 700;
+}
+
+.inline-gv-review-box {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .inline-gv-meter {
+    padding: var(--gv-s-7) 0;
+  }
+
+  .inline-gv-meter-breakdown {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gv-s-4);
+  }
+}
+
+.inline-gv-user-reviews-heading {
+  margin-top: 56px;
+}
+
+/* Avoid making the old modal styles visually relevant after the modal JSX is removed. */
+.meter-backdrop,
+.meter-modal {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .inline-gv-meter-breakdown {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px 24px;
+  }
+}
+
+@media (max-width: 760px) {
+  .inline-gv-meter {
+    padding: 38px 0 48px;
+  }
+
+  .inline-gv-meter-heading,
+  .inline-gv-review-section {
+    width: calc(100% - 32px);
+    padding: 0;
+  }
+
+  .inline-gv-meter-breakdown,
+  .inline-gv-meter-divider {
+    width: calc(100% - 32px);
+  }
+
+  .inline-gv-meter-gauge-wrap {
+    height: 190px;
+  }
+
+  .inline-gv-meter-arc {
+    width: 300px;
+    height: 150px;
+  }
+
+  .inline-gv-meter-inner {
+    width: 216px;
+    height: 108px;
+  }
+
+  .inline-gv-meter-inner strong {
+    font-size: 44px;
+  }
+
+  .inline-gv-meter-inner span {
+    font-size: 14px;
+  }
+
+  .inline-gv-meter-legend {
+    font-size: 13px;
+  }
+
+  .inline-gv-review-heading h4,
+  .inline-gv-meter-heading h3 {
+    font-size: 26px;
+  }
+
+  .details-modal-reference .reference-game-hero-copy h2 {
+    font-size: clamp(28px, 7vw, 38px) !important;
+  }
+}
+
+/* Embedded Marketplace / Cafe views */
+.games-page > .marketplace-embedded,
+.games-page > .cafe-embedded {
+  width: 100%;
+  min-height: calc(100vh - 150px);
+}
+
+.games-page > .marketplace-page,
+.games-page > .cafe-page {
+  width: 100%;
+}

@@ -1,0 +1,96 @@
+/* =========================================================
+   CARDS, BOOKING LIST, CUSTOMER INFO, EMPTY STATE
+   Part of GamingVerse Owner dashboard styles
+========================================================= */
+
+.owner-table-card,
+.owner-form-card,
+.owner-inventory-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: var(--gv-surface-2);
+  padding: 20px;
+}
+.owner-booking-list {
+  display: grid;
+  gap: 10px;
+}
+.owner-booking-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 13px;
+  background: var(--gv-surface-1);
+}
+.owner-booking-row h3 {
+  margin: 6px 0;
+  font-size: 15px;
+}
+.owner-booking-row p,
+.owner-booking-row small {
+  margin: 0;
+  color: #777783;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.owner-customer-info {
+  display: block;
+  margin-top: 5px !important;
+  color: #a7a4af !important;
+}
+.owner-small-label {
+  display: inline-flex;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(80, 210, 142, 0.09);
+  color: #80e7aa;
+  font-size: 9px;
+  font-weight: 900;
+}
+.owner-row-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.owner-row-actions select,
+.owner-row-actions button {
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 9px;
+  background: #121218;
+  color: #eee;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.owner-row-actions .danger {
+  color: #ff9ba8;
+  border-color: rgba(255, 92, 115, 0.18);
+}
+.owner-empty {
+  min-height: 200px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  text-align: center;
+  gap: 7px;
+  color: #777783;
+}
+.owner-empty span {
+  font-size: 35px;
+}
+.owner-empty strong {
+  color: #fff;
+}
+.owner-empty p {
+  margin: 0;
+  font-size: 11px;
+}
+.owner-empty.small {
+  min-height: 140px;
+}

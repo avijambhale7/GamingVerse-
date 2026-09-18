@@ -1,0 +1,124 @@
+/* =========================================================
+   PAGE SHELL, LOADING, HEADER, MAIN LAYOUT
+   Part of GamingVerse Profile page styles
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+.profile-page,
+.edit-profile-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at 15% 0%,
+      rgba(126, 31, 255, 0.08),
+      transparent 28%
+    ),
+    var(--gv-surface-1);
+  color: #fff;
+  font-family: Inter, Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+.profile-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gv-surface-1);
+  color: #fff;
+}
+
+/* =========================================================
+   PROFILE HEADER
+   Compact GamingVerse branding — no Games / Collections
+   buttons on the right.
+========================================================= */
+
+.profile-header {
+  height: 82px;
+  padding: 0 32px;
+  display: flex;
+  align-items: center;
+  background: var(--gv-surface-1);
+  border-bottom: 1px solid #32106e;
+  box-shadow: 0 8px 25px rgba(87, 17, 170, 0.08);
+}
+
+.profile-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.profile-logo-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #7d1cff, #b02cff);
+  font-size: 22px;
+  box-shadow: 0 7px 22px rgba(137, 28, 255, 0.28);
+}
+
+.profile-logo-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profile-logo-text strong {
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.6px;
+}
+
+.profile-logo-text small {
+  color: #aaa;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.profile-logo:hover .profile-logo-icon {
+  transform: translateY(-1px);
+  box-shadow: 0 9px 27px rgba(137, 28, 255, 0.42);
+}
+
+/* Old header actions are intentionally hidden/removed. */
+.profile-header-actions {
+  display: none !important;
+}
+
+/* =========================================================
+   MAIN LAYOUT
+========================================================= */
+
+.profile-content {
+  max-width: 1510px;
+  margin: 0 auto;
+  padding: 36px 28px 55px;
+  display: grid;
+  grid-template-columns: 365px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}

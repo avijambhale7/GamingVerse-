@@ -1,0 +1,61 @@
+/* =========================================================
+   RIGHT COLUMN — INTERESTED IN
+   Part of GamingVerse Profile page styles
+========================================================= */
+
+/* =========================================================
+   RIGHT / INTERESTED IN
+========================================================= */
+
+.profile-right {
+  min-width: 0;
+}
+
+.profile-right > h2 {
+  margin: 2px 0 20px;
+  font-size: 21px;
+}
+
+.interested-card {
+  background: transparent;
+  border: 1px solid #292929;
+  border-radius: 10px;
+  padding: 4px 16px;
+}
+
+.interest-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid #242424;
+}
+
+.interest-item:last-child {
+  border-bottom: 0;
+}
+
+.interest-item > span {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #1c1c1c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.interest-item div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.interest-item strong {
+  font-size: 13px;
+}
+
+.interest-item small {
+  color: #666;
+  font-size: 11px;
+}

@@ -1,0 +1,160 @@
+/* =========================================================
+   CART + EMPTY STATE
+   Part of GamingVerse Marketplace styles
+========================================================= */
+
+/* CART */
+
+.cart-layout,
+.checkout-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 18px;
+  align-items: start;
+}
+
+.cart-list {
+  display: grid;
+  gap: 10px;
+}
+
+.cart-item {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 15px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 15px;
+  background: var(--gv-surface-2);
+}
+
+.cart-image {
+  width: 74px;
+  height: 74px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: var(--gv-surface-3);
+  font-size: 28px;
+}
+
+.cart-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cart-info h3 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.cart-info p {
+  margin: 0 0 6px;
+  color: #73707c;
+  font-size: 11px;
+}
+
+.cart-info strong {
+  font-size: 14px;
+}
+
+.quantity {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.quantity button {
+  width: 27px;
+  height: 27px;
+  border: 0;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+  cursor: pointer;
+}
+
+.quantity span {
+  min-width: 18px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.summary-card {
+  position: sticky;
+  top: 16px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 17px;
+  background: var(--gv-surface-2);
+}
+
+.summary-card h3 {
+  margin: 0 0 18px;
+}
+
+.summary-card > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 0;
+  color: #8e8a96;
+  font-size: 13px;
+}
+
+.summary-card strong {
+  color: #fff;
+}
+
+.summary-card hr {
+  margin: 16px 0;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.total-row {
+  font-size: 16px !important;
+  color: #fff !important;
+}
+
+.total-row strong {
+  color: var(--gv-accent-bright);
+  font-size: 18px;
+}
+
+/* EMPTY */
+
+.empty-state {
+  min-height: 330px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 1px dashed rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  text-align: center;
+}
+
+.empty-state > div {
+  margin-bottom: 10px;
+  font-size: 48px;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.empty-state p {
+  margin: 0 0 18px;
+  color: var(--gv-text-dim);
+}

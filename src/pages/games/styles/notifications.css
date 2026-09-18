@@ -1,0 +1,236 @@
+/* =========================================================
+   NOTIFICATIONS POPOVER
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =========================================================
+   NOTIFICATIONS — POLISHED DARK POPOVER
+   Prevent browser button defaults from creating white cards.
+========================================================= */
+.notifications-popover {
+  width: min(520px, calc(100vw - 32px));
+  border-color: rgba(168, 50, 255, 0.22);
+  border-radius: 16px;
+  background: #0a0a10;
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.72),
+    0 0 38px rgba(168, 50, 255, 0.1);
+}
+
+.popover-header {
+  min-height: 72px;
+  padding: 0 18px 0 20px;
+}
+
+.popover-header h3 {
+  font-size: 19px;
+  font-weight: 850;
+  letter-spacing: -0.2px;
+}
+
+.popover-header-action {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: #8d8d99;
+  font-size: 23px;
+  transition: 0.2s ease;
+}
+
+.notification-tabs {
+  background: rgba(255, 255, 255, 0.012);
+}
+
+.notification-tabs button {
+  min-height: 62px;
+  color: #7f7f8b;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.1px;
+}
+
+.notification-tabs button.active {
+  color: #ffffff;
+}
+
+.notification-tabs button.active::after {
+  left: 18%;
+  right: 18%;
+  height: 3px;
+  background: #ffffff;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.18);
+}
+
+.notification-body {
+  max-height: 340px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 50, 255, 0.55) rgba(255, 255, 255, 0.04);
+}
+
+.notification-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.notification-body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.notification-body::-webkit-scrollbar-thumb {
+  background: rgba(168, 50, 255, 0.48);
+  border-radius: 999px;
+  border: 2px solid #0a0a10;
+}
+
+.notification-period {
+  padding: 17px 20px 11px;
+  background: #0a0a10;
+  color: #f1f1f4;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: 0.15px;
+}
+
+/* These are <button> elements, so reset all browser button defaults. */
+.notification-item,
+.notification-item:visited,
+.notification-item:hover,
+.notification-item:focus,
+.notification-item:active {
+  width: 100%;
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin: 0;
+  padding: 14px 20px;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 0;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--gv-surface-2) !important;
+  color: #e9e9ee !important;
+  font: inherit;
+  text-align: left;
+  box-shadow: none;
+}
+
+.notification-item {
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.notification-item:hover {
+  background: var(--gv-surface-3) !important;
+}
+
+.notification-item:focus-visible {
+  background: var(--gv-surface-3) !important;
+  box-shadow: inset 0 0 0 1px rgba(168, 50, 255, 0.35) !important;
+}
+
+.notification-item:not(.is-read) {
+  background:
+    linear-gradient(90deg, rgba(168, 50, 255, 0.1), transparent 34%), #101019 !important;
+}
+
+.notification-item:not(.is-read)::before {
+  content: "";
+  width: 3px;
+  align-self: stretch;
+  flex: 0 0 3px;
+  margin: -14px 1px -14px 0;
+  border-radius: 0 3px 3px 0;
+  background: #a832ff;
+  box-shadow: 0 0 12px rgba(168, 50, 255, 0.28);
+}
+
+.notification-avatar {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(145deg, #596377, #454d5f);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.notification-avatar.purple {
+  background: linear-gradient(135deg, #7722df, #b92cff);
+  box-shadow: 0 6px 18px rgba(168, 50, 255, 0.22);
+}
+
+.notification-copy {
+  flex: 1;
+  min-width: 0;
+  padding: 1px 0;
+}
+
+.notification-copy strong {
+  display: block;
+  overflow: hidden;
+  color: var(--gv-text);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.notification-copy p {
+  margin: 5px 0 5px;
+  color: #afb0bb;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.notification-copy span {
+  color: #70717d;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.notification-footer {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  background: var(--gv-surface-1);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  color: #666773;
+  font-size: 10px;
+}
+
+.notification-empty-state {
+  min-height: 210px;
+  background: #0a0a10;
+}
+
+@media (max-width: 750px) {
+  .notifications-popover {
+    width: min(460px, calc(100vw - 24px));
+  }
+}
+
+@media (max-width: 520px) {
+  .notifications-popover {
+    right: 8px;
+    width: calc(100vw - 16px);
+    border-radius: 14px;
+  }
+
+  .notification-item {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .notification-period {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}

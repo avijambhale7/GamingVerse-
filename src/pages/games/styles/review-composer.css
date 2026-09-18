@@ -1,0 +1,237 @@
+/* =========================================================
+   REVIEW COMPOSER
+   Part of GamingVerse Games page styles
+
+   The authoritative styling for "Write a Review". It loads
+   after community-reviews.css, so plain rules already win on
+   source order; !important appears only where the base layer
+   used it and there is no other way through.
+========================================================= */
+
+/* The meter breakdown above already is the verdict summary,
+   so the composer does not repeat it. */
+.community-review-heading .community-review-eyebrow,
+.community-review-heading .community-review-summary {
+  display: none;
+}
+
+.community-review-heading {
+  display: block;
+  margin: 0 0 var(--gv-s-5);
+}
+
+.community-review-heading h3 {
+  margin: 0;
+  color: var(--gv-text);
+  font-size: clamp(22px, 2.2vw, 30px);
+  font-weight: 700;
+}
+
+/* --------------------------------------------------- card */
+.community-review-box {
+  padding: var(--gv-s-5);
+  background: var(--gv-surface-2);
+  border: 1px solid var(--gv-border);
+  border-radius: var(--gv-r-lg);
+  box-shadow: var(--gv-shadow-md);
+}
+
+.community-review-top {
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gv-s-5);
+  margin-bottom: var(--gv-s-5);
+}
+
+.community-review-box .community-user {
+  flex: 1 1 auto;
+}
+
+.community-review-box .community-user strong {
+  color: var(--gv-text);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* The name alone identifies the author; the strapline under it
+   was noise next to the verdict control. */
+.community-review-box .community-user span {
+  display: none;
+}
+
+.community-review-box .community-avatar {
+  width: 48px;
+  height: 48px;
+  flex-basis: 48px;
+  font-size: 16px;
+}
+
+/* ---------------------------------------- verdict selector
+   A segmented control: one track, and the chosen verdict
+   fills with its own colour. Replaces the underline, which
+   read as a tab strip rather than a choice. */
+.community-verdict-toggle {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: var(--gv-r-pill);
+  background: var(--gv-surface-3);
+  border: 1px solid var(--gv-border);
+}
+
+.community-verdict-toggle button {
+  min-width: 0;
+  padding: 9px 18px;
+  border: 0;
+  border-radius: var(--gv-r-pill);
+  background: transparent !important;
+  color: var(--gv-text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: none !important;
+  transition:
+    color var(--gv-t) var(--gv-ease),
+    background-color var(--gv-t) var(--gv-ease);
+}
+
+.community-verdict-toggle button:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.community-verdict-toggle button:hover:not(:disabled) {
+  color: var(--gv-text);
+}
+
+.community-verdict-toggle button.active {
+  background: var(--gv-verdict, var(--gv-accent)) !important;
+  color: var(--gv-text-inverse);
+}
+
+/* Pink and purple are dark enough to need light text; amber
+   and green are not. */
+.community-verdict-toggle button.active.skip,
+.community-verdict-toggle button.active.perfection {
+  color: #fff;
+}
+
+/* The underline the old design used is redundant now. */
+.community-verdict-toggle button.active::after {
+  display: none;
+}
+
+/* ----------------------------------------------- textarea */
+.community-review-input {
+  min-height: 120px;
+  padding: var(--gv-s-1) 0 var(--gv-s-3);
+  border-bottom: 0;
+  color: var(--gv-text);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.community-review-input::placeholder {
+  color: var(--gv-text-dim);
+}
+
+/* ------------------------------------------------- footer
+   Counter right-aligned, a rule under it, then Post - the
+   stacked arrangement from the reference. */
+.community-review-footer {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  padding-top: 0;
+}
+
+.community-review-footer span {
+  padding-bottom: var(--gv-s-3);
+  border-bottom: 1px solid var(--gv-border);
+  color: var(--gv-text-dim);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.community-review-footer button {
+  align-self: flex-end;
+  min-width: 104px;
+  min-height: 44px;
+  margin-top: var(--gv-s-4);
+  padding: 10px 26px;
+  border-radius: var(--gv-r-pill);
+  background: var(--gv-text);
+  color: var(--gv-text-inverse);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.community-review-footer button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #fff;
+  box-shadow: var(--gv-shadow-sm);
+}
+
+.community-review-footer button:disabled {
+  opacity: 0.5;
+  transform: none;
+}
+
+/* ------------------------------- user reviews header strip */
+.community-reviews-heading {
+  margin: var(--gv-s-8) 0 var(--gv-s-4);
+}
+
+.community-reviews-heading h3 {
+  font-size: clamp(22px, 2.2vw, 29px);
+  font-weight: 700;
+}
+
+.community-review-filters {
+  gap: var(--gv-s-2);
+}
+
+.review-sort-button,
+.community-review-filters label {
+  min-height: 40px;
+  background: var(--gv-surface-3);
+}
+
+/* ------------------------------------------------ responsive */
+@media (max-width: 900px) {
+  .community-review-top {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .community-verdict-toggle {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .community-verdict-toggle button {
+    flex: 1 1 0;
+    padding: 9px 6px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 520px) {
+  .community-review-box {
+    padding: var(--gv-s-4);
+  }
+
+  .community-review-box .community-avatar {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+  }
+
+  .community-verdict-toggle button {
+    padding: 9px 2px;
+    font-size: 11px;
+  }
+}

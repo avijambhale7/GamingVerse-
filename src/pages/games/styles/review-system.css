@@ -1,0 +1,256 @@
+/* =========================================================
+   GAMINGVERSE REVIEW SYSTEM
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =========================================================
+   GAMINGVERSE REVIEW SYSTEM
+   ========================================================= */
+
+.review-system {
+  margin-top: 18px;
+  padding: 16px;
+  background: rgba(10, 8, 20, 0.92);
+  border: 1px solid rgba(155, 70, 255, 0.25);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+}
+
+.review-heading {
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.review-label {
+  display: block;
+  color: var(--gv-accent);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  margin-bottom: 5px;
+}
+
+.review-heading h4 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* ================= REVIEW OPTIONS ================= */
+
+.review-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.review-option {
+  position: relative;
+  min-height: 105px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 10px 5px;
+
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.035);
+
+  cursor: pointer;
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Hover */
+
+.review-option:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Icon */
+
+.review-icon {
+  font-size: 24px;
+  margin-bottom: 6px;
+}
+
+/* Title */
+
+.review-title {
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-align: center;
+}
+
+/* Description */
+
+.review-description {
+  margin-top: 4px;
+
+  color: #858595;
+
+  font-size: 8px;
+  line-height: 1.2;
+
+  text-align: center;
+}
+
+/* ================= PERFECTION ================= */
+
+.review-perfection:hover,
+.review-perfection.selected {
+  border-color: var(--gv-accent);
+  background: rgba(180, 76, 255, 0.15);
+  box-shadow: 0 0 22px rgba(180, 76, 255, 0.25);
+}
+
+/* ================= GO FOR IT ================= */
+
+.review-go-for-it:hover,
+.review-go-for-it.selected {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+  box-shadow: 0 0 22px rgba(34, 197, 94, 0.2);
+}
+
+/* ================= TIMEPASS ================= */
+
+.review-timepass:hover,
+.review-timepass.selected {
+  border-color: var(--gv-timepass);
+  background: rgba(234, 179, 8, 0.12);
+  box-shadow: 0 0 22px rgba(234, 179, 8, 0.2);
+}
+
+/* ================= SKIP ================= */
+
+.review-skip:hover,
+.review-skip.selected {
+  border-color: var(--gv-skip);
+  background: rgba(239, 68, 68, 0.12);
+  box-shadow: 0 0 22px rgba(239, 68, 68, 0.2);
+}
+
+/* ================= SELECTED ================= */
+
+.review-option.selected {
+  transform: translateY(-2px);
+}
+
+.review-check {
+  position: absolute;
+
+  top: 5px;
+  right: 6px;
+
+  width: 17px;
+  height: 17px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: var(--gv-accent);
+  color: white;
+
+  font-size: 10px;
+  font-weight: bold;
+}
+
+/* ================= MESSAGE ================= */
+
+.review-message {
+  margin-top: 10px;
+
+  text-align: center;
+
+  color: var(--gv-accent);
+
+  font-size: 11px;
+  font-weight: 600;
+
+  animation: reviewMessageIn 0.25s ease;
+}
+
+@keyframes reviewMessageIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================= DISABLED ================= */
+
+.review-option:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
+/* =========================================================
+   POSTER REVIEW ADJUSTMENT
+   ========================================================= */
+
+.poster-card .review-system {
+  margin-top: 14px;
+  padding: 12px;
+}
+
+.poster-card .review-options {
+  gap: 5px;
+}
+
+.poster-card .review-option {
+  min-height: 85px;
+  padding: 7px 3px;
+}
+
+.poster-card .review-icon {
+  font-size: 20px;
+}
+
+.poster-card .review-title {
+  font-size: 8px;
+}
+
+.poster-card .review-description {
+  font-size: 7px;
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 900px) {
+  .review-options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 500px) {
+  .review-options {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .review-option {
+    min-height: 90px;
+  }
+}

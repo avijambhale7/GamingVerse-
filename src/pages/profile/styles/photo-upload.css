@@ -1,0 +1,152 @@
+/* =========================================================
+   EDIT PROFILE — UPLOAD PHOTO UI
+   Part of GamingVerse Profile page styles
+========================================================= */
+
+/* =========================================================
+   EDIT PROFILE — UPLOAD PHOTO UI
+   Matches the requested reference design.
+========================================================= */
+
+.edit-photo-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.upload-photo-button {
+  display: inline-block;
+  flex: 0 0 auto;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.upload-photo-button:focus-visible {
+  outline: 2px solid var(--gv-accent);
+  outline-offset: 5px;
+  border-radius: 50%;
+}
+
+.large-profile-avatar {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  flex: 0 0 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #151515;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.upload-photo-button:hover .large-profile-avatar {
+  transform: scale(1.03);
+  box-shadow: 0 0 0 1px rgba(168, 63, 255, 0.35);
+}
+
+.large-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.large-profile-avatar > span {
+  font-size: 30px;
+  filter: grayscale(1);
+  opacity: 0.85;
+}
+
+.upload-photo-overlay {
+  position: absolute;
+  inset: 0;
+  width: 56px;
+  height: 56px;
+  margin: auto;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(88, 88, 88, 0.95);
+  color: #fff;
+  font-size: 21px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.upload-photo-button:hover .upload-photo-overlay {
+  background: rgba(110, 110, 110, 0.98);
+  transform: scale(1.05);
+}
+
+.profile-file-input {
+  display: none !important;
+}
+
+.edit-photo-copy {
+  min-width: 0;
+}
+
+.edit-photo-copy h3 {
+  margin: 0 0 7px;
+  color: #fff;
+  font-size: 18px;
+}
+
+.edit-photo-copy p {
+  margin: 0;
+  color: #777;
+  font-size: 13px;
+}
+
+.selected-photo-name {
+  display: block;
+  max-width: 360px;
+  margin-top: 9px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--gv-accent);
+  font-size: 11px;
+}
+
+@media (max-width: 800px) {
+  .edit-photo-section {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .edit-photo-copy {
+    width: 100%;
+  }
+
+  .selected-photo-name {
+    max-width: 100%;
+  }
+}
+.age-status-card {
+  display: grid;
+  gap: 5px;
+  padding: 13px 14px;
+  border: 1px solid rgba(158, 98, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(120, 70, 210, 0.07);
+}
+
+.age-status-card strong {
+  color: #fff;
+  font-size: 13px;
+}
+
+.age-status-card span {
+  color: rgba(255, 255, 255, 0.58);
+  font-size: 11px;
+  line-height: 1.45;
+}

@@ -1,0 +1,117 @@
+/* =========================================================
+   RESPONSIVE BREAKPOINTS
+   Part of GamingVerse Profile page styles
+========================================================= */
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1200px) {
+  .profile-content {
+    grid-template-columns: 300px minmax(420px, 1fr);
+  }
+
+  .profile-right {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .profile-header {
+    height: 70px;
+    padding: 0 18px;
+  }
+
+  .profile-logo-icon {
+    width: 38px;
+    height: 38px;
+    font-size: 20px;
+  }
+
+  .profile-logo-text strong {
+    font-size: 19px;
+  }
+
+  .profile-logo-text small {
+    font-size: 10px;
+  }
+
+  .profile-content {
+    grid-template-columns: 1fr;
+    padding: 22px 14px 40px;
+  }
+
+  .profile-left-card {
+    max-width: 520px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .profile-middle {
+    width: 100%;
+  }
+
+  .profile-tabs {
+    margin-bottom: 20px;
+  }
+
+  .profile-filter-row {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+
+  .filter-btn {
+    white-space: nowrap;
+  }
+
+  .review-view-tools {
+    display: none;
+  }
+
+  .edit-profile-page {
+    display: block;
+  }
+
+  .edit-sidebar {
+    width: 100%;
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid #292929;
+  }
+
+  .edit-sidebar-bottom {
+    display: none;
+  }
+
+  .edit-profile-main {
+    padding: 30px 18px;
+  }
+
+  .edit-profile-card {
+    padding: 22px;
+  }
+
+  .edit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full-field {
+    grid-column: auto;
+  }
+
+  .edit-photo-section {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .edit-actions {
+    flex-direction: column-reverse;
+  }
+
+  .cancel-profile-btn,
+  .save-profile-btn {
+    width: 100%;
+  }
+}

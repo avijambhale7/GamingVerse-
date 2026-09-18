@@ -1,0 +1,130 @@
+/* =========================================================
+   SELLER
+   Part of GamingVerse Marketplace styles
+========================================================= */
+
+/* SELLER */
+
+.seller-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 18px;
+  padding: 25px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: linear-gradient(
+    125deg,
+    rgba(129, 62, 224, 0.16),
+    rgba(255, 255, 255, 0.02)
+  );
+}
+
+.seller-title h2 {
+  margin: 12px 0 5px;
+}
+
+.seller-title p {
+  margin: 0;
+  color: #77747f;
+}
+
+.seller-stats {
+  display: flex;
+  gap: 9px;
+}
+
+.seller-stats div {
+  min-width: 105px;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  text-align: center;
+}
+
+.seller-stats strong,
+.seller-stats span {
+  display: block;
+}
+
+.seller-stats strong {
+  font-size: 24px;
+}
+
+.seller-stats span {
+  margin-top: 3px;
+  color: var(--gv-text-dim);
+  font-size: 10px;
+}
+
+.seller-grid {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.8fr) minmax(0, 1.2fr);
+  gap: 15px;
+}
+
+.seller-products {
+  display: grid;
+  gap: 8px;
+}
+
+.seller-row,
+.seller-order {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 9px;
+  align-items: center;
+  padding: 11px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.seller-row strong,
+.seller-row span,
+.seller-row small,
+.seller-order strong,
+.seller-order span,
+.seller-order small {
+  display: block;
+}
+
+.seller-row span,
+.seller-row small,
+.seller-order span,
+.seller-order small {
+  margin-top: 3px;
+  color: var(--gv-text-dim);
+  font-size: 10px;
+}
+
+.seller-orders {
+  margin-top: 15px;
+}
+
+.seller-orders-list {
+  display: grid;
+  gap: 8px;
+}
+
+.seller-order {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.status {
+  padding: 7px 9px;
+  border-radius: 8px;
+  background: rgba(140, 70, 255, 0.1);
+  color: var(--gv-accent-bright);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.seller-empty {
+  min-height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #686570;
+  font-size: 13px;
+}

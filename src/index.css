@@ -1,3 +1,6 @@
+@import "./styles/tokens.css";
+@import "./styles/base.css";
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -13,8 +16,8 @@ body,
 
 body {
   margin: 0;
-  background: #000000;
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--gv-bg);
+  font-family: var(--gv-font);
 }
 
 button,

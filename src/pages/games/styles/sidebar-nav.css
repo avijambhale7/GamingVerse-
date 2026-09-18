@@ -1,0 +1,344 @@
+/* =========================================================
+   SIDEBAR NAV ICONS + PROFILE ICON
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =========================================================
+   SIDEBAR NAV ICONS
+========================================================= */
+
+.sidebar-nav-icon {
+  width: 21px;
+  min-width: 21px;
+  display: inline-grid;
+  place-items: center;
+  color: currentColor;
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* FINAL NAVBAR: compact outlined icons, active item expands to show its existing name */
+.games-main-nav {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0;
+  height: 64px;
+}
+.games-main-nav .nav-icon-link {
+  position: relative;
+  min-width: 62px;
+  height: 64px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #85858c;
+  cursor: pointer;
+  transition:
+    min-width 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+.games-main-nav .nav-icon-link svg {
+  width: 21px;
+  height: 21px;
+  flex: 0 0 auto;
+}
+.games-main-nav .nav-icon-label {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  font-size: 14px;
+  font-weight: 800;
+  transition:
+    max-width 0.2s ease,
+    opacity 0.2s ease;
+}
+.games-main-nav .nav-icon-link:hover {
+  color: #eeeef2;
+  background: rgba(255, 255, 255, 0.025);
+}
+.games-main-nav .nav-icon-link.active {
+  min-width: 128px;
+  color: var(--gv-text);
+  background: rgba(255, 255, 255, 0.045);
+  border-left-color: rgba(255, 255, 255, 0.03);
+  border-right-color: rgba(255, 255, 255, 0.03);
+}
+.games-main-nav .nav-icon-link.active .nav-icon-label {
+  max-width: 110px;
+  opacity: 1;
+}
+.games-main-nav .nav-icon-link.active::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 0;
+  height: 2px;
+  border-radius: 99px;
+  background: #a832ff;
+  box-shadow: 0 0 10px rgba(168, 50, 255, 0.65);
+}
+.search-box .search-icon-button {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #8f9098;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.search-box .search-icon-button:hover {
+  color: #fff;
+}
+.game-comments-section {
+  margin-top: 28px;
+  padding: 22px;
+  border: 1px solid rgba(168, 50, 255, 0.22);
+  border-radius: 18px;
+  background: rgba(9, 8, 16, 0.82);
+}
+.comments-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.comments-eyebrow {
+  display: block;
+  margin-bottom: 5px;
+  color: #a832ff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+}
+.comments-heading h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 22px;
+}
+.comments-count {
+  min-width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(168, 50, 255, 0.14);
+  color: var(--gv-accent-bright);
+  font-weight: 800;
+}
+.comment-composer {
+  display: flex;
+  gap: 12px;
+}
+.comment-avatar {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7620d8, #b52cff);
+  color: #fff;
+  font-weight: 800;
+}
+.comment-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.comment-input-area {
+  flex: 1;
+  min-width: 0;
+}
+.comment-input-area textarea {
+  width: 100%;
+  min-height: 92px;
+  resize: vertical;
+  padding: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.035);
+  color: #fff;
+  font: inherit;
+}
+.comment-input-area textarea:focus {
+  border-color: rgba(168, 50, 255, 0.65);
+}
+.comment-input-area textarea::placeholder {
+  color: #777783;
+}
+.comment-composer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+.comment-composer-bottom small {
+  color: var(--gv-text-dim);
+}
+.comment-composer-bottom button {
+  padding: 9px 15px;
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(90deg, #8523e8, #b52cff);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+.comment-composer-bottom button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.comments-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+}
+.comment-card {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.025);
+}
+.comment-body {
+  min-width: 0;
+  flex: 1;
+}
+.comment-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.comment-topline strong {
+  color: #fff;
+  font-size: 13px;
+}
+.comment-topline span {
+  color: var(--gv-text-dim);
+  font-size: 11px;
+}
+.comment-body p {
+  margin: 7px 0 0;
+  color: #c5c5cc;
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.comments-empty {
+  padding: 28px 10px;
+  text-align: center;
+  color: #777783;
+}
+.comments-empty strong {
+  display: block;
+  color: #ddd;
+  margin-bottom: 5px;
+}
+.comments-empty p {
+  margin: 0;
+  font-size: 13px;
+}
+@media (max-width: 1000px) {
+  .games-main-nav .nav-icon-link {
+    min-width: 52px;
+    padding: 0 10px;
+  }
+  .games-main-nav .nav-icon-link.active {
+    min-width: 110px;
+  }
+}
+@media (max-width: 750px) {
+  .games-main-nav {
+    height: 52px;
+    overflow-x: auto;
+  }
+  .games-main-nav .nav-icon-link,
+  .games-main-nav .nav-icon-link.active {
+    min-width: 48px;
+    width: 48px;
+    height: 52px;
+    padding: 0;
+  }
+  .games-main-nav .nav-icon-label {
+    display: none;
+  }
+  .games-main-nav .nav-icon-link.active::after {
+    left: 9px;
+    right: 9px;
+  }
+  .comment-composer {
+    align-items: flex-start;
+  }
+}
+/* =========================================================
+   GAMINGVERSE NAVBAR - PROFILE ICON FIX
+   Prevent Profile.css from making navbar avatar huge
+========================================================= */
+
+.games-navbar .profile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+.games-navbar .profile-avatar {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+
+  max-width: 38px !important;
+  max-height: 38px !important;
+
+  border-radius: 50%;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  font-size: 14px !important;
+  line-height: 1;
+
+  background: linear-gradient(135deg, #7520dc, #b12bff);
+  color: white;
+
+  box-shadow: 0 0 14px rgba(164, 44, 255, 0.25);
+}
+
+.games-navbar .profile-avatar img {
+  width: 100% !important;
+  height: 100% !important;
+
+  max-width: 100% !important;
+  max-height: 100% !important;
+
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Hide username/status in compact navbar */
+.games-navbar .profile-info {
+  display: none;
+}

@@ -1,0 +1,94 @@
+/* =========================================================
+   PAGE SHELL, HEADER, BRAND
+   Part of GamingVerse Cafe booking styles
+========================================================= */
+
+.cafe-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at 10% 0%,
+      rgba(150, 70, 255, 0.14),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 90% 15%,
+      rgba(100, 50, 180, 0.1),
+      transparent 25%
+    ),
+    var(--gv-surface-1);
+  color: #f5f3ff;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  padding-bottom: 70px;
+}
+.cafe-header {
+  width: min(1400px, calc(100% - 70px));
+  margin: auto;
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.cafe-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: none;
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.cafe-brand-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #7c2cff, var(--gv-accent));
+  font-size: 25px;
+}
+.cafe-brand strong,
+.cafe-brand small {
+  display: block;
+}
+.cafe-brand strong {
+  font-size: 22px;
+}
+.cafe-brand small {
+  margin-top: 3px;
+  color: #888493;
+  font-size: 12px;
+}
+.cafe-header-actions {
+  display: flex;
+  gap: 9px;
+}
+.cafe-header-actions button {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.035);
+  color: #ddd9e8;
+  border-radius: 11px;
+  padding: 11px 14px;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.cafe-header-actions .cafe-bookings-btn {
+  background: linear-gradient(135deg, #722cff, var(--gv-accent));
+  border-color: transparent;
+  color: #fff;
+}
+.cafe-main {
+  width: min(1400px, calc(100% - 70px));
+  margin: auto;
+  padding-top: 28px;
+}

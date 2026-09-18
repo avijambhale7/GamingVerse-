@@ -1,0 +1,76 @@
+/* =========================================================
+   FILTERS + SECTION HEADINGS
+   Part of GamingVerse Marketplace styles
+========================================================= */
+
+/* FILTERS */
+
+.market-filters {
+  display: grid;
+  grid-template-columns: 2fr repeat(4, minmax(135px, 1fr));
+  gap: 10px;
+  margin: 20px 0 28px;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.market-filters input,
+.market-filters select,
+.form-grid input,
+.form-grid select,
+.form-grid textarea {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  outline: none;
+  border-radius: 10px;
+  background: #111118;
+  color: #fff;
+  padding: 0 13px;
+  font: inherit;
+  font-size: 13px;
+}
+
+.form-grid textarea {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  resize: vertical;
+}
+
+.market-filters input::placeholder,
+.form-grid input::placeholder,
+.form-grid textarea::placeholder {
+  color: #696774;
+}
+
+.market-filters input:focus,
+.market-filters select:focus,
+.form-grid input:focus,
+.form-grid select:focus,
+.form-grid textarea:focus {
+  border-color: rgba(166, 91, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(145, 73, 255, 0.08);
+}
+
+/* SECTION */
+
+.results-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.results-heading h2,
+.section-page h2 {
+  margin: 0;
+  font-size: 26px;
+}
+
+.results-heading p {
+  margin: 5px 0 0;
+  color: #73717d;
+  font-size: 13px;
+}

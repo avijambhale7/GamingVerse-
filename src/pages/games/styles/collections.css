@@ -1,0 +1,225 @@
+/* =========================================================
+   COLLECTIONS HUB
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =========================================================
+   COLLECTIONS HUB — THREE SECTIONS IN ONE ROW
+========================================================= */
+
+.collections-hub {
+  min-height: calc(100vh - 78px);
+  padding: 54px 45px 90px;
+  background:
+    radial-gradient(
+      circle at 18% 10%,
+      rgba(168, 50, 255, 0.09),
+      transparent 30%
+    ),
+    var(--gv-surface-1);
+}
+
+.collections-hub-header {
+  width: min(1500px, 100%);
+  margin: 0 auto 30px;
+}
+
+.collections-hub-header h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.1;
+}
+
+.collections-hub-header p {
+  margin: 9px 0 0;
+  color: #858692;
+  font-size: 14px;
+}
+
+.collections-three-column {
+  width: min(1500px, 100%);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.collection-library-panel {
+  min-width: 0;
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: var(--gv-surface-2);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.24);
+}
+
+.collection-library-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 15px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.collection-library-heading h2 {
+  margin: 0;
+  color: white;
+  font-size: 21px;
+  line-height: 1.2;
+}
+
+.collection-library-heading > span {
+  min-width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(168, 50, 255, 0.12);
+  color: var(--gv-accent-bright);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.watched-panel .collection-library-heading > span {
+  background: rgba(48, 219, 147, 0.1);
+  color: #69e2b0;
+}
+
+.later-panel .collection-library-heading > span {
+  background: rgba(255, 189, 23, 0.1);
+  color: #ffd56e;
+}
+
+.collection-library-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 3px;
+}
+
+.collection-library-item {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+  color: white;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: 0.2s ease;
+}
+
+.collection-library-item:hover {
+  transform: translateX(3px);
+  border-color: rgba(180, 92, 255, 0.34);
+  background: rgba(180, 92, 255, 0.06);
+}
+
+.collection-library-item img {
+  width: 82px;
+  height: 52px;
+  flex: 0 0 82px;
+  display: block;
+  object-fit: cover;
+  border-radius: 7px;
+}
+
+.collection-library-item span {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.collection-library-item strong {
+  overflow: hidden;
+  color: #eeeef2;
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.collection-library-item small {
+  color: #777883;
+  font-size: 9px;
+}
+
+.collection-library-empty {
+  min-height: 245px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 25px 15px;
+  text-align: center;
+}
+
+.collection-library-empty > span {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 11px;
+  border-radius: 50%;
+  background: rgba(168, 50, 255, 0.1);
+  color: var(--gv-accent-bright);
+  font-size: 20px;
+}
+
+.collection-library-empty strong {
+  color: #eeeef2;
+  font-size: 13px;
+}
+
+.collection-library-empty small {
+  max-width: 210px;
+  margin-top: 7px;
+  color: #767781;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+@media (max-width: 1050px) {
+  .collections-three-column {
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+}
+
+@media (max-width: 800px) {
+  .collections-hub {
+    padding: 38px 22px 65px;
+  }
+
+  .collections-three-column {
+    grid-template-columns: repeat(3, minmax(260px, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .collections-hub {
+    padding: 30px 15px 55px;
+  }
+
+  .collections-three-column {
+    grid-template-columns: repeat(3, minmax(245px, 1fr));
+    gap: 12px;
+  }
+
+  .collection-library-panel {
+    padding: 14px;
+  }
+}

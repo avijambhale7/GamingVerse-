@@ -1,0 +1,170 @@
+/* =========================================================
+   TABLET / MOBILE / SMALL MOBILE BREAKPOINTS
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 1100px) {
+  .games-navbar {
+    padding: 12px 25px;
+  }
+
+  .navbar-right {
+    gap: 10px;
+  }
+
+  .search-box {
+    width: 190px;
+  }
+
+  .poster-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .horizontal-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 750px) {
+  .featured-games-heading {
+    align-items: stretch;
+    gap: 18px;
+  }
+
+  .featured-games-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .home-category-select,
+  .home-category-select select {
+    width: 100%;
+  }
+
+  .featured-games-actions .view-all {
+    align-self: flex-start;
+  }
+
+  .games-navbar {
+    flex-wrap: wrap;
+
+    padding: 12px 18px;
+  }
+
+  .games-navbar nav {
+    order: 3;
+
+    width: 100%;
+
+    justify-content: center;
+
+    overflow-x: auto;
+  }
+
+  .navbar-right {
+    margin-left: auto;
+  }
+
+  .search-box {
+    width: 160px;
+  }
+
+  .profile-info {
+    display: none;
+  }
+
+  .hero-section {
+    padding: 15px 15px 0;
+  }
+
+  .hero-image-wrapper {
+    height: 430px;
+  }
+
+  .hero-content {
+    left: 25px;
+    right: 25px;
+    bottom: 30px;
+  }
+
+  .hero-content h1 {
+    font-size: 34px;
+  }
+
+  .games-content {
+    padding: 40px 18px 60px;
+  }
+
+  .horizontal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .poster-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .games-footer {
+    flex-direction: column;
+    gap: 10px;
+
+    text-align: center;
+  }
+}
+
+/* =====================================================
+   SMALL MOBILE
+===================================================== */
+
+@media (max-width: 480px) {
+  .brand-icon {
+    width: 43px;
+    height: 43px;
+
+    font-size: 22px;
+  }
+
+  .brand-text h2 {
+    font-size: 19px;
+  }
+
+  .brand-text small {
+    display: none;
+  }
+
+  .search-box {
+    width: 135px;
+  }
+
+  .hero-content h1 {
+    font-size: 29px;
+  }
+
+  .hero-content p {
+    font-size: 13px;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+
+    align-items: flex-start;
+  }
+
+  .play-button,
+  .details-button {
+    width: 150px;
+  }
+
+  .section-heading h2 {
+    font-size: 23px;
+  }
+}

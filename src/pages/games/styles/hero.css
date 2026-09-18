@@ -1,0 +1,307 @@
+/* =========================================================
+   HERO BANNER
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =====================================================
+   HERO
+===================================================== */
+
+.hero-section {
+  width: 100%;
+  padding: 0;
+}
+
+.hero-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 720px;
+  overflow: hidden;
+  border-radius: 0 0 20px 20px;
+  background: var(--gv-surface-1);
+  border-bottom: 1px solid rgba(169, 50, 255, 0.18);
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.65);
+}
+
+.hero-media {
+  position: absolute;
+  inset: 0;
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  filter: brightness(0.82) saturate(1.08);
+  animation: heroFadeIn 0.75s ease both;
+}
+
+@keyframes heroFadeIn {
+  from {
+    opacity: 0.45;
+    transform: scale(1.03);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.95) 0%,
+      rgba(0, 0, 0, 0.68) 30%,
+      rgba(0, 0, 0, 0.16) 65%,
+      rgba(0, 0, 0, 0.1) 100%
+    ),
+    linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.96) 0%,
+      rgba(0, 0, 0, 0.35) 35%,
+      transparent 70%
+    );
+}
+
+.hero-content {
+  position: absolute;
+  left: 54px;
+  bottom: 135px;
+  z-index: 4;
+  max-width: 600px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 13px;
+  border-radius: 999px;
+  background: rgba(169, 50, 255, 0.18);
+  border: 1px solid rgba(190, 94, 255, 0.4);
+  color: var(--gv-accent-bright);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  margin-bottom: 15px;
+}
+
+.hero-content h1 {
+  margin: 0;
+  max-width: 650px;
+  color: white;
+  font-size: clamp(42px, 5vw, 72px);
+  line-height: 1.02;
+  font-weight: 900;
+  text-shadow: 0 7px 28px rgba(0, 0, 0, 0.72);
+}
+
+.hero-content p {
+  max-width: 570px;
+  margin: 18px 0 24px;
+  color: #dddde4;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 11px;
+}
+
+.play-button,
+.details-button {
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: 0.22s ease;
+}
+
+.play-button {
+  border: 0;
+  background: linear-gradient(90deg, #8523e8, #c02cff);
+  color: white;
+  box-shadow: 0 12px 32px rgba(145, 38, 236, 0.36);
+}
+
+.play-button:hover,
+.details-button:hover {
+  transform: translateY(-2px);
+}
+
+.details-button {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(10, 10, 15, 0.58);
+  color: white;
+  backdrop-filter: blur(10px);
+}
+
+.hero-carousel {
+  position: absolute;
+  right: 28px;
+  bottom: 28px;
+  z-index: 6;
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  width: min(700px, 47%);
+}
+
+.hero-thumbnails {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.hero-thumb {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 70px;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 8px;
+  background: #111116;
+  cursor: pointer;
+  text-align: left;
+  transition: 0.22s ease;
+}
+
+.hero-thumb img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  filter: brightness(0.66);
+  transition:
+    transform 0.3s ease,
+    filter 0.3s ease;
+}
+
+.hero-thumb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 35%, rgba(0, 0, 0, 0.82));
+}
+
+.hero-thumb span {
+  position: absolute;
+  z-index: 2;
+  left: 7px;
+  right: 7px;
+  bottom: 6px;
+  overflow: hidden;
+  color: white;
+  font-size: 8px;
+  font-weight: 800;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.hero-thumb:hover {
+  transform: translateY(-4px);
+  border-color: rgba(190, 94, 255, 0.7);
+}
+
+.hero-thumb:hover img {
+  transform: scale(1.06);
+}
+
+.hero-thumb.active {
+  transform: translateY(-5px);
+  border-color: var(--gv-accent);
+  box-shadow: 0 0 18px rgba(180, 77, 255, 0.24);
+}
+
+.hero-thumb.active img {
+  filter: brightness(0.92);
+}
+
+.hero-carousel-arrows {
+  display: flex;
+  gap: 6px;
+}
+
+.hero-carousel-arrows button {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 50%;
+  background: rgba(5, 5, 10, 0.62);
+  backdrop-filter: blur(8px);
+  color: white;
+  font-size: 23px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.hero-carousel-arrows button:hover {
+  background: rgba(176, 74, 255, 0.28);
+  border-color: rgba(190, 94, 255, 0.62);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 900px) {
+  .hero-image-wrapper {
+    height: 620px;
+  }
+
+  .hero-content {
+    left: 32px;
+    right: 32px;
+    bottom: 135px;
+  }
+
+  .hero-carousel {
+    left: 32px;
+    right: 32px;
+    width: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero-image-wrapper {
+    height: 650px;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .hero-content {
+    left: 20px;
+    right: 20px;
+    bottom: 145px;
+  }
+
+  .hero-content h1 {
+    font-size: 37px;
+  }
+
+  .hero-content p {
+    font-size: 13px;
+  }
+
+  .hero-carousel {
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+  }
+
+  .hero-thumb {
+    height: 62px;
+  }
+
+  .hero-carousel-arrows button {
+    width: 34px;
+    height: 34px;
+  }
+}

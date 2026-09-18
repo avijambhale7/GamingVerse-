@@ -1,0 +1,89 @@
+/* =========================================================
+   GAME MEDIA FALLBACKS
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =========================================================
+   ROBUST GAME MEDIA FALLBACKS
+   Keep missing remote artwork from collapsing into a tiny broken image.
+========================================================= */
+.reference-game-hero-poster-button {
+  background: #111116;
+  overflow: hidden;
+}
+
+.reference-game-hero-poster {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.reference-game-hero-media {
+  overflow: hidden;
+}
+
+.reference-game-hero-thumbnail,
+.reference-game-hero-fallback {
+  background-color: #111116;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* FINAL ARRANGEMENT FIX — game detail trailer hero */
+.details-modal-reference .reference-game-hero-media {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  overflow: hidden !important;
+  background: var(--gv-bg) !important;
+}
+
+.details-modal-reference .reference-game-hero-thumbnail-image {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  display: block !important;
+  transform: none !important;
+}
+
+.details-modal-reference .reference-game-hero-play {
+  width: 60px !important;
+  height: 60px !important;
+  border-radius: 50% !important;
+  background: rgba(8, 8, 12, 0.82) !important;
+  color: #fff !important;
+  font-size: 24px !important;
+  line-height: 1 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
+}
+
+.details-modal-reference .reference-game-hero-content {
+  pointer-events: none !important;
+}
+
+.details-modal-reference .reference-game-hero-poster-button,
+.details-modal-reference .reference-hero-actions,
+.details-modal-reference .reference-game-hero-play {
+  pointer-events: auto !important;
+}
+
+.gv-trailer-player {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 520px !important;
+  display: block !important;
+  border: 0 !important;
+  background: var(--gv-bg) !important;
+}
+
+@media (max-width: 760px) {
+  .gv-trailer-player {
+    min-height: 280px !important;
+  }
+}

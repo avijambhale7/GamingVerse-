@@ -1,0 +1,103 @@
+/* =========================================================
+   CLICKABLE LIVE NEWS PILL
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =========================================================
+   CLICKABLE LIVE NEWS PILL
+========================================================= */
+.news-date-pill {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  color: inherit;
+}
+
+.news-date-pill:hover:not(:disabled) {
+  border-color: rgba(186, 91, 255, 0.65);
+  background: rgba(169, 50, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.news-date-pill:disabled {
+  cursor: wait;
+  opacity: 0.85;
+}
+
+.news-date-pill.is-loading .news-refresh-button {
+  animation: newsSpin 0.9s linear infinite;
+}
+
+.news-refresh-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes newsSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.cafe-nav-button .cafe-navbar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 21px;
+  height: 21px;
+  font-size: 19px;
+  line-height: 1;
+}
+
+.cafe-nav-button:hover {
+  color: #ffffff;
+}
+.age-locked-card {
+  cursor: not-allowed;
+}
+
+.age-locked-card img {
+  filter: brightness(0.42) saturate(0.7);
+}
+
+.age-lock-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: rgba(0, 0, 0, 0.48);
+  pointer-events: none;
+  text-align: center;
+}
+
+.age-lock-overlay span {
+  font-size: 28px;
+}
+
+.age-lock-overlay strong {
+  color: #ffffff;
+  font-size: 18px;
+}
+
+.age-lock-overlay small {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+}
+
+.poster-age-lock {
+  border-radius: 11px;
+}
+
+.game-age-badge {
+  padding: 3px 7px;
+  border: 1px solid rgba(169, 50, 255, 0.35);
+  border-radius: 999px;
+  color: var(--gv-accent-bright);
+  font-size: 10px;
+  font-weight: 800;
+}

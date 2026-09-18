@@ -1,0 +1,183 @@
+/* =========================================================
+   RESPONSIVE BREAKPOINTS
+   Part of GamingVerse Marketplace styles
+========================================================= */
+
+/* RESPONSIVE */
+
+@media (max-width: 1150px) {
+  .market-type-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .market-filters {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .market-filters input {
+    grid-column: 1 / -1;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .seller-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 850px) {
+  .market-header,
+  .market-hero,
+  .seller-title {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .market-header {
+    gap: 18px;
+  }
+
+  .market-nav {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .market-hero {
+    padding: 30px;
+  }
+
+  .market-hero h2 {
+    font-size: 42px;
+  }
+
+  .hero-stat {
+    width: 125px;
+    height: 125px;
+    flex-basis: 125px;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cart-layout,
+  .checkout-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-card {
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .market-type-tabs button {
+    min-height: 76px;
+    padding: 12px 14px;
+  }
+
+  .market-type-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+    font-size: 20px;
+  }
+
+  .online-shopping-links,
+  .detail-shopping-links {
+    grid-template-columns: 1fr;
+  }
+
+  .market-header,
+  .market-main {
+    width: min(100% - 24px, 1400px);
+  }
+
+  .market-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .market-filters input {
+    grid-column: auto;
+  }
+
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .market-hero {
+    min-height: auto;
+    padding: 25px;
+  }
+
+  .market-hero h2 {
+    font-size: 36px;
+  }
+
+  .detail-info {
+    padding: 22px;
+  }
+
+  .detail-image,
+  .detail-image img {
+    min-height: 360px;
+  }
+
+  .info-grid,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid .full {
+    grid-column: auto;
+  }
+
+  .detail-actions {
+    flex-direction: column;
+  }
+
+  .detail-actions button {
+    width: 100%;
+  }
+
+  .cart-item {
+    grid-template-columns: 62px minmax(0, 1fr);
+  }
+
+  .cart-image {
+    width: 62px;
+    height: 62px;
+  }
+
+  .quantity,
+  .cart-item > strong,
+  .cart-item .danger-link {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .tracker {
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .tracker-step {
+    min-width: 70px;
+  }
+
+  .seller-row,
+  .seller-order {
+    grid-template-columns: 1fr;
+  }
+
+  .seller-row button,
+  .seller-order button {
+    justify-self: start;
+  }
+}

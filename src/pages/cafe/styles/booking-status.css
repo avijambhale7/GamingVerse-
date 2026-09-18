@@ -1,0 +1,62 @@
+/* =========================================================
+   HOURLY BOOKING REQUEST / OWNER APPROVAL STATUS
+   Part of GamingVerse Cafe booking styles
+========================================================= */
+
+/* =========================================================
+   HOURLY BOOKING REQUEST / OWNER APPROVAL STATUS
+   ========================================================= */
+.booking-owner-note {
+  display: block;
+  margin-top: 6px;
+  color: #aaa3b5 !important;
+  font-size: 11px !important;
+  font-weight: 700;
+}
+
+.booking-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.booking-status-pending {
+  background: rgba(255, 190, 72, 0.1);
+  border: 1px solid rgba(255, 190, 72, 0.22);
+  color: #ffd477;
+}
+
+.booking-status-confirmed {
+  background: rgba(83, 220, 155, 0.1);
+  border: 1px solid rgba(83, 220, 155, 0.22);
+  color: #8bf1ba;
+}
+
+.booking-status-rejected,
+.booking-status-cancelled {
+  background: rgba(255, 92, 115, 0.09);
+  border: 1px solid rgba(255, 92, 115, 0.2);
+  color: #ff9ba8;
+}
+
+.booking-status-completed {
+  background: rgba(145, 126, 255, 0.1);
+  border: 1px solid rgba(145, 126, 255, 0.22);
+  color: #c3b9ff;
+}
+
+.time-slot:not(:disabled):hover {
+  transform: translateY(-2px);
+  border-color: rgba(177, 84, 255, 0.42);
+  box-shadow: 0 8px 24px rgba(137, 43, 255, 0.12);
+}
+
+.confirm-booking {
+  margin-top: 14px;
+}

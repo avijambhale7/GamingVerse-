@@ -1,0 +1,614 @@
+/* =========================================================
+   DISCOVER GRID + DISCOVERY PAGE
+   Part of GamingVerse Games page styles
+========================================================= */
+
+/* =========================================================
+   GAMINGVERSE DISCOVER GRID - 5 ITEM MENU
+   Compact 3 + 2 card layout matching the reference image.
+   The original menu items remain untouched; extra entries are
+   hidden visually so no existing JSX lines are removed.
+========================================================= */
+.discover-popover {
+  width: 556px;
+  max-width: calc(100vw - 28px);
+  padding: 14px;
+  box-sizing: border-box;
+}
+
+.discover-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+/* Keep the original 13-item JSX intact; show the 5 requested cards. */
+.discover-menu-item:nth-child(n + 6) {
+  display: none;
+}
+
+.discover-menu-item {
+  min-width: 0;
+  min-height: 118px;
+  padding: 14px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: linear-gradient(
+    145deg,
+    rgba(22, 22, 28, 0.98),
+    rgba(12, 12, 17, 0.98)
+  );
+  color: #e9e9ee;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.discover-menu-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(168, 63, 255, 0.55);
+  background: linear-gradient(
+    145deg,
+    rgba(30, 22, 39, 0.99),
+    rgba(14, 13, 19, 0.99)
+  );
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.28),
+    0 0 18px rgba(168, 63, 255, 0.08);
+}
+
+.discover-menu-icon {
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #e8e8ec;
+  font-size: 25px;
+  line-height: 1;
+}
+
+@media (max-width: 650px) {
+  .discover-popover {
+    width: min(556px, calc(100vw - 20px));
+    right: 10px;
+  }
+
+  .discover-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 430px) {
+  .discover-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .discover-menu-item {
+    min-height: 92px;
+    flex-direction: row;
+  }
+}
+
+/* =========================================================
+   GAMINGVERSE DISCOVER — GAME DISCOVERY PAGE
+   Added for the game-focused Discover experience.
+========================================================= */
+.discover-games-page {
+  min-height: calc(100vh - 78px);
+  padding: 42px 0 90px;
+  background: #050505;
+}
+
+.discover-games-layout {
+  width: min(1400px, calc(100% - 72px));
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  gap: 60px;
+  align-items: start;
+}
+
+.discover-games-sidebar {
+  padding: 4px 0 20px;
+  position: sticky;
+  top: 96px;
+}
+
+.discover-sidebar-title,
+.discover-filter-heading {
+  color: #85858c;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+}
+
+.discover-sidebar-title {
+  margin-bottom: 18px;
+}
+
+.discover-filter-label {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #29292e;
+}
+
+.discover-filter-label > span {
+  color: #85858c;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+}
+
+.discover-filter-label select {
+  width: 100%;
+  min-height: 45px;
+  padding: 0 12px;
+  border: 1px solid #303038;
+  border-radius: 8px;
+  outline: none;
+  background: var(--gv-surface-1);
+  color: #ededf0;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.discover-filter-group {
+  padding: 23px 0;
+  border-bottom: 1px solid #29292e;
+}
+
+.discover-filter-heading {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 11px;
+}
+
+.discover-filter-button {
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  margin: 3px 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #bdbdc4;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.discover-filter-button:hover {
+  background: #141416;
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.discover-filter-button.active {
+  background: var(--gv-surface-3);
+  color: #fff;
+  box-shadow: inset 3px 0 0 var(--gv-accent);
+}
+
+.discover-filter-button > span:first-child:not(.discover-filter-dot) {
+  width: 20px;
+  min-width: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.discover-filter-dot {
+  width: 10px;
+  height: 10px;
+  min-width: 10px;
+  border-radius: 50%;
+  background: var(--gv-accent);
+  box-shadow: 0 0 10px rgba(168, 63, 255, 0.3);
+}
+
+.release-dot {
+  border-radius: 3px;
+  background: #22c55e;
+}
+
+.discover-clear-button {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 22px;
+  border: 1px solid #2d2d34;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--gv-text-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.discover-clear-button:hover {
+  border-color: var(--gv-accent);
+  color: #fff;
+}
+
+.discover-games-main {
+  min-width: 0;
+}
+
+.discover-games-header {
+  padding: 5px 0 28px;
+  border-bottom: 1px solid #29292e;
+}
+
+.discover-games-header h1 {
+  margin: 7px 0 10px;
+  color: var(--gv-text);
+  font-size: clamp(34px, 4vw, 52px);
+  line-height: 1.05;
+  letter-spacing: -1.8px;
+  font-weight: 850;
+}
+
+.discover-games-header p {
+  max-width: 720px;
+  margin: 0;
+  color: #8c8c94;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.discover-games-hero {
+  min-height: 510px;
+  margin-top: 20px;
+  padding: 54px 70px;
+  border: 1px solid #28282d;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 8% 12%, rgba(168, 63, 255, 0.1), transparent 34%),
+    radial-gradient(
+      circle at 92% 88%,
+      rgba(30, 150, 180, 0.08),
+      transparent 34%
+    ),
+    var(--gv-surface-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.24);
+}
+
+.discover-hero-icon {
+  width: 72px;
+  height: 72px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 26px;
+  border: 1px solid #38383d;
+  border-radius: 17px;
+  background: linear-gradient(145deg, #252528, var(--gv-surface-2));
+  color: #e6e6e9;
+}
+
+.discover-games-hero h2 {
+  margin: 0;
+  color: var(--gv-text);
+  font-size: clamp(25px, 3vw, 34px);
+  line-height: 1.15;
+  letter-spacing: -0.8px;
+}
+
+.discover-games-hero > p {
+  max-width: 620px;
+  margin: 13px 0 0;
+  color: var(--gv-text-muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.discover-quick-divider {
+  width: 78%;
+  height: 1px;
+  margin: 40px 0 27px;
+  background: #29292e;
+}
+
+.discover-quick-title {
+  color: var(--gv-text-muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.1px;
+}
+
+.discover-presets {
+  max-width: 760px;
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px;
+}
+
+.discover-preset {
+  min-height: 39px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 15px;
+  border: 1px solid #303035;
+  border-radius: 999px;
+  background: #1a1a1c;
+  color: #d2d2d7;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.discover-preset:hover,
+.discover-preset.active {
+  border-color: var(--gv-accent);
+  background: rgba(168, 63, 255, 0.1);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.discover-preset span {
+  color: var(--gv-accent-bright);
+  font-size: 15px;
+}
+
+.discover-results-section {
+  margin-top: 45px;
+}
+
+.discover-results-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #29292e;
+}
+
+.discover-results-heading h2 {
+  margin: 6px 0 0;
+  color: var(--gv-text);
+  font-size: 25px;
+}
+
+.discover-results-heading > span {
+  color: #77777f;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.discover-results-grid {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.discover-result-card {
+  overflow: hidden;
+  border: 1px solid var(--gv-surface-hover);
+  border-radius: 12px;
+  background: var(--gv-surface-2);
+  cursor: pointer;
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.discover-result-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(168, 63, 255, 0.45);
+  box-shadow: 0 18px 35px rgba(0, 0, 0, 0.35);
+}
+
+.discover-result-image {
+  position: relative;
+  height: 185px;
+  overflow: hidden;
+  background: var(--gv-surface-3);
+}
+
+.discover-result-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.discover-result-image > span:first-child {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 34px;
+}
+
+.discover-result-age {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 850;
+}
+
+.discover-result-info {
+  padding: 15px;
+}
+
+.discover-result-info h3 {
+  overflow: hidden;
+  margin: 0 0 7px;
+  color: var(--gv-text);
+  font-size: 15px;
+  line-height: 1.3;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.discover-result-info > p {
+  overflow: hidden;
+  margin: 0 0 10px;
+  color: var(--gv-accent);
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.discover-result-meta {
+  min-height: 33px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #74747c;
+  font-size: 10px;
+}
+
+.discover-result-meta span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.discover-result-meta strong {
+  flex: 0 0 auto;
+  color: var(--gv-accent-bright);
+  font-size: 10px;
+}
+
+.discover-result-info button {
+  width: 100%;
+  min-height: 36px;
+  margin-top: 8px;
+  border: 1px solid #34343b;
+  border-radius: 7px;
+  background: var(--gv-surface-3);
+  color: #e5e5e8;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.discover-result-info button:hover {
+  border-color: var(--gv-accent);
+  background: rgba(168, 63, 255, 0.1);
+}
+
+.discover-no-results {
+  min-height: 260px;
+  margin-top: 22px;
+  border: 1px solid #28282d;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  text-align: center;
+  background: var(--gv-surface-2);
+}
+
+.discover-no-results span {
+  font-size: 34px;
+}
+
+.discover-no-results h2 {
+  margin: 4px 0;
+  color: #eeeef1;
+  font-size: 20px;
+}
+
+.discover-no-results p {
+  margin: 0;
+  color: #77777f;
+  font-size: 12px;
+}
+
+@media (max-width: 1100px) {
+  .discover-games-layout {
+    width: min(920px, calc(100% - 40px));
+    grid-template-columns: 230px minmax(0, 1fr);
+    gap: 35px;
+  }
+
+  .discover-games-hero {
+    padding: 45px 35px;
+  }
+
+  .discover-results-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .discover-games-page {
+    padding-top: 30px;
+  }
+
+  .discover-games-layout {
+    width: calc(100% - 24px);
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .discover-games-sidebar {
+    position: static;
+  }
+
+  .discover-filter-group {
+    padding: 16px 0;
+  }
+
+  .discover-games-header h1 {
+    font-size: 34px;
+  }
+
+  .discover-games-hero {
+    min-height: 470px;
+    padding: 35px 20px;
+  }
+
+  .discover-results-grid {
+    grid-template-columns: 1fr;
+  }
+}

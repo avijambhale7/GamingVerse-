@@ -1,0 +1,278 @@
+/* =========================================================
+   PRODUCT GRID + CARDS
+   Part of GamingVerse Marketplace styles
+========================================================= */
+
+/* PRODUCTS */
+
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.product-card {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 18px;
+  background: var(--gv-surface-2);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(163, 92, 255, 0.35);
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.3);
+}
+
+.product-image {
+  position: relative;
+  height: 220px;
+  overflow: hidden;
+  background: var(--gv-surface-3);
+}
+
+/* Keep the product photo visible while badges/buttons sit above it. */
+.product-image img {
+  position: relative;
+  z-index: 1;
+
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.product-card:hover .product-image img {
+  transform: scale(1.04);
+}
+
+.product-image > span:not(.condition-badge) {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 56px;
+  background:
+    radial-gradient(circle, rgba(144, 71, 255, 0.26), transparent 55%), var(--gv-surface-3);
+}
+
+.wishlist-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  background: rgba(5, 5, 9, 0.58);
+  color: #fff;
+  cursor: pointer;
+  font-size: 18px;
+  backdrop-filter: blur(8px);
+}
+
+.wishlist-button:hover {
+  background: rgba(128, 53, 255, 0.75);
+}
+
+.condition-badge {
+  position: absolute;
+  left: 11px;
+  bottom: 11px;
+  z-index: 4;
+  width: auto;
+  height: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 9px;
+  border-radius: 7px;
+  background: rgba(5, 5, 9, 0.78);
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.product-content {
+  padding: 16px;
+}
+
+.product-content > small {
+  color: #787683;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.product-content h3 {
+  margin: 8px 0 7px;
+  font-size: 17px;
+  line-height: 1.2;
+}
+
+.rating {
+  color: #ffd56d;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.product-content p {
+  min-height: 42px;
+  margin: 9px 0 14px;
+  color: #85828e;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.product-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.product-bottom strong {
+  display: block;
+  font-size: 19px;
+}
+
+.product-bottom small {
+  display: block;
+  margin-top: 3px;
+  color: var(--gv-text-dim);
+  font-size: 10px;
+}
+
+.online-shopping-links {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  margin-top: 10px;
+}
+
+.online-shopping-links a,
+.detail-shopping-links a {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 10px;
+  font-weight: 850;
+  transition: 0.2s ease;
+}
+
+.amazon-link {
+  border: 1px solid rgba(255, 173, 48, 0.28);
+  background: rgba(255, 173, 48, 0.08);
+  color: #ffd07a;
+}
+
+.amazon-link:hover {
+  background: rgba(255, 173, 48, 0.15);
+}
+
+.flipkart-link {
+  border: 1px solid rgba(55, 145, 255, 0.28);
+  background: rgba(55, 145, 255, 0.08);
+  color: #8cc5ff;
+}
+
+.flipkart-link:hover {
+  background: rgba(55, 145, 255, 0.15);
+}
+
+.detail-shopping-links {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.detail-shopping-links a {
+  min-height: 42px;
+  font-size: 12px;
+}
+
+.primary-btn,
+.secondary-btn,
+.danger-btn,
+.back-btn {
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  transition: 0.2s ease;
+}
+
+.primary-btn {
+  border: 0;
+  padding: 11px 14px;
+  color: #fff;
+  background: linear-gradient(135deg, #792cff, var(--gv-accent));
+  box-shadow: 0 8px 25px rgba(126, 48, 255, 0.18);
+}
+
+.primary-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+}
+
+.primary-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.primary-btn.large {
+  padding: 13px 19px;
+}
+
+.primary-btn.full {
+  width: 100%;
+}
+
+.secondary-btn {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 11px 14px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.danger-btn {
+  border: 1px solid rgba(255, 83, 112, 0.18);
+  padding: 10px 12px;
+  color: #ff8ca0;
+  background: rgba(255, 83, 112, 0.08);
+}
+
+.danger-link {
+  border: 0;
+  padding: 0;
+  color: #ff8099;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.back-btn {
+  margin-bottom: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 10px 14px;
+  color: #aaa7b2;
+  background: rgba(255, 255, 255, 0.035);
+}

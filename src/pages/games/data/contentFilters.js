@@ -1,0 +1,55 @@
+/* =========================================================
+   CONTENT SAFETY FILTERS
+   Terms and titles that must never surface in the catalogue.
+========================================================= */
+
+export const RAWG_BLOCKED_TERMS = [
+  "blue whale",
+  "self harm challenge",
+  "suicide challenge",
+  "dangerous challenge",
+  "being a dik",
+  "acting lessons",
+  "toys 18+",
+  "rainy waifu",
+  "waifu gamers",
+  "holy waifu",
+  "hot holes",
+  "hot foots",
+  "hot feet",
+  "sex secret",
+  "love 2077",
+  "desktop companion",
+  "alt girl",
+  "waifu",
+  "hentai",
+  "ecchi",
+  "eroge",
+  "porn",
+  "pornographic",
+  "nsfw",
+  "adult only",
+  "adult game",
+  "adult visual novel",
+  "sexual content",
+  "sexual themes",
+  "sexually explicit",
+  "explicit sexual",
+  "nudity",
+  "nude",
+  "naked",
+  "fetish",
+  "foot fetish",
+  "lustful",
+  "lewd",
+  "uncensored",
+  "erotic",
+  "erotica",
+  "sexualized",
+  "sexualised",
+  "femboy",
+  "fembot",
+];
+
+/* Games that must never be available through the normal game catalogue. */
+export const blockedGameNames = ["blue whale"];

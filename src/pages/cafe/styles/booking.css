@@ -1,0 +1,183 @@
+/* =========================================================
+   BOOKING VIEW, SLOTS, CONFIRMATION
+   Part of GamingVerse Cafe booking styles
+========================================================= */
+
+.cafe-booking-view {
+  padding-top: 8px;
+}
+.cafe-back {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.04);
+  color: #aaa6b4;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+.cafe-detail-grid {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 16px;
+}
+.cafe-detail-card,
+.cafe-slot-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background: var(--gv-surface-2);
+  padding: 23px;
+}
+.cafe-cover-icon {
+  width: 70px;
+  height: 70px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: rgba(134, 62, 255, 0.12);
+  font-size: 34px;
+  margin-bottom: 12px;
+}
+.cafe-rating {
+  color: #ffd66e;
+  font-weight: 900;
+}
+.cafe-detail-card h2,
+.cafe-slot-card h2 {
+  font-size: 29px;
+  margin: 10px 0;
+}
+.cafe-detail-card > p {
+  color: #87838f;
+  font-size: 12px;
+  line-height: 1.65;
+}
+.cafe-info-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 15px 0;
+}
+.cafe-info-pills span {
+  padding: 8px 9px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--gv-text-muted);
+  font-size: 10px;
+}
+.cafe-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cafe-links a {
+  color: var(--gv-accent-bright);
+  text-decoration: none;
+  border: 1px solid rgba(169, 108, 255, 0.2);
+  border-radius: 9px;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.cafe-slot-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #898592;
+  font-size: 11px;
+  font-weight: 800;
+}
+.cafe-slot-card input {
+  height: 45px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: #111118;
+  color: #fff;
+  padding: 0 12px;
+  font: inherit;
+}
+.slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0 10px;
+}
+.slot-header span {
+  font-weight: 850;
+}
+.slot-header small {
+  color: var(--gv-text-dim);
+}
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  max-height: 360px;
+  overflow: auto;
+  padding-right: 3px;
+}
+.time-slot {
+  min-height: 61px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #fff;
+  cursor: pointer;
+}
+.time-slot strong,
+.time-slot small {
+  display: block;
+}
+.time-slot strong {
+  font-size: 11px;
+}
+.time-slot small {
+  margin-top: 3px;
+  color: #78dca0;
+  font-size: 9px;
+}
+.time-slot.selected {
+  border-color: var(--gv-accent);
+  background: rgba(143, 69, 255, 0.15);
+}
+.time-slot.full {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.time-slot.full small {
+  color: #ff8e9c;
+}
+.confirm-booking {
+  width: 100%;
+  margin-top: 15px;
+  height: 47px;
+  border: 0;
+  border-radius: 11px;
+  color: #fff;
+  font: inherit;
+  font-weight: 900;
+  background: linear-gradient(135deg, #792cff, var(--gv-accent));
+  cursor: pointer;
+}
+.confirm-booking:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.online-appointment {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid rgba(169, 108, 255, 0.18);
+  border-radius: 13px;
+  background: rgba(132, 60, 255, 0.07);
+}
+.online-appointment p {
+  color: #85818e;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.online-appointment a {
+  color: var(--gv-accent-bright);
+  font-weight: 850;
+  text-decoration: none;
+}
