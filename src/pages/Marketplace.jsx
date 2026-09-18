@@ -1,6 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate as useRouterNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
-import { get, ref, set, push, update, remove } from "firebase/database";
+import {
+  get,
+  ref,
+  set,
+  push,
+  update,
+  remove,
+  onValue,
+} from "firebase/database";
 
 import { auth, db } from "../firebase";
 import "./Marketplace.css";
@@ -471,6 +480,9 @@ function money(value) {
 }
 
 export default function Marketplace({ embedded = false }) {
+  const routeNavigate = useRouterNavigate();
+  const navigateToGames = () => routeNavigate("/games");
+  const navigateToCafe = () => routeNavigate("/cafe");
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -507,6 +519,51 @@ export default function Marketplace({ embedded = false }) {
   const [sellerForm, setSellerForm] = useState(EMPTY_PRODUCT);
 
   const [editingId, setEditingId] = useState(null);
+
+  // Keep Marketplace product listings live. Anything a Café Owner adds to
+  // the shared products node appears for normal users without a page refresh.
+  // This listener also keeps edits/deletions in sync immediately.
+  useEffect(() => {
+    const productsRef = ref(db, "products");
+    const unsubscribeProducts = onValue(
+      productsRef,
+      (snapshot) => {
+        const data = snapshot.val() || {};
+        const firebaseProducts = Object.entries(data)
+          .filter(([, product]) => product && typeof product === "object")
+          .map(([id, product]) => ({
+            id,
+            ...product,
+            productType: product.productType || "game",
+          }))
+          .filter((product) => product.status !== "blocked");
+
+        const firebaseGameProducts = firebaseProducts.filter(
+          (product) => product.productType !== "accessory",
+        );
+
+        const firebaseAccessoryProducts = firebaseProducts.filter(
+          (product) => product.productType === "accessory",
+        );
+
+        setProducts([
+          ...DEMO_PRODUCTS,
+          ...firebaseGameProducts,
+          ...ACCESSORY_PRODUCTS,
+          ...firebaseAccessoryProducts,
+        ]);
+      },
+      (error) => {
+        console.error("Marketplace product listener error:", error);
+        // Keep the built-in catalogue visible if Firebase rules/network are
+        // unavailable. The Firebase rule for products must allow normal users
+        // to READ this node for owner-added products to appear.
+        setProducts([...DEMO_PRODUCTS, ...ACCESSORY_PRODUCTS]);
+      },
+    );
+
+    return () => unsubscribeProducts();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -548,40 +605,9 @@ export default function Marketplace({ embedded = false }) {
     setLoading(true);
 
     try {
-      const productsSnap = await get(ref(db, "products"));
-
-      // Always keep the built-in marketplace catalog available.
-      // Firebase products are added on top of it when present.
-      let firebaseProducts = [];
-
-      if (productsSnap.exists()) {
-        const data = productsSnap.val();
-
-        firebaseProducts = Object.entries(data)
-          .map(([id, product]) => ({
-            id,
-            ...product,
-            productType: product.productType || "game",
-          }))
-          .filter((product) => product.status !== "blocked");
-      }
-
-      const firebaseGameProducts = firebaseProducts.filter(
-        (product) => product.productType !== "accessory",
-      );
-
-      const firebaseAccessoryProducts = firebaseProducts.filter(
-        (product) => product.productType === "accessory",
-      );
-
-      const loadedProducts = [
-        ...DEMO_PRODUCTS,
-        ...firebaseGameProducts,
-        ...ACCESSORY_PRODUCTS,
-        ...firebaseAccessoryProducts,
-      ];
-
-      setProducts(loadedProducts);
+      // Product inventory is maintained by the realtime `products` listener
+      // above. Keeping it out of this user-data loader prevents a later cart,
+      // wishlist or order read from overwriting the live marketplace catalog.
 
       if (!currentUser) {
         setCart([]);
@@ -623,9 +649,9 @@ export default function Marketplace({ embedded = false }) {
     } catch (error) {
       console.error("Marketplace load error:", error);
 
-      // Keep both marketplace sections usable even if Firebase is
-      // unavailable or the database node/rules are not configured yet.
-      setProducts([...DEMO_PRODUCTS, ...ACCESSORY_PRODUCTS]);
+      // Do not reset the marketplace catalog here. The `products` node is
+      // maintained by the realtime listener above. A failure while loading
+      // cart/wishlist/orders must never remove owner-added marketplace items.
 
       if (currentUser) {
         setCart([]);
@@ -1214,6 +1240,15 @@ export default function Marketplace({ embedded = false }) {
       </div>
 
       <div className="market-nav">
+        {!embedded && (
+          <button
+            type="button"
+            onClick={() => navigateToGames()}
+            title="Back to GamingVerse"
+          >
+            ← Games
+          </button>
+        )}
         <button
           className={page === "products" ? "active" : ""}
           onClick={() => navigate("products")}
@@ -1252,6 +1287,16 @@ export default function Marketplace({ embedded = false }) {
         >
           🏪 Sell
         </button>
+
+        {!embedded && (
+          <button
+            type="button"
+            onClick={() => navigateToCafe()}
+            title="Open Gaming Café"
+          >
+            ☕ Café
+          </button>
+        )}
       </div>
     </div>
   );
@@ -2293,7 +2338,53 @@ export default function Marketplace({ embedded = false }) {
     >
       {toast && <div className="market-toast">{toast}</div>}
 
-      {renderHeader()}
+      {!embedded && renderHeader()}
+
+      {embedded && (
+        <div className="market-embedded-toolbar">
+          <div>
+            <span className="market-kicker">GAMINGVERSE MARKETPLACE</span>
+            <strong>Games, CDs & Accessories</strong>
+          </div>
+          <div className="market-embedded-actions">
+            <button
+              type="button"
+              className={page === "products" ? "active" : ""}
+              onClick={() => navigate("products")}
+            >
+              🛍 Shop
+            </button>
+            <button
+              type="button"
+              className={page === "wishlist" ? "active" : ""}
+              onClick={() => navigate("wishlist")}
+            >
+              ♡ Wishlist{wishlist.length ? ` (${wishlist.length})` : ""}
+            </button>
+            <button
+              type="button"
+              className={page === "cart" ? "active" : ""}
+              onClick={() => navigate("cart")}
+            >
+              🛒 Cart{cartCount ? ` (${cartCount})` : ""}
+            </button>
+            <button
+              type="button"
+              className={page === "orders" ? "active" : ""}
+              onClick={() => navigate("orders")}
+            >
+              📦 Orders
+            </button>
+            <button
+              type="button"
+              className={page === "seller" ? "active" : ""}
+              onClick={() => navigate("seller")}
+            >
+              🏪 Sell
+            </button>
+          </div>
+        </div>
+      )}
 
       <main className="market-main">
         {page === "products" && renderProducts()}

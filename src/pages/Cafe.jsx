@@ -1,7 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
-import { get, push, ref, remove, runTransaction, set } from "firebase/database";
+import {
+  get,
+  onValue,
+  push,
+  ref,
+  remove,
+  runTransaction,
+  set,
+} from "firebase/database";
 import { auth, db } from "../firebase";
 import "./Cafe.css";
 
@@ -369,11 +377,17 @@ function saveLocalBookings(uid, bookings) {
 function localSlotCount(cafeId, date, time, uid) {
   const bookings = loadLocalBookings(uid);
   return bookings.filter(
-    (b) => b.cafeId === cafeId && b.date === date && b.time === time,
+    (b) =>
+      b.cafeId === cafeId &&
+      b.date === date &&
+      b.time === time &&
+      !["Rejected", "Cancelled", "Completed"].includes(
+        String(b.status || "Confirmed"),
+      ),
   ).length;
 }
 
-export default function Cafe({ embedded = false }) {
+export default function Cafe() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -390,12 +404,60 @@ export default function Cafe({ embedded = false }) {
   const [showBookings, setShowBookings] = useState(false);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (currentUser) => {
+    let unsubscribeBookings = () => {};
+
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
-      if (currentUser) await loadBookings(currentUser.uid);
+
+      unsubscribeBookings();
+      unsubscribeBookings = () => {};
+
+      if (!currentUser) {
+        setBookings([]);
+        return;
+      }
+
+      const bookingsRef = ref(db, `cafeBookings/${currentUser.uid}`);
+      unsubscribeBookings = onValue(
+        bookingsRef,
+        (snapshot) => {
+          const localBookings = loadLocalBookings(currentUser.uid);
+          const firebaseBookings = snapshot.exists()
+            ? Object.entries(snapshot.val()).map(([id, value]) => ({
+                id,
+                ...value,
+              }))
+            : [];
+
+          const merged = [
+            ...firebaseBookings,
+            ...localBookings.filter(
+              (localBooking) =>
+                !firebaseBookings.some(
+                  (firebaseBooking) =>
+                    firebaseBooking.localId === localBooking.localId,
+                ),
+            ),
+          ].sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+
+          setBookings(merged);
+        },
+        (error) => {
+          console.error("Cafe bookings realtime listener error:", error);
+          setBookings(
+            loadLocalBookings(currentUser.uid).sort(
+              (a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0),
+            ),
+          );
+        },
+      );
     });
-    return () => unsub();
+
+    return () => {
+      unsubscribeAuth();
+      unsubscribeBookings();
+    };
   }, []);
 
   const notify = (text) => {
@@ -595,7 +657,11 @@ export default function Cafe({ embedded = false }) {
       date: selectedDate,
       time: selectedTime,
       station: `Station ${(locallyBooked % TOTAL_STATIONS) + 1}`,
-      status: "Confirmed",
+      status: "Pending",
+      customerName:
+        user.displayName || user.email?.split("@")[0] || "GamingVerse User",
+      customerEmail: user.email || "",
+      customerPhone: user.phoneNumber || "",
       createdAt: Date.now(),
     };
 
@@ -658,10 +724,12 @@ export default function Cafe({ embedded = false }) {
         setBookings((prev) => [bookingBase, ...prev]);
 
         notify(
-          "✓ Booking confirmed on this device. Connect Firebase Database write access to sync across devices.",
+          "✓ Booking request saved on this device. Connect Firebase Database write access to sync across devices.",
         );
       } else {
-        notify("✓ Café slot booked successfully.");
+        notify(
+          "✓ Booking request sent to the café owner. Waiting for approval.",
+        );
       }
 
       setSlotAvailability((prev) => ({
@@ -710,20 +778,25 @@ export default function Cafe({ embedded = false }) {
       const slotKey = booking.time.replace(/[^a-z0-9]/gi, "_").toLowerCase();
 
       try {
-        await runTransaction(
-          ref(db, `cafeSlots/${booking.cafeId}/${booking.date}/${slotKey}`),
-          (current) => {
-            if (!current) return current;
-            const nextBooked = Math.max(0, Number(current.booked || 0) - 1);
-            return nextBooked === 0
-              ? null
-              : {
-                  ...current,
-                  booked: nextBooked,
-                  updatedAt: Date.now(),
-                };
-          },
+        const occupied = ["Pending", "Confirmed"].includes(
+          String(booking.status || ""),
         );
+        if (occupied) {
+          await runTransaction(
+            ref(db, `cafeSlots/${booking.cafeId}/${booking.date}/${slotKey}`),
+            (current) => {
+              if (!current) return current;
+              const nextBooked = Math.max(0, Number(current.booked || 0) - 1);
+              return nextBooked === 0
+                ? null
+                : {
+                    ...current,
+                    booked: nextBooked,
+                    updatedAt: Date.now(),
+                  };
+            },
+          );
+        }
 
         await remove(ref(db, `cafeBookings/${user.uid}/${booking.id}`));
       } catch (firebaseError) {
@@ -758,33 +831,31 @@ export default function Cafe({ embedded = false }) {
 
   return (
     <div className="cafe-page">
-      {!embedded && (
-        <header className="cafe-header">
-          <button
-            className="cafe-brand"
-            type="button"
-            onClick={() => navigate("/games")}
-          >
-            <span className="cafe-brand-icon">🎮</span>
-            <span>
-              <strong>GamingVerse</strong>
-              <small>Level up your gaming experience</small>
-            </span>
+      <header className="cafe-header">
+        <button
+          className="cafe-brand"
+          type="button"
+          onClick={() => navigate("/games")}
+        >
+          <span className="cafe-brand-icon">🎮</span>
+          <span>
+            <strong>GamingVerse</strong>
+            <small>Level up your gaming experience</small>
+          </span>
+        </button>
+        <div className="cafe-header-actions">
+          <button type="button" onClick={() => navigate("/games")}>
+            ← Games
           </button>
-          <div className="cafe-header-actions">
-            <button type="button" onClick={() => navigate("/games")}>
-              ← Games
-            </button>
-            <button
-              type="button"
-              className="cafe-bookings-btn"
-              onClick={() => setShowBookings((v) => !v)}
-            >
-              📅 My Bookings{bookings.length ? ` (${bookings.length})` : ""}
-            </button>
-          </div>
-        </header>
-      )}
+          <button
+            type="button"
+            className="cafe-bookings-btn"
+            onClick={() => setShowBookings((v) => !v)}
+          >
+            📅 My Bookings{bookings.length ? ` (${bookings.length})` : ""}
+          </button>
+        </div>
+      </header>
 
       <main className="cafe-main">
         <section className="cafe-hero">
@@ -794,8 +865,8 @@ export default function Cafe({ embedded = false }) {
               Book your <b>gaming session.</b>
             </h1>
             <p>
-              Discover gaming cafés in Pune, choose your date and an available
-              time slot, then reserve your session.
+              Discover gaming cafés in Pune, choose your date and hourly slot,
+              then send a booking request to the café owner.
             </p>
           </div>
           <div className="cafe-hero-stat">
@@ -803,24 +874,6 @@ export default function Cafe({ embedded = false }) {
             <small>cafés listed</small>
           </div>
         </section>
-
-        {embedded && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              margin: "0 0 14px",
-            }}
-          >
-            <button
-              type="button"
-              className="cafe-bookings-btn"
-              onClick={() => setShowBookings((v) => !v)}
-            >
-              📅 My Bookings{bookings.length ? ` (${bookings.length})` : ""}
-            </button>
-          </div>
-        )}
 
         <section className="cafe-search-bar">
           <input
@@ -853,43 +906,68 @@ export default function Cafe({ embedded = false }) {
             </div>
             {bookings.length ? (
               <div className="cafe-bookings-list">
-                {bookings.map((b) => (
-                  <article className="cafe-booking-card" key={b.id}>
-                    <div>
-                      <span className="booking-status">{b.status}</span>
-                      <h3>{b.cafeName}</h3>
-                      <p>
-                        📅 {b.date} &nbsp; • &nbsp; 🕐 {b.time} &nbsp; • &nbsp;
-                        🎮 {b.station}
-                      </p>
-                      <small>{b.address}</small>
-                    </div>
-                    <div>
-                      <a
-                        href={
-                          CAFES.find((c) => c.id === b.cafeId)?.mapUrl || "#"
-                        }
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Open Map ↗
-                      </a>
-                      <button
-                        type="button"
-                        className="cancel-booking"
-                        onClick={() => cancelBooking(b)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </article>
-                ))}
+                {bookings.map((b) => {
+                  const status = b.status || "Confirmed";
+                  const statusText =
+                    status === "Pending"
+                      ? "Waiting for café approval"
+                      : status === "Confirmed"
+                        ? "Booking confirmed"
+                        : status === "Rejected"
+                          ? "Request rejected"
+                          : status;
+                  const canCancel = ![
+                    "Completed",
+                    "Cancelled",
+                    "Rejected",
+                  ].includes(status);
+                  return (
+                    <article className="cafe-booking-card" key={b.id}>
+                      <div>
+                        <span
+                          className={`booking-status booking-status-${status.toLowerCase()}`}
+                        >
+                          {status}
+                        </span>
+                        <h3>{b.cafeName}</h3>
+                        <p>
+                          📅 {b.date} &nbsp; • &nbsp; 🕐 {b.time} &nbsp; •
+                          &nbsp; 🎮 {b.station}
+                        </p>
+                        <small>{b.address}</small>
+                        <small className="booking-owner-note">
+                          {statusText}
+                        </small>
+                      </div>
+                      <div>
+                        <a
+                          href={
+                            CAFES.find((c) => c.id === b.cafeId)?.mapUrl || "#"
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          Open Map ↗
+                        </a>
+                        {canCancel && (
+                          <button
+                            type="button"
+                            className="cancel-booking"
+                            onClick={() => cancelBooking(b)}
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             ) : (
               <div className="cafe-empty">
                 <div>📅</div>
                 <h3>No bookings yet</h3>
-                <p>Pick a café and reserve your first gaming session.</p>
+                <p>Pick a café and request your first gaming session.</p>
               </div>
             )}
           </section>
@@ -938,7 +1016,7 @@ export default function Cafe({ embedded = false }) {
               </div>
               <div className="cafe-slot-card">
                 <span className="cafe-step">STEP 1</span>
-                <h2>Choose date & time</h2>
+                <h2>Choose date & hourly slot</h2>
                 <label>
                   Date
                   <input
@@ -954,7 +1032,7 @@ export default function Cafe({ embedded = false }) {
                 {/online appointment/i.test(selectedCafe.opening) ? null : (
                   <>
                     <div className="slot-header">
-                      <span>Available time slots</span>
+                      <span>Available hourly slots</span>
                       <small>
                         {loadingSlots
                           ? "Checking availability..."
@@ -990,9 +1068,9 @@ export default function Cafe({ embedded = false }) {
                       onClick={bookCafe}
                     >
                       {saving
-                        ? "Booking..."
+                        ? "Sending Request..."
                         : selectedTime
-                          ? `Confirm ${selectedTime} Booking`
+                          ? `Request ${selectedTime} Booking`
                           : "Select a Time Slot"}
                     </button>
                   </>

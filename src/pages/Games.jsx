@@ -1054,24 +1054,6 @@ const DEFAULT_CLUB_DISCUSSIONS = [
   },
 ];
 
-const DEFAULT_CLUB_EVENTS = [
-  {
-    id: "club-event-1",
-    title: "Friday Night FPS",
-    meta: "Friday • 8:00 PM • 16 gamers",
-  },
-  {
-    id: "club-event-2",
-    title: "PS5 Co-op Session",
-    meta: "Saturday • 7:30 PM • 11 gamers",
-  },
-  {
-    id: "club-event-3",
-    title: "PC Gaming Community Night",
-    meta: "Sunday • 6:00 PM • 24 gamers",
-  },
-];
-
 const currentGamingNews = [
   {
     id: "konami-press-start",
@@ -1530,9 +1512,11 @@ function Games() {
           ? "following"
           : view === "top100"
             ? "top100"
-            : view === "spaces" || view === "clubs"
+            : view === "spaces"
               ? "trailers"
-              : "home",
+              : view === "clubs"
+                ? "clubs"
+                : "home",
     );
     if (view === "clubs") {
       setSpacesSection("clubs");
@@ -1554,10 +1538,19 @@ function Games() {
   useEffect(() => {
     const navigationEntry = performance.getEntriesByType("navigation")[0];
     if (navigationEntry?.type === "reload") {
-      setActiveView("home");
-      setActiveCategory("All");
-      if (searchParams.get("view")) {
-        navigate("/games", { replace: true });
+      const reloadView = searchParams.get("view");
+      if (reloadView === "clubs") {
+        setActiveView("clubs");
+        setSpacesSection("clubs");
+      } else if (reloadView === "spaces") {
+        setActiveView("trailers");
+        setSpacesSection("feed");
+      } else {
+        setActiveView("home");
+        setActiveCategory("All");
+        if (reloadView) {
+          navigate("/games", { replace: true });
+        }
       }
       window.scrollTo({ top: 0, behavior: "auto" });
     }
@@ -1729,16 +1722,6 @@ function Games() {
       return Array.isArray(saved) ? saved : DEFAULT_CLUB_DISCUSSIONS;
     } catch {
       return DEFAULT_CLUB_DISCUSSIONS;
-    }
-  });
-  const [joinedEventIds, setJoinedEventIds] = useState(() => {
-    try {
-      const saved = JSON.parse(
-        localStorage.getItem("gamingverse_club_events") || "[]",
-      );
-      return Array.isArray(saved) ? saved : [];
-    } catch {
-      return [];
     }
   });
 
@@ -2291,16 +2274,6 @@ function Games() {
       return next;
     });
     setCommunityTalkPost("");
-  };
-
-  const toggleClubEvent = (eventId) => {
-    setJoinedEventIds((current) => {
-      const next = current.includes(eventId)
-        ? current.filter((id) => id !== eventId)
-        : [...current, eventId];
-      localStorage.setItem("gamingverse_club_events", JSON.stringify(next));
-      return next;
-    });
   };
 
   const filteredGamingClubs = useMemo(() => {
@@ -3886,7 +3859,7 @@ function Games() {
               activeView === "marketplace" ? "active" : ""
             }`}
             type="button"
-            title="CD Marketplace"
+            title="Marketplace • Games, CDs & Accessories"
             aria-label="CD Marketplace"
             onClick={() => {
               setActiveView("marketplace");
@@ -3905,7 +3878,7 @@ function Games() {
               activeView === "cafe" ? "active" : ""
             }`}
             type="button"
-            title="Gaming Café Booking"
+            title="Café • Book a Gaming Session"
             aria-label="Gaming Café Booking"
             onClick={() => {
               setActiveView("cafe");
@@ -4053,13 +4026,14 @@ function Games() {
 
               <button
                 type="button"
-                className={`navbar-icon-button ${showProfileMenu ? "active" : ""}`}
+                className="navbar-icon-button"
                 onClick={() => {
-                  setShowProfileMenu((current) => !current);
+                  setShowProfileMenu(false);
                   setShowNotifications(false);
+                  navigate("/profile");
                 }}
-                aria-label="Profile menu"
-                aria-expanded={showProfileMenu}
+                aria-label="Open profile"
+                title="Profile"
               >
                 <span className="profile-avatar profile-avatar-button">
                   <GVIcon name="user" size={20} />
@@ -4208,38 +4182,6 @@ function Games() {
                 <div className="notification-footer">
                   Notifications are automatically removed after 30 days
                 </div>
-              </div>
-            )}
-
-            {showProfileMenu && (
-              <div className="navbar-popover profile-popover">
-                <div className="profile-popover-head">
-                  <span className="profile-avatar">A</span>
-                  <div>
-                    <strong>Gamer</strong>
-                    <span>Online</span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowProfileMenu(false);
-                    navigate("/profile");
-                  }}
-                >
-                  👤 Profile
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowProfileMenu(false);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                >
-                  ⚙ Settings
-                </button>
               </div>
             )}
           </div>
@@ -5379,7 +5321,9 @@ function Games() {
         </>
       )}
 
-      {(activeView === "trailers" || activeView === "news") && (
+      {(activeView === "trailers" ||
+        activeView === "news" ||
+        activeView === "clubs") && (
         <section className="trailers-page">
           <div className="trailers-layout">
             <aside className="trailers-sidebar">
@@ -5393,6 +5337,7 @@ function Games() {
                 onClick={() => {
                   setActiveView("trailers");
                   setSpacesSection("feed");
+                  setSelectedClubId(null);
                 }}
               >
                 <span className="sidebar-nav-icon">⌂</span>
@@ -5412,14 +5357,14 @@ function Games() {
 
               <button
                 className={`trailers-side-item ${
-                  spacesSection === "clubs" && activeView === "trailers"
-                    ? "active"
-                    : ""
+                  activeView === "clubs" ? "active" : ""
                 }`}
                 type="button"
                 onClick={() => {
-                  setActiveView("trailers");
+                  setActiveView("clubs");
                   setSpacesSection("clubs");
+                  setSelectedClubId(null);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
                 }}
               >
                 <span className="sidebar-nav-icon">♣</span>
@@ -5575,7 +5520,7 @@ function Games() {
                   </aside>
                 </div>
               </main>
-            ) : spacesSection === "clubs" ? (
+            ) : activeView === "clubs" || spacesSection === "clubs" ? (
               <main className="clubs-feed">
                 {selectedClubId &&
                   (() => {
@@ -5625,105 +5570,114 @@ function Games() {
                             <span>{joined ? "✓ Joined" : "Not joined"}</span>
                           </div>
 
-                          <div className="clubs-two-column club-open-columns">
-                            <section className="club-panel">
-                              <div className="club-panel-heading">
-                                <div>
-                                  <span className="section-label">
-                                    GROUP CHAT
-                                  </span>
-                                  <h2>Group Chat</h2>
-                                </div>
-                                <span>💬</span>
+                          <section className="club-whatsapp-chat">
+                            <header className="club-whatsapp-header">
+                              <div className="club-whatsapp-avatar">♣</div>
+                              <div className="club-whatsapp-title">
+                                <strong>{selectedClub.name}</strong>
+                                <span>
+                                  {clubMembers} members •{" "}
+                                  {joined ? "Online" : "View only"}
+                                </span>
                               </div>
-                              {joined && (
-                                <div className="club-post-row">
-                                  <input
-                                    value={clubPost}
-                                    onChange={(event) =>
-                                      setClubPost(event.target.value)
-                                    }
-                                    placeholder="Type a message..."
-                                    maxLength={140}
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={postClubDiscussion}
-                                  >
-                                    Post
-                                  </button>
+                              <div
+                                className="club-whatsapp-actions"
+                                aria-hidden="true"
+                              >
+                                <span>⌕</span>
+                                <span>⋮</span>
+                              </div>
+                            </header>
+
+                            <div className="club-whatsapp-messages">
+                              <div className="club-chat-day">TODAY</div>
+                              {clubDiscussionsForClub.length ? (
+                                clubDiscussionsForClub
+                                  .slice(0, 20)
+                                  .map((discussion) => {
+                                    const currentUserName =
+                                      auth.currentUser?.displayName ||
+                                      auth.currentUser?.email?.split("@")[0] ||
+                                      "Gamer";
+                                    const isMine =
+                                      String(
+                                        discussion.author || "",
+                                      ).toLowerCase() ===
+                                      String(currentUserName).toLowerCase();
+                                    return (
+                                      <div
+                                        className={`club-chat-message-row ${isMine ? "mine" : "theirs"}`}
+                                        key={discussion.id}
+                                      >
+                                        {!isMine && (
+                                          <div className="club-chat-avatar">
+                                            {(discussion.author || "G")
+                                              .charAt(0)
+                                              .toUpperCase()}
+                                          </div>
+                                        )}
+                                        <div className="club-chat-bubble">
+                                          {!isMine && (
+                                            <span className="club-chat-author">
+                                              @{discussion.author || "Gamer"}
+                                            </span>
+                                          )}
+                                          <p>{discussion.title}</p>
+                                          <span className="club-chat-time">
+                                            {String(
+                                              discussion.meta || "Just now",
+                                            )
+                                              .split(" • ")[0]
+                                              .replace(/^@[^ ]+\s*•\s*/i, "")}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })
+                              ) : (
+                                <div className="club-empty-state club-chat-empty">
+                                  No messages yet. Start the conversation.
                                 </div>
                               )}
-                              <div className="club-discussions-list">
-                                {clubDiscussionsForClub
-                                  .slice(0, 8)
-                                  .map((discussion) => (
-                                    <article
-                                      className="club-discussion-item"
-                                      key={discussion.id}
-                                    >
-                                      <div className="club-discussion-avatar">
-                                        {(discussion.author || "G")
-                                          .charAt(0)
-                                          .toUpperCase()}
-                                      </div>
-                                      <div>
-                                        <strong>{discussion.title}</strong>
-                                        <span>
-                                          @{discussion.author} •{" "}
-                                          {discussion.meta}
-                                        </span>
-                                      </div>
-                                    </article>
-                                  ))}
-                                {!clubDiscussionsForClub.length && (
-                                  <div className="club-empty-state">
-                                    No messages yet. Start the conversation.
-                                  </div>
-                                )}
-                              </div>
-                            </section>
+                            </div>
 
-                            <section className="club-panel">
-                              <div className="club-panel-heading">
-                                <div>
-                                  <span className="section-label">EVENTS</span>
-                                  <h2>Gaming Events</h2>
-                                </div>
-                                <span>▦</span>
+                            {joined ? (
+                              <form
+                                className="club-whatsapp-composer"
+                                onSubmit={(event) => {
+                                  event.preventDefault();
+                                  postClubDiscussion();
+                                }}
+                              >
+                                <button
+                                  type="button"
+                                  className="club-chat-emoji"
+                                  aria-label="Add emoji"
+                                >
+                                  ☺
+                                </button>
+                                <input
+                                  value={clubPost}
+                                  onChange={(event) =>
+                                    setClubPost(event.target.value)
+                                  }
+                                  placeholder="Type a message"
+                                  maxLength={140}
+                                />
+                                <button
+                                  type="submit"
+                                  className="club-chat-send"
+                                  aria-label="Send message"
+                                >
+                                  ➤
+                                </button>
+                              </form>
+                            ) : (
+                              <div className="club-chat-join-note">
+                                Join the club to send messages.
                               </div>
-                              <div className="club-events-list">
-                                {DEFAULT_CLUB_EVENTS.map((event) => {
-                                  const going = joinedEventIds.includes(
-                                    event.id,
-                                  );
-                                  return (
-                                    <div
-                                      className="club-event-item"
-                                      key={event.id}
-                                    >
-                                      <div className="club-event-icon">🎮</div>
-                                      <div>
-                                        <strong>{event.title}</strong>
-                                        <span>{event.meta}</span>
-                                      </div>
-                                      {joined && (
-                                        <button
-                                          type="button"
-                                          className={going ? "joined" : ""}
-                                          onClick={() =>
-                                            toggleClubEvent(event.id)
-                                          }
-                                        >
-                                          {going ? "Going ✓" : "Join"}
-                                        </button>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </section>
-                          </div>
+                            )}
+                          </section>
 
                           <div className="club-open-footer">
                             <button
@@ -5957,90 +5911,100 @@ function Games() {
                       )}
                     </section>
 
-                    <div className="clubs-two-column">
-                      <section className="club-panel">
-                        <div className="club-panel-heading">
-                          <div>
-                            <span className="section-label">DISCUSSIONS</span>
-                            <h2>Community Talks</h2>
-                          </div>
-                          <span>💬</span>
+                    <section className="community-chat-panel">
+                      <div className="community-chat-header">
+                        <div className="community-chat-avatar">💬</div>
+                        <div>
+                          <span className="section-label">COMMUNITY</span>
+                          <h2>Community Talks</h2>
+                          <p>GamingVerse community chat</p>
                         </div>
+                        <span className="community-chat-online">● Online</span>
+                      </div>
 
-                        <div className="club-post-row">
-                          <input
-                            value={communityTalkPost}
-                            onChange={(event) =>
-                              setCommunityTalkPost(event.target.value)
-                            }
-                            placeholder="Start a community discussion..."
-                            maxLength={140}
-                          />
-                          <button type="button" onClick={postCommunityTalk}>
-                            Post
-                          </button>
-                        </div>
+                      <div className="community-chat-messages">
+                        {communityTalks.slice(0, 12).map((discussion) => {
+                          const currentUser =
+                            auth.currentUser?.displayName ||
+                            auth.currentUser?.email?.split("@")[0] ||
+                            "Gamer";
+                          const isMine =
+                            String(discussion.author || "")
+                              .trim()
+                              .toLowerCase() ===
+                            currentUser.trim().toLowerCase();
 
-                        <div className="club-discussions-list">
-                          {communityTalks.slice(0, 6).map((discussion) => (
+                          return (
                             <article
-                              className="club-discussion-item"
+                              className={`community-message ${isMine ? "mine" : ""}`}
                               key={discussion.id}
                             >
-                              <div className="club-discussion-avatar">
-                                {(discussion.author || "G")
-                                  .charAt(0)
-                                  .toUpperCase()}
-                              </div>
-                              <div>
-                                <strong>{discussion.title}</strong>
-                                <span>
-                                  @{discussion.author} • {discussion.meta}
+                              {!isMine && (
+                                <div className="community-message-avatar">
+                                  {(discussion.author || "G")
+                                    .charAt(0)
+                                    .toUpperCase()}
+                                </div>
+                              )}
+                              <div className="community-message-bubble">
+                                {!isMine && (
+                                  <strong>
+                                    @{discussion.author || "Gamer"}
+                                  </strong>
+                                )}
+                                <div className="community-message-text">
+                                  {discussion.title}
+                                </div>
+                                <span className="community-message-time">
+                                  {
+                                    String(discussion.meta || "Just now").split(
+                                      " • ",
+                                    )[0]
+                                  }
                                 </span>
                               </div>
                             </article>
-                          ))}
-                        </div>
-                      </section>
+                          );
+                        })}
 
-                      <section className="club-panel">
-                        <div className="club-panel-heading">
-                          <div>
-                            <span className="section-label">EVENTS</span>
-                            <h2>Gaming Events</h2>
+                        {!communityTalks.length && (
+                          <div className="community-chat-empty">
+                            <span>💬</span>
+                            <strong>No messages yet</strong>
+                            <p>
+                              Start the conversation with the GamingVerse
+                              community.
+                            </p>
                           </div>
-                          <span>▦</span>
-                        </div>
+                        )}
+                      </div>
 
-                        <div className="club-events-list">
-                          {DEFAULT_CLUB_EVENTS.map((event) => {
-                            const going = joinedEventIds.includes(event.id);
-                            return (
-                              <div className="club-event-item" key={event.id}>
-                                <div className="club-event-icon">🎮</div>
-                                <div>
-                                  <strong>{event.title}</strong>
-                                  <span>{event.meta}</span>
-                                </div>
-                                <button
-                                  type="button"
-                                  className={going ? "joined" : ""}
-                                  onClick={() => toggleClubEvent(event.id)}
-                                >
-                                  {going ? "Going ✓" : "Join"}
-                                </button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </section>
-                    </div>
+                      <form
+                        className="community-chat-composer"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          postCommunityTalk();
+                        }}
+                      >
+                        <input
+                          value={communityTalkPost}
+                          onChange={(event) =>
+                            setCommunityTalkPost(event.target.value)
+                          }
+                          placeholder="Type a message..."
+                          maxLength={140}
+                        />
+                        <button type="submit" aria-label="Send message">
+                          ➤
+                        </button>
+                      </form>
+                    </section>
 
                     <div className="clubs-feature-note">
                       <strong>Gaming Clubs</strong>
                       <span>
-                        Connect with other gamers based on shared interests,
-                        participate in discussions and join gaming events.
+                        Connect with other gamers based on shared interests and
+                        participate in discussions.
                       </span>
                     </div>
                   </>

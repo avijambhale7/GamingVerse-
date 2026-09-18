@@ -1,3 +1,249 @@
+/* =========================================================
+   COMMUNITY TALKS — WHATSAPP STYLE CHAT
+   ========================================================= */
+.community-chat-panel {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #292936;
+  border-radius: 16px;
+  background: #0d0d12;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.2);
+}
+
+.community-chat-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 78px;
+  padding: 13px 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(143, 45, 240, 0.16),
+    rgba(176, 76, 255, 0.04)
+  );
+  border-bottom: 1px solid #262630;
+}
+
+.community-chat-avatar {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8a2be2, #b83cff);
+  color: #fff;
+  font-size: 18px;
+  box-shadow: 0 8px 24px rgba(168, 50, 255, 0.22);
+}
+
+.community-chat-header .section-label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 9px;
+}
+
+.community-chat-header h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.15;
+}
+
+.community-chat-header p {
+  margin: 3px 0 0;
+  color: #7f7f8a;
+  font-size: 10px;
+}
+
+.community-chat-online {
+  margin-left: auto;
+  color: #58dc9b;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.community-chat-messages {
+  height: 330px;
+  overflow-y: auto;
+  padding: 16px 16px 12px;
+  background:
+    radial-gradient(
+      circle at 18% 22%,
+      rgba(142, 45, 240, 0.05),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 82% 78%,
+      rgba(176, 76, 255, 0.035),
+      transparent 30%
+    ),
+    #09090e;
+  scrollbar-width: thin;
+}
+
+.community-message {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 10px;
+  max-width: 82%;
+}
+
+.community-message.mine {
+  margin-left: auto;
+  justify-content: flex-end;
+}
+
+.community-message-avatar {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6e22be, #a932ff);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.community-message-bubble {
+  position: relative;
+  min-width: 0;
+  padding: 8px 11px 6px;
+  border: 1px solid #24242d;
+  border-radius: 12px 12px 12px 4px;
+  background: #15151c;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
+}
+
+.community-message.mine .community-message-bubble {
+  border-color: rgba(153, 54, 242, 0.45);
+  border-radius: 12px 12px 4px 12px;
+  background: linear-gradient(135deg, #7d27d6, #9b35eb);
+}
+
+.community-message-bubble strong {
+  display: block;
+  margin-bottom: 3px;
+  color: #d79eff;
+  font-size: 10px;
+}
+
+.community-message-text {
+  color: #f0eef4;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.community-message.mine .community-message-text {
+  color: #fff;
+}
+
+.community-message-time {
+  display: block;
+  margin-top: 4px;
+  color: #777783;
+  font-size: 8px;
+  text-align: right;
+}
+
+.community-message.mine .community-message-time {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.community-chat-empty {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #888895;
+}
+
+.community-chat-empty span {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.community-chat-empty strong {
+  color: #f1eef5;
+  font-size: 14px;
+}
+
+.community-chat-empty p {
+  max-width: 280px;
+  margin: 5px 0 0;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.community-chat-composer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid #24242d;
+  background: #101016;
+}
+
+.community-chat-composer input {
+  min-width: 0;
+  flex: 1;
+  height: 42px;
+  padding: 0 13px;
+  border: 1px solid #2b2b35;
+  border-radius: 21px;
+  outline: none;
+  background: #08080d;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+}
+
+.community-chat-composer input:focus {
+  border-color: rgba(168, 50, 255, 0.6);
+  box-shadow: 0 0 0 3px rgba(168, 50, 255, 0.08);
+}
+
+.community-chat-composer button {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #8e2de2, #b130ff);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(168, 50, 255, 0.25);
+}
+
+.community-chat-composer button:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 760px) {
+  .community-chat-messages {
+    height: 290px;
+  }
+
+  .community-message {
+    max-width: 92%;
+  }
+
+  .community-chat-online {
+    display: none;
+  }
+}
+
 /*
   GAMINGVERSE - GAMES PAGE STYLES
 
@@ -3389,7 +3635,7 @@ body,
   width: min(1380px, 100%);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 210px minmax(0, 780px) 280px;
+  grid-template-columns: 210px minmax(0, 1fr);
   justify-content: center;
   gap: 28px;
   align-items: start;
@@ -3473,15 +3719,15 @@ body,
 
 .trailers-list {
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 30px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 20px;
 }
 
 .trailer-post {
   width: 100%;
   min-width: 0;
-  padding-bottom: 28px;
+  padding-bottom: 22px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -3531,6 +3777,7 @@ body,
 }
 
 .trailers-promo {
+  display: none !important;
   position: sticky;
   top: 100px;
   width: 100%;
@@ -3557,6 +3804,12 @@ body,
 /* Keep the home hero untouched when the trailers page is open. */
 .games-home-view {
   width: 100%;
+}
+
+@media (max-width: 900px) {
+  .trailers-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Tablet */
@@ -10661,5 +10914,292 @@ reference-game-hero-thumbnail {
 @media (max-width: 760px) {
   .gv-trailer-player {
     min-height: 280px !important;
+  }
+}
+
+/* =========================================================
+   OPEN CLUB — WHATSAPP-STYLE GROUP CHAT
+   Events panel removed from the open club view.
+========================================================= */
+.club-open-columns {
+  display: block;
+  margin-top: 20px;
+}
+
+.club-whatsapp-chat {
+  width: 100%;
+  min-height: 560px;
+  display: grid;
+  grid-template-rows: auto minmax(360px, 1fr) auto;
+  overflow: hidden;
+  border: 1px solid #292936;
+  border-radius: 16px;
+  background: #0d0d12;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.015);
+}
+
+.club-whatsapp-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(168, 50, 255, 0.16),
+    rgba(20, 16, 28, 0.92)
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.club-whatsapp-avatar {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8626e5, #bd2cff);
+  color: #fff;
+  font-size: 19px;
+  font-weight: 900;
+  box-shadow: 0 6px 18px rgba(164, 44, 255, 0.22);
+}
+
+.club-whatsapp-title {
+  min-width: 0;
+  flex: 1;
+}
+
+.club-whatsapp-title strong,
+.club-whatsapp-title span {
+  display: block;
+}
+
+.club-whatsapp-title strong {
+  color: #f3f1f6;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.club-whatsapp-title span {
+  margin-top: 4px;
+  color: #7f7b86;
+  font-size: 10px;
+}
+
+.club-whatsapp-actions {
+  display: flex;
+  gap: 16px;
+  color: #a8a3ad;
+  font-size: 18px;
+}
+
+.club-whatsapp-messages {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px 18px;
+  background:
+    radial-gradient(
+      circle at 15% 20%,
+      rgba(168, 50, 255, 0.045),
+      transparent 26%
+    ),
+    #0a0a0f;
+  scrollbar-width: thin;
+  scrollbar-color: #5f2a82 transparent;
+}
+
+.club-whatsapp-messages::-webkit-scrollbar {
+  width: 6px;
+}
+.club-whatsapp-messages::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #5f2a82;
+}
+
+.club-chat-day {
+  width: fit-content;
+  margin: 0 auto 16px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #77727e;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.club-chat-message-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.club-chat-message-row.mine {
+  justify-content: flex-end;
+}
+
+.club-chat-message-row.theirs {
+  justify-content: flex-start;
+}
+
+.club-chat-avatar {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #29213a;
+  color: #d9bbf3;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.club-chat-bubble {
+  position: relative;
+  max-width: min(72%, 720px);
+  padding: 9px 11px 7px;
+  border-radius: 12px;
+  background: #19171d;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+}
+
+.club-chat-message-row.mine .club-chat-bubble {
+  background: linear-gradient(135deg, #7d22d8, #9e32f0);
+  border-color: rgba(191, 115, 255, 0.22);
+}
+
+.club-chat-author {
+  display: block;
+  margin-bottom: 4px;
+  color: #c98aff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.club-chat-message-row.mine .club-chat-author {
+  color: #f0ddff;
+}
+
+.club-chat-bubble p {
+  margin: 0;
+  color: #eeeaf1;
+  font-size: 12px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.club-chat-time {
+  display: block;
+  margin-top: 4px;
+  text-align: right;
+  color: #6f6a74;
+  font-size: 8px;
+}
+
+.club-chat-message-row.mine .club-chat-time {
+  color: rgba(255, 255, 255, 0.64);
+}
+
+.club-chat-empty {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.club-whatsapp-composer {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 42px;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  background: #111116;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.club-whatsapp-composer input {
+  width: 100%;
+  height: 42px;
+  padding: 0 14px;
+  border: 1px solid #2c2b35;
+  border-radius: 22px;
+  outline: none;
+  background: #08080d;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+}
+
+.club-whatsapp-composer input:focus {
+  border-color: rgba(168, 50, 255, 0.65);
+  box-shadow: 0 0 0 3px rgba(168, 50, 255, 0.08);
+}
+
+.club-chat-emoji,
+.club-chat-send {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font: inherit;
+}
+
+.club-chat-emoji {
+  background: transparent;
+  color: #aaa5ae;
+  font-size: 17px;
+}
+
+.club-chat-send {
+  background: linear-gradient(135deg, #8725e7, #b52cff);
+  color: #fff;
+  font-size: 16px;
+  box-shadow: 0 8px 18px rgba(142, 38, 255, 0.24);
+}
+
+.club-chat-join-note {
+  padding: 13px 16px;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: #111116;
+  color: #77727e;
+  font-size: 11px;
+}
+
+.club-open-footer {
+  margin-top: 18px;
+}
+
+@media (max-width: 900px) {
+  .club-whatsapp-chat {
+    min-height: 520px;
+  }
+  .club-chat-bubble {
+    max-width: 82%;
+  }
+}
+
+@media (max-width: 600px) {
+  .club-whatsapp-chat {
+    min-height: 470px;
+  }
+  .club-whatsapp-header {
+    padding: 12px;
+  }
+  .club-whatsapp-messages {
+    padding: 16px 10px;
+  }
+  .club-whatsapp-composer {
+    grid-template-columns: 34px minmax(0, 1fr) 38px;
+    padding: 8px;
+  }
+  .club-chat-emoji,
+  .club-chat-send {
+    width: 36px;
+    height: 36px;
   }
 }

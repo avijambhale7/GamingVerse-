@@ -551,6 +551,24 @@ function Login() {
             Create Account
           </button>
         </p>
+
+        <button
+          type="button"
+          onClick={() => navigate("/owner-login")}
+          style={{
+            width: "100%",
+            marginTop: "14px",
+            padding: "12px 16px",
+            borderRadius: "10px",
+            border: "1px solid rgba(168, 85, 247, 0.35)",
+            background: "rgba(139, 92, 246, 0.08)",
+            color: "#d8b4fe",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          ☕ 🖱 Business Owner Login
+        </button>
       </div>
 
       {/* Mobile phone login modal */}

@@ -3,11 +3,13 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
 
+import Marketplace from "./pages/Marketplace";
+import Cafe from "./pages/Cafe";
 import Login from "./pages/Login";
 import Games from "./pages/Games";
 import Profile from "./pages/Profile";
-import Marketplace from "./pages/Marketplace";
-import Cafe from "./pages/Cafe";
+import OwnerLogin from "./pages/OwnerLogin";
+import OwnerDashboard from "./pages/OwnerDashboard";
 
 import "./App.css";
 
@@ -72,6 +74,8 @@ function App() {
         ================================================= */}
         <Route path="/login" element={<Login />} />
 
+        <Route path="/owner-login" element={<OwnerLogin />} />
+
         {/* =================================================
             GAMINGVERSE / GAMES
         ================================================= */}
@@ -104,6 +108,18 @@ function App() {
           element={
             <ProtectedRoute user={user} loading={loading}>
               <Marketplace />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* =================================================
+            OWNER DASHBOARD
+        ================================================= */}
+        <Route
+          path="/owner-dashboard"
+          element={
+            <ProtectedRoute user={user} loading={loading}>
+              <OwnerDashboard />
             </ProtectedRoute>
           }
         />
