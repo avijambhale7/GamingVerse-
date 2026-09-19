@@ -1,0 +1,62 @@
+/* =========================================================
+   SIGNUP EXTRAS
+   Date-of-birth field (personal signup) and the café/shop
+   role toggle + hint (business signup).
+   Part of GamingVerse Login page styles
+========================================================= */
+
+.signup-dob-field {
+  display: grid;
+  gap: 7px;
+  margin-top: 2px;
+}
+
+.signup-dob-field label {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.signup-dob-field input[type="date"] {
+  width: 100%;
+}
+
+.signup-dob-field small {
+  color: rgba(255, 255, 255, 0.48);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* Business-owner signup: café/shop role toggle. */
+.owner-signup-role-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.owner-signup-role-toggle button {
+  height: 46px;
+  border: 1px solid #30303c;
+  border-radius: 9px;
+  background: #111018;
+  color: #aaa;
+  font: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.owner-signup-role-toggle button.active {
+  border-color: rgba(168, 85, 247, 0.5);
+  background: rgba(168, 85, 247, 0.14);
+  color: #fff;
+}
+
+.owner-signup-hint {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 9px;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  background: rgba(168, 85, 247, 0.08);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 12px;
+  line-height: 1.5;
+}

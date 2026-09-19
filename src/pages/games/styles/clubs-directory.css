@@ -163,7 +163,7 @@
   background:
     linear-gradient(
       135deg,
-      rgba(176, 76, 255, 0.19),
+      color-mix(in srgb, var(--club-accent, #b04cff) 26%, transparent),
       rgba(54, 20, 78, 0.15) 45%,
       rgba(10, 8, 15, 0.05) 100%
     ),
@@ -177,11 +177,12 @@
   top: -92px;
   width: 250px;
   height: 250px;
-  border: 1px solid rgba(194, 103, 255, 0.08);
+  border: 1px solid
+    color-mix(in srgb, var(--club-accent, #c267ff) 12%, transparent);
   border-radius: 50%;
   box-shadow:
-    0 0 0 34px rgba(194, 103, 255, 0.022),
-    0 0 0 68px rgba(194, 103, 255, 0.016);
+    0 0 0 34px color-mix(in srgb, var(--club-accent, #c267ff) 3%, transparent),
+    0 0 0 68px color-mix(in srgb, var(--club-accent, #c267ff) 2%, transparent);
   pointer-events: none;
 }
 
@@ -195,11 +196,17 @@
   place-items: center;
 
   border-radius: 15px;
-  background: linear-gradient(135deg, #8a22e9, #c02cff);
+  background: linear-gradient(
+    135deg,
+    var(--club-accent, #8a22e9),
+    var(--gv-surface-3)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.16);
   color: #fff;
   font-size: 30px;
 
-  box-shadow: 0 0 24px rgba(166, 57, 255, 0.24);
+  box-shadow: 0 0 28px
+    color-mix(in srgb, var(--club-accent, #a832ff) 45%, transparent);
 }
 
 .club-open-heading {

@@ -12,15 +12,12 @@ import {
 } from "firebase/database";
 
 import { auth, db } from "../firebase";
+import PageSkeleton from "../components/PageSkeleton.jsx";
 import "./Marketplace.css";
 
 import {
   EMPTY_PRODUCT,
 } from "./marketplace/data/catalog.js";
-import {
-  ACCESSORY_PRODUCTS,
-  DEMO_PRODUCTS,
-} from "./marketplace/data/products.js";
 
 import CartView from "./marketplace/views/CartView.jsx";
 import CheckoutView from "./marketplace/views/CheckoutView.jsx";
@@ -36,10 +33,7 @@ export default function Marketplace({ embedded = false }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const [products, setProducts] = useState([
-    ...DEMO_PRODUCTS,
-    ...ACCESSORY_PRODUCTS,
-  ]);
+  const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [orders, setOrders] = useState([]);
@@ -70,9 +64,20 @@ export default function Marketplace({ embedded = false }) {
 
   const [editingId, setEditingId] = useState(null);
 
-  // Keep Marketplace product listings live. Anything a Café Owner adds to
-  // the shared products node appears for normal users without a page refresh.
-  // This listener also keeps edits/deletions in sync immediately.
+  const notify = (text) => {
+    setToast(text);
+
+    clearTimeout(window.marketToastTimer);
+
+    window.marketToastTimer = setTimeout(() => {
+      setToast("");
+    }, 2500);
+  };
+
+  // Keep Marketplace product listings live. The `products` node is the only
+  // source of truth now — every listing here was added by a real seller
+  // through the Sell tab (or an owner's accessory form), so what buyers see
+  // is exactly what people are actually offering, never seed/demo data.
   useEffect(() => {
     const productsRef = ref(db, "products");
     const unsubscribeProducts = onValue(
@@ -88,42 +93,16 @@ export default function Marketplace({ embedded = false }) {
           }))
           .filter((product) => product.status !== "blocked");
 
-        const firebaseGameProducts = firebaseProducts.filter(
-          (product) => product.productType !== "accessory",
-        );
-
-        const firebaseAccessoryProducts = firebaseProducts.filter(
-          (product) => product.productType === "accessory",
-        );
-
-        setProducts([
-          ...DEMO_PRODUCTS,
-          ...firebaseGameProducts,
-          ...ACCESSORY_PRODUCTS,
-          ...firebaseAccessoryProducts,
-        ]);
+        setProducts(firebaseProducts);
       },
       (error) => {
         console.error("Marketplace product listener error:", error);
-        // Keep the built-in catalogue visible if Firebase rules/network are
-        // unavailable. The Firebase rule for products must allow normal users
-        // to READ this node for owner-added products to appear.
-        setProducts([...DEMO_PRODUCTS, ...ACCESSORY_PRODUCTS]);
+        notify("Could not load marketplace listings.");
       },
     );
 
     return () => unsubscribeProducts();
   }, []);
-
-  const notify = (text) => {
-    setToast(text);
-
-    clearTimeout(window.marketToastTimer);
-
-    window.marketToastTimer = setTimeout(() => {
-      setToast("");
-    }, 2500);
-  };
 
   const navigate = (nextPage) => {
     setPage(nextPage);
@@ -190,8 +169,6 @@ export default function Marketplace({ embedded = false }) {
         setWishlist([]);
         setOrders([]);
       }
-
-      notify("Showing GamingVerse marketplace catalog.");
     } finally {
       setLoading(false);
     }
@@ -216,21 +193,11 @@ export default function Marketplace({ embedded = false }) {
   }, []);
 
   const filteredProducts = useMemo(() => {
-    const sourceProducts =
-      marketType === "accessories" ? ACCESSORY_PRODUCTS : DEMO_PRODUCTS;
-
-    let result = [...sourceProducts];
-
-    // Include seller-added Firebase products for the matching section.
-    const firebaseMatches = products.filter((product) =>
+    let result = products.filter((product) =>
       marketType === "accessories"
-        ? product.productType === "accessory" &&
-          !sourceProducts.some((demo) => demo.id === product.id)
-        : product.productType !== "accessory" &&
-          !sourceProducts.some((demo) => demo.id === product.id),
+        ? product.productType === "accessory"
+        : product.productType !== "accessory",
     );
-
-    result = [...result, ...firebaseMatches];
 
     const text = search.trim().toLowerCase();
 
@@ -459,10 +426,6 @@ export default function Marketplace({ embedded = false }) {
 
     try {
       for (const item of cart) {
-        if (item.productId.startsWith("demo")) {
-          continue;
-        }
-
         const productSnap = await get(ref(db, `products/${item.productId}`));
 
         if (!productSnap.exists()) {
@@ -539,10 +502,6 @@ export default function Marketplace({ embedded = false }) {
         Reduce inventory.
       */
       for (const item of cart) {
-        if (item.productId.startsWith("demo")) {
-          continue;
-        }
-
         const productRef = ref(db, `products/${item.productId}`);
 
         const snap = await get(productRef);
@@ -781,11 +740,7 @@ export default function Marketplace({ embedded = false }) {
 
 
   if (loading) {
-    return (
-      <div className="market-loading">
-        <h2>Loading GamingVerse Marketplace...</h2>
-      </div>
-    );
+    return <PageSkeleton variant="grid" />;
   }
 
   return (

@@ -1,112 +1,11 @@
 /* =========================================================
-   DISCOVER GRID + DISCOVERY PAGE
+   DISCOVERY PAGE
    Part of GamingVerse Games page styles
 ========================================================= */
 
 /* =========================================================
-   GAMINGVERSE DISCOVER GRID - 5 ITEM MENU
-   Compact 3 + 2 card layout matching the reference image.
-   The original menu items remain untouched; extra entries are
-   hidden visually so no existing JSX lines are removed.
-========================================================= */
-.discover-popover {
-  width: 556px;
-  max-width: calc(100vw - 28px);
-  padding: 14px;
-  box-sizing: border-box;
-}
-
-.discover-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-
-/* Keep the original 13-item JSX intact; show the 5 requested cards. */
-.discover-menu-item:nth-child(n + 6) {
-  display: none;
-}
-
-.discover-menu-item {
-  min-width: 0;
-  min-height: 118px;
-  padding: 14px 10px 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  background: linear-gradient(
-    145deg,
-    rgba(22, 22, 28, 0.98),
-    rgba(12, 12, 17, 0.98)
-  );
-  color: #e9e9ee;
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 800;
-  line-height: 1.2;
-  text-align: center;
-  cursor: pointer;
-  transition:
-    transform 0.18s ease,
-    border-color 0.18s ease,
-    background 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.discover-menu-item:hover {
-  transform: translateY(-2px);
-  border-color: rgba(168, 63, 255, 0.55);
-  background: linear-gradient(
-    145deg,
-    rgba(30, 22, 39, 0.99),
-    rgba(14, 13, 19, 0.99)
-  );
-  box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.28),
-    0 0 18px rgba(168, 63, 255, 0.08);
-}
-
-.discover-menu-icon {
-  width: 50px;
-  height: 50px;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.035);
-  color: #e8e8ec;
-  font-size: 25px;
-  line-height: 1;
-}
-
-@media (max-width: 650px) {
-  .discover-popover {
-    width: min(556px, calc(100vw - 20px));
-    right: 10px;
-  }
-
-  .discover-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 430px) {
-  .discover-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .discover-menu-item {
-    min-height: 92px;
-    flex-direction: row;
-  }
-}
-
-/* =========================================================
    GAMINGVERSE DISCOVER — GAME DISCOVERY PAGE
-   Added for the game-focused Discover experience.
+   Reached via /games?view=discover.
 ========================================================= */
 .discover-games-page {
   min-height: calc(100vh - 78px);

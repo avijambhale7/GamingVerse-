@@ -48,25 +48,45 @@
 .section-heading h2 {
   margin: 0;
 
-  font-size: 29px;
+  font-size: 30px;
+  font-weight: 750;
+  letter-spacing: -0.3px;
 
-  color: white;
+  background: linear-gradient(120deg, #fff 45%, #d9aaff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .view-all {
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 
-  background: transparent;
+  height: 38px;
+  padding: 0 16px;
 
-  color: #a832ff;
+  border: 1px solid rgba(168, 50, 255, 0.28);
+  border-radius: 999px;
+  background: rgba(168, 50, 255, 0.08);
 
-  font-weight: 700;
+  color: #d9c8e6;
+  font-size: 12.5px;
+  font-weight: 800;
 
   cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .view-all:hover {
-  color: var(--gv-accent-bright);
+  transform: translateY(-1px);
+  color: #fff;
+  border-color: rgba(168, 50, 255, 0.55);
+  background: rgba(168, 50, 255, 0.18);
 }
 
 /* =====================================================
@@ -170,7 +190,9 @@
 
   border-color: var(--gv-accent-line);
 
-  box-shadow: var(--gv-shadow-md);
+  box-shadow:
+    var(--gv-shadow-md),
+    0 0 30px rgba(168, 50, 255, 0.16);
 }
 
 .horizontal-card img {
@@ -209,11 +231,19 @@
 
 .game-meta {
   display: flex;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 
-  color: #b4b4be;
-
-  font-size: 12px;
+.game-meta span {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(6, 6, 10, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(4px);
+  color: #d8d5e0;
+  font-size: 10.5px;
+  font-weight: 700;
 }
 
 /* =====================================================
@@ -300,7 +330,7 @@
   width: 50px;
   height: 50px;
 
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.16);
 
   border-radius: 50%;
 
@@ -311,12 +341,14 @@
   font-size: 18px;
 
   cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 
   box-shadow: 0 8px 25px rgba(145, 38, 236, 0.5);
 }
 
 .quick-play:hover {
   transform: scale(1.1);
+  box-shadow: 0 10px 32px rgba(145, 38, 236, 0.65);
 }
 
 .poster-info {
@@ -341,8 +373,9 @@
   display: flex;
 
   justify-content: space-between;
+  align-items: center;
 
-  margin-top: 7px;
+  margin-top: 8px;
 
   color: #858590;
 
@@ -350,7 +383,13 @@
 }
 
 .genre {
-  color: #a832ff;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(168, 50, 255, 0.12);
+  border: 1px solid rgba(168, 50, 255, 0.25);
+  color: #d9b5ff;
+  font-size: 10px;
+  font-weight: 800;
 }
 
 /* =====================================================
@@ -403,5 +442,7 @@
    old design moved it without any change of state. */
 .poster-card:hover .poster-image-wrapper {
   border-color: var(--gv-accent-line);
-  box-shadow: var(--gv-shadow-md);
+  box-shadow:
+    var(--gv-shadow-md),
+    0 0 26px rgba(168, 50, 255, 0.18);
 }

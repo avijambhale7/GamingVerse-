@@ -6,7 +6,7 @@
 ========================================================= */
 
 import { ACCESSORY_CATEGORIES, MARKET_TABS } from "../data/catalog.js";
-import { getOnlineSearchUrl, money } from "../utils/format.js";
+import { money } from "../utils/format.js";
 
 export default function ProductCatalogue({
   addToCart,
@@ -129,6 +129,62 @@ export default function ProductCatalogue({
   const renderProductCard = (product) => {
     const wished = wishlist.includes(product.id);
 
+    // Gaming CDs read like box art, so they get the GamerX-style poster
+    // treatment: the photo fills the card and the details sit on a
+    // gradient scrim at the bottom, instead of a separate content panel.
+    if (marketType === "games") {
+      return (
+        <article
+          className="product-card product-card-poster"
+          key={product.id}
+          onClick={() => openProduct(product)}
+        >
+          <div className="poster-image">
+            {product.image ? (
+              <img
+                src={product.image}
+                alt={product.name}
+                onError={(event) => {
+                  event.currentTarget.style.display = "none";
+                  event.currentTarget.parentElement.classList.add(
+                    "image-fallback-active",
+                  );
+                }}
+              />
+            ) : (
+              <span>🎮</span>
+            )}
+          </div>
+          <div className="poster-scrim" />
+
+          <button
+            className="wishlist-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleWishlist(product);
+            }}
+          >
+            {wished ? "♥" : "♡"}
+          </button>
+
+          <div className="poster-content">
+            <small>
+              {product.platform} • ⭐ {Number(product.rating || 0).toFixed(1)}
+            </small>
+            <h3>{product.name}</h3>
+            <div className="poster-bottom">
+              <strong>{money(product.price)}</strong>
+              <span className="poster-badge">
+                {Number(product.stock) > 0
+                  ? `${product.stock} available`
+                  : "Out of stock"}
+              </span>
+            </div>
+          </div>
+        </article>
+      );
+    }
+
     return (
       <div className="product-card" key={product.id}>
         <div className="product-image">
@@ -187,29 +243,6 @@ export default function ProductCatalogue({
             >
               View Details
             </button>
-
-            {product.productType === "accessory" && (
-              <div className="online-shopping-links">
-                <a
-                  href={getOnlineSearchUrl("Amazon", product.name)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="amazon-link"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  🛒 Amazon
-                </a>
-                <a
-                  href={getOnlineSearchUrl("Flipkart", product.name)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flipkart-link"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  🛍 Flipkart
-                </a>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -367,25 +400,6 @@ export default function ProductCatalogue({
                 Buy Now
               </button>
             </div>
-
-            {selectedProduct.productType === "accessory" && (
-              <div className="detail-shopping-links">
-                <a
-                  href={getOnlineSearchUrl("Amazon", selectedProduct.name)}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  🛒 Shop on Amazon
-                </a>
-                <a
-                  href={getOnlineSearchUrl("Flipkart", selectedProduct.name)}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  🛍 Shop on Flipkart
-                </a>
-              </div>
-            )}
           </div>
         </div>
       </section>

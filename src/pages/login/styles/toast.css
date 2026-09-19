@@ -1,0 +1,82 @@
+/* =========================================================
+   LOGIN TOAST
+   Replaces native alert() with an in-theme banner, so
+   validation and auth feedback don't break the visual style
+   with a browser dialog.
+   Part of GamingVerse Login page styles
+========================================================= */
+
+.login-toast {
+  position: fixed;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1200;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  min-width: 260px;
+  max-width: min(440px, calc(100% - 32px));
+  padding: 13px 18px;
+
+  border-radius: 12px;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  background: rgba(18, 14, 26, 0.94);
+  backdrop-filter: blur(10px);
+
+  color: #f1eaff;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.4;
+
+  box-shadow:
+    0 18px 45px rgba(0, 0, 0, 0.55),
+    0 0 30px rgba(150, 45, 255, 0.12);
+
+  animation: gv-login-toast-in 0.25s ease;
+}
+
+.login-toast-icon {
+  flex: none;
+  font-size: 16px;
+}
+
+.login-toast.success {
+  border-color: rgba(80, 210, 142, 0.4);
+  background: rgba(12, 28, 20, 0.94);
+}
+.login-toast.success .login-toast-icon {
+  color: #6fe3a0;
+}
+
+.login-toast.error {
+  border-color: rgba(255, 92, 115, 0.4);
+  background: rgba(32, 12, 17, 0.94);
+}
+.login-toast.error .login-toast-icon {
+  color: #ff8ca0;
+}
+
+.login-toast.info .login-toast-icon {
+  color: var(--gv-accent-bright, #c084fc);
+}
+
+@keyframes gv-login-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (max-width: 500px) {
+  .login-toast {
+    top: 14px;
+    font-size: 12.5px;
+  }
+}

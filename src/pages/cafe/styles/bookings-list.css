@@ -48,6 +48,16 @@
   font: inherit;
   font-weight: 800;
 }
+.show-ticket {
+  border: 1px solid rgba(169, 108, 255, 0.28);
+  border-radius: 9px;
+  background: rgba(143, 69, 255, 0.1);
+  color: var(--gv-accent-bright);
+  padding: 8px 10px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+}
 .booking-status {
   display: inline-flex;
   padding: 5px 8px;

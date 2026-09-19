@@ -1,0 +1,57 @@
+.image-upload-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: 9px;
+  background: rgba(168, 85, 247, 0.08);
+  color: #d8b4fe;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.image-upload-button:hover:not(:disabled) {
+  background: rgba(168, 85, 247, 0.16);
+  border-color: rgba(168, 85, 247, 0.55);
+}
+
+.image-upload-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* Shared layout for "paste a URL or upload a file" form fields. */
+.image-field-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.image-field-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.image-field-preview {
+  margin-top: 8px;
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.image-field-error {
+  display: block;
+  margin-top: 6px;
+  color: #ff9ba8;
+  font-size: 11px;
+}
+

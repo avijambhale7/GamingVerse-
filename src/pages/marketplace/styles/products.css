@@ -151,57 +151,89 @@
   font-size: 10px;
 }
 
-.online-shopping-links {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 7px;
-  margin-top: 10px;
+/* Poster-style card for the CD marketplace: the box art fills the
+   whole tile and details sit on a gradient scrim at the bottom,
+   matching how a CD/game case reads at a glance. */
+.product-card-poster {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  cursor: pointer;
 }
-
-.online-shopping-links a,
-.detail-shopping-links a {
-  min-height: 34px;
-  display: inline-flex;
-  align-items: center;
+.product-card-poster .poster-image {
+  position: absolute;
+  inset: 0;
+  background: var(--gv-surface-3);
+}
+.product-card-poster .poster-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.product-card-poster .poster-image > span {
+  width: 100%;
+  height: 100%;
+  display: flex;
   justify-content: center;
-  border-radius: 8px;
-  text-decoration: none;
+  align-items: center;
+  font-size: 56px;
+  background:
+    radial-gradient(circle, rgba(144, 71, 255, 0.26), transparent 55%),
+    var(--gv-surface-3);
+}
+.product-card-poster .poster-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to top,
+    rgba(4, 4, 8, 0.92) 0%,
+    rgba(4, 4, 8, 0.55) 42%,
+    rgba(4, 4, 8, 0) 72%
+  );
+  pointer-events: none;
+}
+.product-card-poster .wishlist-button {
+  z-index: 2;
+}
+.product-card-poster .poster-content {
+  position: absolute;
+  z-index: 2;
+  left: 14px;
+  right: 14px;
+  bottom: 12px;
+}
+.product-card-poster .poster-content > small {
+  color: #d6d2e0;
   font-size: 10px;
-  font-weight: 850;
-  transition: 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
-
-.amazon-link {
-  border: 1px solid rgba(255, 173, 48, 0.28);
-  background: rgba(255, 173, 48, 0.08);
-  color: #ffd07a;
+.product-card-poster .poster-content h3 {
+  margin: 6px 0 8px;
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.25;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
-
-.amazon-link:hover {
-  background: rgba(255, 173, 48, 0.15);
+.poster-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
-
-.flipkart-link {
-  border: 1px solid rgba(55, 145, 255, 0.28);
-  background: rgba(55, 145, 255, 0.08);
-  color: #8cc5ff;
+.poster-bottom strong {
+  color: #fff;
+  font-size: 16px;
 }
-
-.flipkart-link:hover {
-  background: rgba(55, 145, 255, 0.15);
-}
-
-.detail-shopping-links {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 9px;
-  margin-top: 12px;
-}
-
-.detail-shopping-links a {
-  min-height: 42px;
-  font-size: 12px;
+.poster-badge {
+  padding: 4px 8px;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #e6e3ec;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .primary-btn,

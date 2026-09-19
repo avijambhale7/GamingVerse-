@@ -1,0 +1,129 @@
+/* =========================================================
+   PAGE SKELETON
+========================================================= */
+
+.page-skeleton {
+  min-height: 100vh;
+  width: min(1260px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 60px 0;
+  background: var(--gv-surface-1, #08080b);
+}
+
+.skeleton-header {
+  margin-bottom: 32px;
+}
+
+.skeleton-bar,
+.skeleton-block {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.skeleton-bar::after,
+.skeleton-block::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(168, 85, 247, 0.14),
+    transparent
+  );
+  animation: gv-skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes gv-skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-title {
+  width: 260px;
+  height: 30px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+}
+
+.skeleton-subtitle {
+  width: 400px;
+  height: 14px;
+}
+
+.skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.skeleton-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.skeleton-thumb {
+  height: 150px;
+  border-radius: 12px;
+}
+
+.skeleton-line {
+  height: 12px;
+  width: 100%;
+}
+
+.skeleton-line.short {
+  width: 60%;
+}
+
+.skeleton-list {
+  display: grid;
+  gap: 12px;
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.skeleton-avatar {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+.skeleton-row-lines {
+  flex: 1;
+  display: grid;
+  gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .skeleton-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .skeleton-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .skeleton-subtitle {
+    width: 80%;
+  }
+}

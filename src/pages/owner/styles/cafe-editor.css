@@ -1,0 +1,215 @@
+/* =========================================================
+   OWNER-EDITABLE CAFÉ DETAILS + REVENUE
+   Part of GamingVerse Owner dashboard styles
+========================================================= */
+
+.owner-cafe-subtabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.owner-cafe-subtabs button {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  background: var(--gv-surface-2);
+  color: #999;
+  padding: 8px 15px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.owner-cafe-subtabs button.active {
+  color: #fff;
+  background: rgba(166, 59, 255, 0.16);
+  border-color: rgba(166, 59, 255, 0.4);
+}
+
+.owner-cafe-picker {
+  margin-bottom: 16px;
+}
+.owner-cafe-picker label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #898592;
+  font-size: 11px;
+  font-weight: 800;
+}
+.owner-cafe-picker select {
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 9px;
+  background: #121218;
+  color: #eee;
+  padding: 9px 11px;
+  font: inherit;
+}
+
+.owner-cafe-details-form form {
+  display: grid;
+  gap: 14px;
+}
+.owner-cafe-status-badge {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  border: 1px solid rgba(255, 196, 73, 0.35);
+  background: rgba(255, 196, 73, 0.1);
+  color: #ffcf77;
+}
+.owner-cafe-status-badge.approved {
+  border-color: rgba(86, 220, 157, 0.35);
+  background: rgba(86, 220, 157, 0.1);
+  color: #87efb1;
+}
+.owner-cafe-status-badge.rejected {
+  border-color: rgba(255, 92, 115, 0.35);
+  background: rgba(255, 92, 115, 0.1);
+  color: #ff9ba8;
+}
+
+.owner-cafe-intro {
+  margin: 0 0 4px;
+  color: #8f8b98;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.owner-cafe-details-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #898592;
+  font-size: 11px;
+  font-weight: 800;
+}
+.owner-cafe-details-form textarea,
+.owner-cafe-details-form input {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: #111118;
+  color: #fff;
+  padding: 10px 12px;
+  font: inherit;
+  resize: vertical;
+}
+
+.owner-spec-editor {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 13px;
+  background: var(--gv-surface-1);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+.owner-spec-editor > .owner-form-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.owner-spec-editor > .owner-form-title span {
+  color: #898592;
+  font-size: 11px;
+  font-weight: 800;
+}
+.owner-spec-editor > .owner-form-title button {
+  border: 1px solid rgba(169, 108, 255, 0.28);
+  border-radius: 9px;
+  background: rgba(143, 69, 255, 0.1);
+  color: var(--gv-accent-bright);
+  padding: 7px 11px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.owner-spec-row {
+  display: grid;
+  grid-template-columns: 90px 1.3fr 1.3fr 90px auto;
+  gap: 8px;
+}
+.owner-spec-row select,
+.owner-spec-row input {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: #16161c;
+  color: #fff;
+  padding: 8px 9px;
+  font: inherit;
+  font-size: 12px;
+}
+.owner-spec-row button {
+  border: 1px solid rgba(255, 92, 115, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 92, 115, 0.07);
+  color: #ff9ba8;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.owner-weekday-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.owner-weekday-chips button {
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  background: #16161c;
+  color: #999;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.owner-weekday-chips button.active {
+  color: #fff;
+  background: rgba(255, 92, 115, 0.15);
+  border-color: rgba(255, 92, 115, 0.3);
+}
+
+.owner-month-nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.owner-month-nav button {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  background: var(--gv-surface-2);
+  color: #ddd;
+  cursor: pointer;
+  font: inherit;
+}
+.owner-month-nav strong {
+  min-width: 140px;
+  text-align: center;
+}
+
+.owner-revenue-summary {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.owner-revenue-summary > div {
+  display: grid;
+  gap: 4px;
+}
+.owner-revenue-summary span {
+  color: #777783;
+  font-size: 11px;
+}
+.owner-revenue-summary strong {
+  font-size: 26px;
+  color: var(--gv-accent-bright);
+}

@@ -5,6 +5,8 @@
 ========================================================= */
 
 import { auth } from "../../../firebase";
+import { CLUB_INTERESTS, getClubInterestMeta } from "../data/clubs.js";
+import { formatActivityDate } from "../utils/text.js";
 import { getGameDetails } from "../utils/gameInfo.js";
 import { horizontalGames } from "../utils/catalogue.js";
 
@@ -24,6 +26,7 @@ export default function SpacesView({
   filteredPosters,
   gamingClubs,
   joinedClubIds,
+  leaveClub,
   liveNews,
   newClubDescription,
   newClubInterest,
@@ -42,7 +45,6 @@ export default function SpacesView({
   setClubPost,
   setClubSearch,
   setCommunityTalkPost,
-  setJoinedClubIds,
   setNewClubDescription,
   setNewClubInterest,
   setNewClubName,
@@ -263,14 +265,7 @@ export default function SpacesView({
                     );
                     if (!selectedClub) return null;
                     const joined = joinedClubIds.includes(selectedClub.id);
-                    const clubMembers =
-                      selectedClub.members +
-                      (joined && !selectedClub.membersAdded ? 1 : 0);
-                    const clubDiscussionsForClub = clubDiscussions.filter(
-                      (discussion) =>
-                        !discussion.clubId ||
-                        discussion.clubId === selectedClub.id,
-                    );
+                    const clubMembers = selectedClub.memberCount || 0;
 
                     return (
                       <section className="club-open-page">
@@ -278,7 +273,9 @@ export default function SpacesView({
                           className="club-open-hero"
                           style={{ "--club-accent": selectedClub.accent }}
                         >
-                          <div className="club-open-icon">♣</div>
+                          <div className="club-open-icon">
+                            {getClubInterestMeta(selectedClub.interest).icon}
+                          </div>
                           <div className="club-open-heading">
                             <span>{selectedClub.interest}</span>
                             <h1>{selectedClub.name}</h1>
@@ -325,49 +322,39 @@ export default function SpacesView({
 
                             <div className="club-whatsapp-messages">
                               <div className="club-chat-day">TODAY</div>
-                              {clubDiscussionsForClub.length ? (
-                                clubDiscussionsForClub
-                                  .slice(0, 20)
-                                  .map((discussion) => {
-                                    const currentUserName =
-                                      auth.currentUser?.displayName ||
-                                      auth.currentUser?.email?.split("@")[0] ||
-                                      "Gamer";
-                                    const isMine =
-                                      String(
-                                        discussion.author || "",
-                                      ).toLowerCase() ===
-                                      String(currentUserName).toLowerCase();
-                                    return (
-                                      <div
-                                        className={`club-chat-message-row ${isMine ? "mine" : "theirs"}`}
-                                        key={discussion.id}
-                                      >
-                                        {!isMine && (
-                                          <div className="club-chat-avatar">
-                                            {(discussion.author || "G")
-                                              .charAt(0)
-                                              .toUpperCase()}
-                                          </div>
-                                        )}
-                                        <div className="club-chat-bubble">
-                                          {!isMine && (
-                                            <span className="club-chat-author">
-                                              @{discussion.author || "Gamer"}
-                                            </span>
-                                          )}
-                                          <p>{discussion.title}</p>
-                                          <span className="club-chat-time">
-                                            {String(
-                                              discussion.meta || "Just now",
-                                            )
-                                              .split(" • ")[0]
-                                              .replace(/^@[^ ]+\s*•\s*/i, "")}
-                                          </span>
+                              {clubDiscussions.length ? (
+                                clubDiscussions.slice(0, 20).map((discussion) => {
+                                  const isMine =
+                                    discussion.authorUid ===
+                                    auth.currentUser?.uid;
+                                  return (
+                                    <div
+                                      className={`club-chat-message-row ${isMine ? "mine" : "theirs"}`}
+                                      key={discussion.id}
+                                    >
+                                      {!isMine && (
+                                        <div className="club-chat-avatar">
+                                          {(discussion.author || "G")
+                                            .charAt(0)
+                                            .toUpperCase()}
                                         </div>
+                                      )}
+                                      <div className="club-chat-bubble">
+                                        {!isMine && (
+                                          <span className="club-chat-author">
+                                            @{discussion.author || "Gamer"}
+                                          </span>
+                                        )}
+                                        <p>{discussion.title}</p>
+                                        <span className="club-chat-time">
+                                          {formatActivityDate(
+                                            discussion.createdAt,
+                                          )}
+                                        </span>
                                       </div>
-                                    );
-                                  })
+                                    </div>
+                                  );
+                                })
                               ) : (
                                 <div className="club-empty-state club-chat-empty">
                                   No messages yet. Start the conversation.
@@ -426,19 +413,7 @@ export default function SpacesView({
                               <button
                                 type="button"
                                 className="club-open-leave"
-                                onClick={() => {
-                                  setJoinedClubIds((current) => {
-                                    const next = current.filter(
-                                      (id) => id !== selectedClub.id,
-                                    );
-                                    localStorage.setItem(
-                                      "gamingverse_joined_clubs",
-                                      JSON.stringify(next),
-                                    );
-                                    return next;
-                                  });
-                                  closeClub();
-                                }}
+                                onClick={() => leaveClub(selectedClub.id)}
                               >
                                 Leave Club
                               </button>
@@ -492,17 +467,9 @@ export default function SpacesView({
                                 setNewClubInterest(event.target.value)
                               }
                             >
-                              {[
-                                "Action",
-                                "Adventure",
-                                "RPG",
-                                "FPS",
-                                "PlayStation",
-                                "Xbox",
-                                "PC",
-                              ].map((interest) => (
-                                <option key={interest} value={interest}>
-                                  {interest}
+                              {CLUB_INTERESTS.map(({ id, icon }) => (
+                                <option key={id} value={id}>
+                                  {icon} {id}
                                 </option>
                               ))}
                             </select>
@@ -533,25 +500,22 @@ export default function SpacesView({
 
                     <div className="clubs-toolbar">
                       <div className="club-interest-filters">
-                        {[
-                          "All",
-                          "Action",
-                          "Adventure",
-                          "RPG",
-                          "FPS",
-                          "PlayStation",
-                          "Xbox",
-                          "PC",
-                        ].map((interest) => (
+                        <button
+                          type="button"
+                          className={clubInterest === "All" ? "active" : ""}
+                          onClick={() => setClubInterest("All")}
+                        >
+                          ✦ All
+                        </button>
+                        {CLUB_INTERESTS.map(({ id, icon }) => (
                           <button
-                            key={interest}
+                            key={id}
                             type="button"
-                            className={
-                              clubInterest === interest ? "active" : ""
-                            }
-                            onClick={() => setClubInterest(interest)}
+                            className={clubInterest === id ? "active" : ""}
+                            style={{ "--interest-color": getClubInterestMeta(id).color }}
+                            onClick={() => setClubInterest(id)}
                           >
-                            {interest}
+                            {icon} {id}
                           </button>
                         ))}
                       </div>
@@ -603,8 +567,12 @@ export default function SpacesView({
                                 className="gaming-club-card-top"
                                 style={{ "--club-accent": club.accent }}
                               >
-                                <div className="gaming-club-icon">♣</div>
-                                <span>{club.interest}</span>
+                                <div className="gaming-club-icon">
+                                  {getClubInterestMeta(club.interest).icon}
+                                </div>
+                                <span className="gaming-club-tag">
+                                  {club.interest}
+                                </span>
                               </div>
 
                               <div className="gaming-club-card-body">
@@ -612,14 +580,7 @@ export default function SpacesView({
                                 <p>{club.description}</p>
 
                                 <div className="gaming-club-card-footer">
-                                  <span>
-                                    ♟{" "}
-                                    {club.members +
-                                      (joined && !club.membersAdded
-                                        ? 1
-                                        : 0)}{" "}
-                                    members
-                                  </span>
+                                  <span>👥 {club.memberCount || 0} members</span>
                                   <button
                                     type="button"
                                     className={joined ? "joined" : ""}
@@ -658,15 +619,8 @@ export default function SpacesView({
 
                       <div className="community-chat-messages">
                         {communityTalks.slice(0, 12).map((discussion) => {
-                          const currentUser =
-                            auth.currentUser?.displayName ||
-                            auth.currentUser?.email?.split("@")[0] ||
-                            "Gamer";
                           const isMine =
-                            String(discussion.author || "")
-                              .trim()
-                              .toLowerCase() ===
-                            currentUser.trim().toLowerCase();
+                            discussion.authorUid === auth.currentUser?.uid;
 
                           return (
                             <article
@@ -690,11 +644,7 @@ export default function SpacesView({
                                   {discussion.title}
                                 </div>
                                 <span className="community-message-time">
-                                  {
-                                    String(discussion.meta || "Just now").split(
-                                      " • ",
-                                    )[0]
-                                  }
+                                  {formatActivityDate(discussion.createdAt)}
                                 </span>
                               </div>
                             </article>
@@ -771,7 +721,7 @@ export default function SpacesView({
                       details.trailerUrl || details.trailerSearchUrl;
                     return (
                       <article
-                        className="trailer-post"
+                        className={`trailer-post ${index === 0 ? "featured" : ""}`}
                         key={`trailer-post-${game.name}-${index}`}
                       >
                         <a
@@ -784,7 +734,9 @@ export default function SpacesView({
                           <img src={game.image} alt={game.name} />
                           <span className="trailer-media-shade"></span>
                           <span className="trailer-play">▶</span>
-                          <span className="trailer-media-label">TRAILER</span>
+                          <span className="trailer-media-label">
+                            {index === 0 ? "★ FEATURED" : "▶ TRAILER"}
+                          </span>
                         </a>
 
                         <div className="trailer-post-copy">

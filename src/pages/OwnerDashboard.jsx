@@ -1,9 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./OwnerDashboard.css";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { get, onValue, push, ref, remove, update } from "firebase/database";
+import { get, onValue, push, ref, remove, set, update } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
+import PageSkeleton from "../components/PageSkeleton.jsx";
+import ImageUploadButton from "../components/ImageUploadButton.jsx";
+import {
+  DEFAULT_PRICE_PER_HOUR,
+  DEFAULT_TOTAL_SEATS,
+  normalizeCafe,
+} from "./cafe/utils/cafeModel.js";
+import { decodeTicket } from "./cafe/utils/ticket.js";
+import { todayISO } from "./cafe/utils/time.js";
+import jsQR from "jsqr";
 
 const OWNER_ROLES = new Set([
   "owner",
@@ -42,15 +52,36 @@ const EMPTY_PRODUCT = {
   image: "",
   description: "",
 };
-
-const CAFE_NAMES = {
-  cafe1: "Rapid Round Cafe",
-  cafe2: "Dragon Lord Esports | Gaming Cafe",
-  cafe3: "TGT Esports Studio | Gaming Cafe",
-  cafe4: "Ministry of Esports",
-  cafe5: "Vibezone Esports Lounge",
-  cafe6: "Boomer's Gaming Café",
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const EMPTY_NEW_CAFE = {
+  name: "",
+  address: "",
+  phone: "",
+  email: "",
+  opening: "10:00 AM",
+  closing: "10:00 PM",
 };
+const EMPTY_CAFE_OVERLAY = {
+  name: "",
+  address: "",
+  phone: "",
+  email: "",
+  opening: "",
+  closing: "",
+  website: "",
+  mapUrl: "",
+  about: "",
+  photosText: "",
+  totalSeats: "",
+  pricePerHour: "",
+  specs: [],
+  closedDays: [],
+  blockedDatesText: "",
+};
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
 function money(value) {
   return `₹${Number(value || 0).toLocaleString("en-IN")}`;
@@ -78,6 +109,22 @@ export default function OwnerDashboard() {
   const [editingId, setEditingId] = useState(null);
   const [productForm, setProductForm] = useState(EMPTY_PRODUCT);
   const [message, setMessage] = useState("");
+
+  const [cafeSection, setCafeSection] = useState("bookings");
+  const [allCafes, setAllCafes] = useState([]);
+  const [activeCafeId, setActiveCafeId] = useState("");
+  const [cafeOverlayForm, setCafeOverlayForm] = useState(EMPTY_CAFE_OVERLAY);
+  const [savingCafeDetails, setSavingCafeDetails] = useState(false);
+  const [newCafeForm, setNewCafeForm] = useState(EMPTY_NEW_CAFE);
+  const [creatingCafe, setCreatingCafe] = useState(false);
+  const [revenueMonth, setRevenueMonth] = useState(() => {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() };
+  });
+  const [scanResult, setScanResult] = useState(null);
+  const [scanError, setScanError] = useState("");
+  const videoRef = useRef(null);
+  const scanFrameRef = useRef(null);
 
   const canCafe = role === "owner" || role === "cafe_owner";
   const canAccessories =
@@ -209,6 +256,346 @@ export default function OwnerDashboard() {
     );
     return () => unsubscribe();
   }, [canCafe, role, ownedCafeIds]);
+
+  // Every café an owner can manage lives at cafes/{id} — there is no seed
+  // directory to pick from any more. A "owner" (site-wide business owner)
+  // sees every café; a cafe_owner only sees the ones they created.
+  useEffect(() => {
+    if (!canCafe) return undefined;
+    const unsubscribe = onValue(
+      ref(db, "cafes"),
+      (snapshot) => {
+        const data = snapshot.val() || {};
+        const next = Object.entries(data)
+          .map(([id, raw]) => normalizeCafe(id, raw))
+          .filter(Boolean)
+          .sort((a, b) => b.createdAt - a.createdAt);
+        setAllCafes(next);
+      },
+      (error) => {
+        console.error("Owner cafes listener error:", error);
+        setMessage("Could not load café listings.");
+      },
+    );
+    return () => unsubscribe();
+  }, [canCafe]);
+
+  const editableCafes = useMemo(() => {
+    if (!canCafe) return [];
+    return role === "owner"
+      ? allCafes
+      : allCafes.filter((c) => ownedCafeIds.includes(c.id));
+  }, [canCafe, role, ownedCafeIds, allCafes]);
+
+  const effectiveCafeId = activeCafeId || editableCafes[0]?.id || "";
+
+  // The café edit form is seeded from live data once per café selection,
+  // then left alone (an effect keyed on the café list would re-run and
+  // clobber in-progress edits every time any field of the café changes).
+  // Adjusting state during render — rather than in an effect — is the
+  // pattern React recommends for "reset local state when a prop changes".
+  const [syncedCafeId, setSyncedCafeId] = useState("");
+  if (effectiveCafeId && effectiveCafeId !== syncedCafeId) {
+    const cafe = editableCafes.find((c) => c.id === effectiveCafeId);
+    if (cafe) {
+      setSyncedCafeId(effectiveCafeId);
+      setCafeOverlayForm({
+        name: cafe.name,
+        address: cafe.address,
+        phone: cafe.phone,
+        email: cafe.email,
+        opening: cafe.opening,
+        closing: cafe.closing,
+        website: cafe.website,
+        mapUrl: cafe.mapUrl,
+        about: cafe.about,
+        photosText: cafe.photos.join("\n"),
+        totalSeats: cafe.totalSeats || "",
+        pricePerHour: cafe.pricePerHour || "",
+        specs: cafe.specs,
+        closedDays: cafe.closedDays,
+        blockedDatesText: cafe.blockedDates.join("\n"),
+      });
+    }
+  }
+
+  const createCafe = async (event) => {
+    event.preventDefault();
+    if (!newCafeForm.name.trim() || !newCafeForm.address.trim()) {
+      setMessage("Enter at least a café name and address.");
+      return;
+    }
+    setCreatingCafe(true);
+    try {
+      const newCafeRef = push(ref(db, "cafes"));
+      const newCafeId = newCafeRef.key;
+
+      // ownedCafeIds must be set before the café doc write, since the
+      // café's own write rule checks that this account already owns it.
+      await set(ref(db, `users/${user.uid}/ownedCafeIds/${newCafeId}`), true);
+
+      await set(newCafeRef, {
+        name: newCafeForm.name.trim(),
+        address: newCafeForm.address.trim(),
+        phone: newCafeForm.phone.trim(),
+        email: newCafeForm.email.trim(),
+        opening: newCafeForm.opening.trim(),
+        closing: newCafeForm.closing.trim(),
+        ownerUid: user.uid,
+        status: "pending",
+        createdAt: Date.now(),
+      });
+
+      setOwnedCafeIds((prev) => [...prev, newCafeId]);
+      setActiveCafeId(newCafeId);
+      setNewCafeForm(EMPTY_NEW_CAFE);
+      setMessage(
+        "Café listed! Add photos, setups and pricing below — a GamingVerse admin will review it before it's visible to customers.",
+      );
+    } catch (error) {
+      console.error("Create cafe error:", error);
+      setMessage("Could not create your café listing.");
+    } finally {
+      setCreatingCafe(false);
+    }
+  };
+
+  const addSpecRow = () => {
+    setCafeOverlayForm((form) => ({
+      ...form,
+      specs: [
+        ...form.specs,
+        {
+          id: `spec-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          type: "PC",
+          label: "",
+          details: "",
+          price: "",
+        },
+      ],
+    }));
+  };
+
+  const updateSpecRow = (id, field, value) => {
+    setCafeOverlayForm((form) => ({
+      ...form,
+      specs: form.specs.map((spec) =>
+        spec.id === id ? { ...spec, [field]: value } : spec,
+      ),
+    }));
+  };
+
+  const removeSpecRow = (id) => {
+    setCafeOverlayForm((form) => ({
+      ...form,
+      specs: form.specs.filter((spec) => spec.id !== id),
+    }));
+  };
+
+  const toggleClosedDay = (day) => {
+    setCafeOverlayForm((form) => ({
+      ...form,
+      closedDays: form.closedDays.includes(day)
+        ? form.closedDays.filter((d) => d !== day)
+        : [...form.closedDays, day],
+    }));
+  };
+
+  const saveCafeDetails = async (event) => {
+    event.preventDefault();
+    if (!effectiveCafeId) return;
+    if (!cafeOverlayForm.name.trim() || !cafeOverlayForm.address.trim()) {
+      setMessage("Café name and address are required.");
+      return;
+    }
+    setSavingCafeDetails(true);
+    try {
+      const specsObject = {};
+      cafeOverlayForm.specs.forEach((spec) => {
+        if (!spec.label.trim()) return;
+        specsObject[spec.id] = {
+          type: spec.type,
+          label: spec.label.trim(),
+          details: spec.details.trim(),
+          price: Number(spec.price) || DEFAULT_PRICE_PER_HOUR,
+        };
+      });
+
+      await update(ref(db, `cafes/${effectiveCafeId}`), {
+        name: cafeOverlayForm.name.trim(),
+        address: cafeOverlayForm.address.trim(),
+        phone: cafeOverlayForm.phone.trim(),
+        email: cafeOverlayForm.email.trim(),
+        opening: cafeOverlayForm.opening.trim(),
+        closing: cafeOverlayForm.closing.trim(),
+        website: cafeOverlayForm.website.trim(),
+        mapUrl: cafeOverlayForm.mapUrl.trim(),
+        about: cafeOverlayForm.about.trim(),
+        photos: cafeOverlayForm.photosText
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean),
+        totalSeats: Number(cafeOverlayForm.totalSeats) || 0,
+        pricePerHour: Number(cafeOverlayForm.pricePerHour) || 0,
+        specs: specsObject,
+        closedDays: cafeOverlayForm.closedDays,
+        blockedDates: cafeOverlayForm.blockedDatesText
+          .split("\n")
+          .map((line) => line.trim())
+          .filter(Boolean),
+        ownerUid: user.uid,
+        updatedAt: Date.now(),
+      });
+      setMessage("Café details saved.");
+    } catch (error) {
+      console.error("Save cafe details error:", error);
+      setMessage("Could not save café details.");
+    } finally {
+      setSavingCafeDetails(false);
+    }
+  };
+
+  const monthlyCompletedBookings = useMemo(() => {
+    return bookings.filter((booking) => {
+      if (String(booking.status || "") !== "Completed") return false;
+      const when = new Date(Number(booking.completedAt || booking.createdAt || 0));
+      return (
+        when.getFullYear() === revenueMonth.year &&
+        when.getMonth() === revenueMonth.month
+      );
+    });
+  }, [bookings, revenueMonth]);
+
+  const monthlyRevenue = monthlyCompletedBookings.reduce(
+    (sum, booking) => sum + Number(booking.totalPrice || 0),
+    0,
+  );
+
+  const stopScanner = () => {
+    if (scanFrameRef.current) {
+      cancelAnimationFrame(scanFrameRef.current);
+      scanFrameRef.current = null;
+    }
+    const video = videoRef.current;
+    if (video?.srcObject) {
+      video.srcObject.getTracks().forEach((track) => track.stop());
+      video.srcObject = null;
+    }
+  };
+
+  const handleScan = async (text) => {
+    stopScanner();
+    setScanError("");
+    const decoded = decodeTicket(text);
+    if (!decoded) {
+      setScanResult({ ok: false, message: "Unrecognised QR code." });
+      return;
+    }
+    try {
+      const snap = await get(
+        ref(db, `cafeBookings/${decoded.uid}/${decoded.bookingId}`),
+      );
+      if (!snap.exists()) {
+        setScanResult({ ok: false, message: "Booking not found." });
+        return;
+      }
+      const booking = {
+        id: decoded.bookingId,
+        customerId: decoded.uid,
+        ...snap.val(),
+      };
+      const cafeAllowed =
+        role === "owner" || ownedCafeIds.includes(booking.cafeId);
+      if (!cafeAllowed) {
+        setScanResult({
+          ok: false,
+          message: "This ticket is for a different café.",
+        });
+        return;
+      }
+      if (booking.date !== todayISO()) {
+        setScanResult({
+          ok: false,
+          message: `This ticket is for ${booking.date}, not today.`,
+        });
+        return;
+      }
+      if (booking.status === "Completed") {
+        setScanResult({
+          ok: false,
+          message: "This ticket has already been checked in.",
+        });
+        return;
+      }
+      if (booking.status !== "Confirmed") {
+        setScanResult({
+          ok: false,
+          message: `Booking status is "${booking.status}", not Confirmed.`,
+        });
+        return;
+      }
+      setScanResult({ ok: true, booking });
+    } catch (error) {
+      console.error("Scan lookup error:", error);
+      setScanResult({ ok: false, message: "Could not verify this ticket." });
+    }
+  };
+
+  useEffect(() => {
+    if (cafeSection !== "scan" || scanResult) {
+      stopScanner();
+      return undefined;
+    }
+
+    let cancelled = false;
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+
+    const tick = () => {
+      const video = videoRef.current;
+      if (video && video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = context.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height,
+        );
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        if (code?.data) {
+          handleScan(code.data);
+          return;
+        }
+      }
+      scanFrameRef.current = requestAnimationFrame(tick);
+    };
+
+    navigator.mediaDevices
+      ?.getUserMedia({ video: { facingMode: "environment" } })
+      .then((stream) => {
+        if (cancelled) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+        scanFrameRef.current = requestAnimationFrame(tick);
+      })
+      .catch((error) => {
+        console.error("Camera access error:", error);
+        setScanError("Could not access the camera. Check browser permissions.");
+      });
+
+    return () => {
+      cancelled = true;
+      stopScanner();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cafeSection, scanResult]);
 
   const totalAccessorySales = useMemo(
     () =>
@@ -397,7 +784,7 @@ export default function OwnerDashboard() {
 
   if (loading)
     return (
-      <div className="owner-dashboard-loading">Loading owner dashboard...</div>
+      <PageSkeleton variant="list" />
     );
 
   if (!user || !OWNER_ROLES.has(role)) return null;
@@ -517,22 +904,61 @@ export default function OwnerDashboard() {
 
       {section === "cafe" && canCafe && (
         <main className="owner-dashboard-main">
-          <section className="owner-section-head">
-            <div>
-              <span className="owner-dashboard-kicker">CAFÉ OPERATIONS</span>
-              <h2>Manage Café Bookings</h2>
-              <p>
-                Monitor reservations and update the booking status for your
-                café.
-              </p>
-            </div>
-            <div className="owner-mini-stat">
-              <strong>{bookings.length}</strong>
-              <span>Total bookings</span>
-            </div>
-          </section>
+          <nav className="owner-cafe-subtabs">
+            {["bookings", "details", "revenue", "scan"].map((item) => (
+              <button
+                key={item}
+                type="button"
+                className={cafeSection === item ? "active" : ""}
+                onClick={() => setCafeSection(item)}
+              >
+                {item === "bookings"
+                  ? "Bookings"
+                  : item === "details"
+                    ? "Café Details"
+                    : item === "revenue"
+                      ? "Revenue"
+                      : "Scan Ticket"}
+              </button>
+            ))}
+          </nav>
 
-          <section className="owner-table-card">
+          {editableCafes.length > 1 && cafeSection !== "bookings" && (
+            <div className="owner-cafe-picker">
+              <label>
+                Editing
+                <select
+                  value={effectiveCafeId}
+                  onChange={(e) => setActiveCafeId(e.target.value)}
+                >
+                  {editableCafes.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          )}
+
+          {cafeSection === "bookings" && (
+            <>
+              <section className="owner-section-head">
+                <div>
+                  <span className="owner-dashboard-kicker">CAFÉ OPERATIONS</span>
+                  <h2>Manage Café Bookings</h2>
+                  <p>
+                    Monitor reservations and update the booking status for your
+                    café.
+                  </p>
+                </div>
+                <div className="owner-mini-stat">
+                  <strong>{bookings.length}</strong>
+                  <span>Total bookings</span>
+                </div>
+              </section>
+
+              <section className="owner-table-card">
             {bookings.length === 0 ? (
               <div className="owner-empty">
                 <span>☕</span>
@@ -555,11 +981,7 @@ export default function OwnerDashboard() {
                     >
                       <div className="owner-booking-details">
                         <span className="owner-small-label">{status}</span>
-                        <h3>
-                          {booking.cafeName ||
-                            CAFE_NAMES[booking.cafeId] ||
-                            "Gaming Café"}
-                        </h3>
+                        <h3>{booking.cafeName || "Gaming Café"}</h3>
                         <p>
                           📅 {booking.date} &nbsp; • &nbsp; 🕐 {booking.time}{" "}
                           &nbsp; • &nbsp; 🎮{" "}
@@ -639,7 +1061,513 @@ export default function OwnerDashboard() {
                 })}
               </div>
             )}
-          </section>
+              </section>
+            </>
+          )}
+
+          {cafeSection === "details" && (
+            <section className="owner-form-card owner-cafe-details-form">
+              {!effectiveCafeId ? (
+                <form onSubmit={createCafe}>
+                  <div className="owner-form-title">
+                    <div>
+                      <span className="owner-dashboard-kicker">GET STARTED</span>
+                      <h3>List Your Café</h3>
+                    </div>
+                  </div>
+                  <p className="owner-cafe-intro">
+                    Add your café so gamers can find and book it. You can add
+                    photos, PC/console setups and pricing right after.
+                  </p>
+
+                  <label>
+                    Café name
+                    <input
+                      value={newCafeForm.name}
+                      onChange={(e) =>
+                        setNewCafeForm((f) => ({ ...f, name: e.target.value }))
+                      }
+                      placeholder="Rapid Round Café"
+                      required
+                    />
+                  </label>
+                  <label>
+                    Address
+                    <input
+                      value={newCafeForm.address}
+                      onChange={(e) =>
+                        setNewCafeForm((f) => ({ ...f, address: e.target.value }))
+                      }
+                      placeholder="Street, area, city"
+                      required
+                    />
+                  </label>
+                  <div className="owner-form-two">
+                    <label>
+                      Phone
+                      <input
+                        value={newCafeForm.phone}
+                        onChange={(e) =>
+                          setNewCafeForm((f) => ({ ...f, phone: e.target.value }))
+                        }
+                        placeholder="98765 43210"
+                      />
+                    </label>
+                    <label>
+                      Email
+                      <input
+                        type="email"
+                        value={newCafeForm.email}
+                        onChange={(e) =>
+                          setNewCafeForm((f) => ({ ...f, email: e.target.value }))
+                        }
+                        placeholder="cafe@example.com"
+                      />
+                    </label>
+                  </div>
+                  <div className="owner-form-two">
+                    <label>
+                      Opening time
+                      <input
+                        value={newCafeForm.opening}
+                        onChange={(e) =>
+                          setNewCafeForm((f) => ({ ...f, opening: e.target.value }))
+                        }
+                        placeholder="10:00 AM"
+                      />
+                    </label>
+                    <label>
+                      Closing time
+                      <input
+                        value={newCafeForm.closing}
+                        onChange={(e) =>
+                          setNewCafeForm((f) => ({ ...f, closing: e.target.value }))
+                        }
+                        placeholder="10:00 PM"
+                      />
+                    </label>
+                  </div>
+
+                  <button
+                    className="owner-primary-btn"
+                    type="submit"
+                    disabled={creatingCafe}
+                  >
+                    {creatingCafe ? "Listing..." : "List My Café"}
+                  </button>
+                </form>
+              ) : (
+                <form onSubmit={saveCafeDetails}>
+                  <div className="owner-form-title">
+                    <div>
+                      <span className="owner-dashboard-kicker">EDIT</span>
+                      <h3>Café Details</h3>
+                    </div>
+                    {(() => {
+                      const status = editableCafes.find(
+                        (c) => c.id === effectiveCafeId,
+                      )?.status;
+                      if (!status) return null;
+                      return (
+                        <span className={`owner-cafe-status-badge ${status}`}>
+                          {status === "approved"
+                            ? "✓ Live"
+                            : status === "rejected"
+                              ? "✕ Rejected"
+                              : "⏳ Pending review"}
+                        </span>
+                      );
+                    })()}
+                  </div>
+
+                  <label>
+                    Café name
+                    <input
+                      value={cafeOverlayForm.name}
+                      onChange={(e) =>
+                        setCafeOverlayForm((f) => ({ ...f, name: e.target.value }))
+                      }
+                      required
+                    />
+                  </label>
+                  <label>
+                    Address
+                    <input
+                      value={cafeOverlayForm.address}
+                      onChange={(e) =>
+                        setCafeOverlayForm((f) => ({ ...f, address: e.target.value }))
+                      }
+                      required
+                    />
+                  </label>
+                  <div className="owner-form-two">
+                    <label>
+                      Phone
+                      <input
+                        value={cafeOverlayForm.phone}
+                        onChange={(e) =>
+                          setCafeOverlayForm((f) => ({ ...f, phone: e.target.value }))
+                        }
+                      />
+                    </label>
+                    <label>
+                      Email
+                      <input
+                        type="email"
+                        value={cafeOverlayForm.email}
+                        onChange={(e) =>
+                          setCafeOverlayForm((f) => ({ ...f, email: e.target.value }))
+                        }
+                      />
+                    </label>
+                  </div>
+                  <div className="owner-form-two">
+                    <label>
+                      Opening time
+                      <input
+                        value={cafeOverlayForm.opening}
+                        onChange={(e) =>
+                          setCafeOverlayForm((f) => ({ ...f, opening: e.target.value }))
+                        }
+                        placeholder="10:00 AM"
+                      />
+                    </label>
+                    <label>
+                      Closing time
+                      <input
+                        value={cafeOverlayForm.closing}
+                        onChange={(e) =>
+                          setCafeOverlayForm((f) => ({ ...f, closing: e.target.value }))
+                        }
+                        placeholder="10:00 PM"
+                      />
+                    </label>
+                  </div>
+                  <div className="owner-form-two">
+                    <label>
+                      Website (optional)
+                      <input
+                        value={cafeOverlayForm.website}
+                        onChange={(e) =>
+                          setCafeOverlayForm((f) => ({ ...f, website: e.target.value }))
+                        }
+                        placeholder="https://..."
+                      />
+                    </label>
+                    <label>
+                      Google Maps link (optional)
+                      <input
+                        value={cafeOverlayForm.mapUrl}
+                        onChange={(e) =>
+                          setCafeOverlayForm((f) => ({ ...f, mapUrl: e.target.value }))
+                        }
+                        placeholder="https://maps.app.goo.gl/..."
+                      />
+                    </label>
+                  </div>
+
+                  <label>
+                    About
+                    <textarea
+                      rows="3"
+                      value={cafeOverlayForm.about}
+                      onChange={(e) =>
+                        setCafeOverlayForm((f) => ({ ...f, about: e.target.value }))
+                      }
+                      placeholder="Tell customers what makes your café worth visiting..."
+                    />
+                  </label>
+
+                  <label>
+                    Photos (one URL per line, or upload)
+                    <textarea
+                      rows="3"
+                      value={cafeOverlayForm.photosText}
+                      onChange={(e) =>
+                        setCafeOverlayForm((f) => ({
+                          ...f,
+                          photosText: e.target.value,
+                        }))
+                      }
+                      placeholder="https://..."
+                    />
+                    <ImageUploadButton
+                      pathPrefix={`cafePhotos/${user.uid}`}
+                      label="Upload Photos"
+                      multiple
+                      onUploaded={(urls) =>
+                        setCafeOverlayForm((f) => ({
+                          ...f,
+                          photosText: [f.photosText, ...urls]
+                            .filter(Boolean)
+                            .join("\n"),
+                        }))
+                      }
+                      onError={setMessage}
+                    />
+                  </label>
+
+                  <div className="owner-form-two">
+                    <label>
+                      Total seats
+                      <input
+                        type="number"
+                        min="1"
+                        value={cafeOverlayForm.totalSeats}
+                        onChange={(e) =>
+                          setCafeOverlayForm((f) => ({
+                            ...f,
+                            totalSeats: e.target.value,
+                          }))
+                        }
+                        placeholder={String(DEFAULT_TOTAL_SEATS)}
+                      />
+                    </label>
+                    <label>
+                      Default price (₹/hr)
+                      <input
+                        type="number"
+                        min="1"
+                        value={cafeOverlayForm.pricePerHour}
+                        onChange={(e) =>
+                          setCafeOverlayForm((f) => ({
+                            ...f,
+                            pricePerHour: e.target.value,
+                          }))
+                        }
+                        placeholder={String(DEFAULT_PRICE_PER_HOUR)}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="owner-spec-editor">
+                    <div className="owner-form-title">
+                      <span>Gaming setups (PC / Console specs)</span>
+                      <button type="button" onClick={addSpecRow}>
+                        + Add setup
+                      </button>
+                    </div>
+                    {cafeOverlayForm.specs.map((spec) => (
+                      <div className="owner-spec-row" key={spec.id}>
+                        <select
+                          value={spec.type}
+                          onChange={(e) =>
+                            updateSpecRow(spec.id, "type", e.target.value)
+                          }
+                        >
+                          <option value="PC">PC</option>
+                          <option value="Console">Console</option>
+                        </select>
+                        <input
+                          value={spec.label}
+                          onChange={(e) =>
+                            updateSpecRow(spec.id, "label", e.target.value)
+                          }
+                          placeholder="RTX 4070 • 165Hz"
+                        />
+                        <input
+                          value={spec.details}
+                          onChange={(e) =>
+                            updateSpecRow(spec.id, "details", e.target.value)
+                          }
+                          placeholder="Extra details (optional)"
+                        />
+                        <input
+                          type="number"
+                          min="1"
+                          value={spec.price}
+                          onChange={(e) =>
+                            updateSpecRow(spec.id, "price", e.target.value)
+                          }
+                          placeholder="₹/hr"
+                        />
+                        <button
+                          type="button"
+                          className="danger"
+                          onClick={() => removeSpecRow(spec.id)}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <label>Closed days</label>
+                  <div className="owner-weekday-chips">
+                    {WEEKDAYS.map((day) => (
+                      <button
+                        type="button"
+                        key={day}
+                        className={
+                          cafeOverlayForm.closedDays.includes(day) ? "active" : ""
+                        }
+                        onClick={() => toggleClosedDay(day)}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+
+                  <label>
+                    Blocked dates (YYYY-MM-DD, one per line)
+                    <textarea
+                      rows="2"
+                      value={cafeOverlayForm.blockedDatesText}
+                      onChange={(e) =>
+                        setCafeOverlayForm((f) => ({
+                          ...f,
+                          blockedDatesText: e.target.value,
+                        }))
+                      }
+                      placeholder="2026-10-02"
+                    />
+                  </label>
+
+                  <button
+                    className="owner-primary-btn"
+                    type="submit"
+                    disabled={savingCafeDetails}
+                  >
+                    {savingCafeDetails ? "Saving..." : "Save Café Details"}
+                  </button>
+                </form>
+              )}
+            </section>
+          )}
+
+          {cafeSection === "revenue" && (
+            <>
+              <section className="owner-section-head">
+                <div>
+                  <span className="owner-dashboard-kicker">CAFÉ REVENUE</span>
+                  <h2>Monthly Revenue</h2>
+                  <p>Completed bookings across your café(s).</p>
+                </div>
+                <div className="owner-month-nav">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setRevenueMonth((m) =>
+                        m.month === 0
+                          ? { year: m.year - 1, month: 11 }
+                          : { year: m.year, month: m.month - 1 },
+                      )
+                    }
+                  >
+                    ←
+                  </button>
+                  <strong>
+                    {MONTH_NAMES[revenueMonth.month]} {revenueMonth.year}
+                  </strong>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setRevenueMonth((m) =>
+                        m.month === 11
+                          ? { year: m.year + 1, month: 0 }
+                          : { year: m.year, month: m.month + 1 },
+                      )
+                    }
+                  >
+                    →
+                  </button>
+                </div>
+              </section>
+
+              <section className="owner-table-card">
+                <div className="owner-revenue-summary">
+                  <div>
+                    <span>Total Revenue</span>
+                    <strong>{money(monthlyRevenue)}</strong>
+                  </div>
+                  <div>
+                    <span>Completed Bookings</span>
+                    <strong>{monthlyCompletedBookings.length}</strong>
+                  </div>
+                </div>
+                {monthlyCompletedBookings.length === 0 ? (
+                  <div className="owner-empty small">
+                    <span>💰</span>
+                    <strong>No completed bookings this month</strong>
+                  </div>
+                ) : (
+                  <div className="owner-booking-list">
+                    {monthlyCompletedBookings.map((booking) => (
+                      <article
+                        key={`${booking.customerId}-${booking.id}`}
+                        className="owner-booking-row"
+                      >
+                        <div>
+                          <span className="owner-small-label">Completed</span>
+                          <h3>{booking.cafeName}</h3>
+                          <p>
+                            📅 {booking.date} &nbsp; • &nbsp; 🕐 {booking.time}
+                            {booking.specLabel ? ` • ${booking.specLabel}` : ""}
+                          </p>
+                        </div>
+                        <div className="owner-row-actions">
+                          <strong>{money(booking.totalPrice)}</strong>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </>
+          )}
+
+          {cafeSection === "scan" && (
+            <section className="owner-scanner-card">
+              <div>
+                <span className="owner-dashboard-kicker">CHECK-IN</span>
+                <h2>Scan Ticket</h2>
+                <p>Point the camera at a customer's booking QR code.</p>
+              </div>
+
+              {!scanResult && (
+                <div className="owner-scanner-video-wrap">
+                  <video ref={videoRef} muted playsInline />
+                </div>
+              )}
+              {scanError && <div className="owner-scan-result error">{scanError}</div>}
+
+              {scanResult && (
+                <div
+                  className={`owner-scan-result ${scanResult.ok ? "success" : "error"}`}
+                >
+                  {scanResult.ok ? (
+                    <>
+                      <strong>Ticket verified ✓</strong>
+                      <p>{scanResult.booking.customerName}</p>
+                      <small>
+                        {scanResult.booking.date} • {scanResult.booking.time} •{" "}
+                        {scanResult.booking.specLabel || scanResult.booking.station}
+                      </small>
+                    </>
+                  ) : (
+                    <strong>{scanResult.message}</strong>
+                  )}
+                  <div className="owner-row-actions">
+                    {scanResult.ok && (
+                      <button
+                        type="button"
+                        className="owner-confirm-btn"
+                        onClick={async () => {
+                          await updateBookingStatus(scanResult.booking, "Completed");
+                          setScanResult(null);
+                        }}
+                      >
+                        ✓ Confirm Check-In
+                      </button>
+                    )}
+                    <button type="button" onClick={() => setScanResult(null)}>
+                      Scan Again
+                    </button>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
         </main>
       )}
 
@@ -740,14 +1668,31 @@ export default function OwnerDashboard() {
                 </label>
               </div>
               <label>
-                Image URL
-                <input
-                  value={productForm.image}
-                  onChange={(e) =>
-                    setProductForm((p) => ({ ...p, image: e.target.value }))
-                  }
-                  placeholder="https://..."
-                />
+                Image
+                <div className="image-field-row">
+                  <input
+                    value={productForm.image}
+                    onChange={(e) =>
+                      setProductForm((p) => ({ ...p, image: e.target.value }))
+                    }
+                    placeholder="Paste a URL, or upload a photo →"
+                  />
+                  <ImageUploadButton
+                    pathPrefix={`productImages/${user.uid}`}
+                    label="Upload"
+                    onUploaded={(url) =>
+                      setProductForm((p) => ({ ...p, image: url }))
+                    }
+                    onError={setMessage}
+                  />
+                </div>
+                {productForm.image && (
+                  <img
+                    src={productForm.image}
+                    alt=""
+                    className="image-field-preview"
+                  />
+                )}
               </label>
               <label>
                 Description

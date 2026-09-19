@@ -12,3 +12,4 @@
 @import "./cafe/styles/bookings-list.css"; /* MY BOOKINGS, EMPTY, LOADING */
 @import "./cafe/styles/responsive.css"; /* RESPONSIVE BREAKPOINTS */
 @import "./cafe/styles/booking-status.css"; /* HOURLY BOOKING REQUEST / OWNER APPROVAL STATUS */
+@import "./cafe/styles/qr.css"; /* QR TICKET MODAL + OWNER SCANNER */

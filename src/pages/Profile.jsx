@@ -9,6 +9,7 @@ import {
   uploadBytes,
   getDownloadURL,
 } from "firebase/storage";
+import PageSkeleton from "../components/PageSkeleton.jsx";
 import "./Profile.css";
 
 import {
@@ -543,7 +544,7 @@ function Profile() {
   };
 
   if (loading) {
-    return <div className="profile-loading">Loading GamingVerse...</div>;
+    return <PageSkeleton variant="list" />;
   }
 
   if (!user) return null;

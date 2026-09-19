@@ -18,7 +18,12 @@
 }
 .clubs-feed-head h1 {
   margin: 4px 0 8px;
-  font-size: 38px;
+  font-size: 40px;
+  background: linear-gradient(120deg, #fff 40%, #d9aaff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -0.5px;
 }
 .clubs-feed-head p {
   margin: 0;
@@ -31,15 +36,24 @@
   border: 1px solid rgba(177, 77, 255, 0.75);
   background: linear-gradient(90deg, #8127e7, #b92cff);
   color: #fff;
-  border-radius: 10px;
-  padding: 12px 17px;
+  border-radius: 12px;
+  padding: 13px 20px;
   font-weight: 800;
+  font-size: 14px;
   cursor: pointer;
-  box-shadow: 0 10px 26px rgba(153, 45, 255, 0.18);
+  box-shadow:
+    0 10px 26px rgba(153, 45, 255, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .clubs-create-button:hover,
 .clubs-create-submit:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 34px rgba(153, 45, 255, 0.42),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset;
 }
 .club-create-panel {
   background: var(--gv-surface-2);
@@ -106,37 +120,71 @@
   border: 1px solid #292936;
   background: #111117;
   color: var(--gv-text-muted);
-  padding: 8px 12px;
+  padding: 9px 14px;
   border-radius: 999px;
   cursor: pointer;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 12.5px;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
 }
-.club-interest-filters button.active,
 .club-interest-filters button:hover {
   color: #fff;
-  border-color: #8c35d6;
-  background: rgba(168, 50, 255, 0.12);
+  transform: translateY(-1px);
+  border-color: color-mix(
+    in srgb,
+    var(--interest-color, #a832ff) 60%,
+    transparent
+  );
+}
+.club-interest-filters button.active {
+  color: #fff;
+  border-color: color-mix(
+    in srgb,
+    var(--interest-color, #a832ff) 75%,
+    transparent
+  );
+  background: linear-gradient(
+    120deg,
+    color-mix(in srgb, var(--interest-color, #a832ff) 55%, transparent),
+    color-mix(in srgb, var(--interest-color, #a832ff) 18%, transparent)
+  );
+  box-shadow: 0 6px 18px
+    color-mix(in srgb, var(--interest-color, #a832ff) 35%, transparent);
 }
 .club-search {
-  width: 210px;
-  height: 40px;
+  width: 230px;
+  height: 44px;
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 10px;
+  gap: 8px;
+  padding: 0 14px;
   border: 1px solid #292936;
   background: #111117;
-  border-radius: 10px;
+  border-radius: 999px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.club-search span {
+  color: #6f6f7a;
 }
 .club-search input {
   width: 100%;
   padding: 0;
   border: 0;
   background: transparent;
+  font-size: 13px;
 }
 .club-search input:focus {
   box-shadow: none;
+}
+.club-search:focus-within {
+  border-color: #a832ff;
+  box-shadow: 0 0 0 4px rgba(168, 50, 255, 0.12);
 }
 .clubs-block {
   margin-top: 26px;
@@ -155,8 +203,13 @@
   font-size: 22px;
 }
 .clubs-block-heading > span {
-  color: #787884;
-  font-size: 12px;
+  color: #d9c8e6;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(168, 50, 255, 0.12);
+  border: 1px solid rgba(168, 50, 255, 0.25);
 }
 .clubs-grid {
   display: grid;
@@ -167,47 +220,82 @@
   overflow: hidden;
   background: var(--gv-surface-2);
   border: 1px solid #292936;
-  border-radius: 14px;
-  transition: 0.2s ease;
+  border-radius: 16px;
+  transition:
+    transform 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
 }
 .gaming-club-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(168, 50, 255, 0.5);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--club-accent) 70%, transparent);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.35),
+    0 0 30px color-mix(in srgb, var(--club-accent) 22%, transparent);
 }
 .gaming-club-card-top {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 15px;
   background: linear-gradient(
     135deg,
-    color-mix(in srgb, var(--club-accent) 28%, transparent),
-    rgba(255, 255, 255, 0.02)
+    color-mix(in srgb, var(--club-accent) 42%, transparent),
+    rgba(255, 255, 255, 0.02) 70%
   );
   border-bottom: 1px solid var(--gv-surface-hover);
 }
+.gaming-club-card-top::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  right: -15%;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--club-accent) 55%, transparent);
+  filter: blur(28px);
+  opacity: 0.55;
+  pointer-events: none;
+}
 .gaming-club-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+  position: relative;
+  z-index: 1;
+  width: 50px;
+  height: 50px;
+  border-radius: 13px;
   display: grid;
   place-items: center;
+  font-size: 22px;
   color: #fff;
   background: linear-gradient(135deg, var(--club-accent), var(--gv-surface-3));
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--club-accent) 45%, transparent);
 }
-.gaming-club-card-top > span {
+.gaming-club-tag {
+  position: relative;
+  z-index: 1;
   font-size: 11px;
-  color: #cdb7db;
   font-weight: 800;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(4px);
 }
 .gaming-club-card-body {
   padding: 15px;
 }
 .gaming-club-card-body h3 {
   margin: 0 0 7px;
-  font-size: 16px;
+  font-size: 17px;
+  transition: color 0.2s ease;
+}
+.gaming-club-card:hover .gaming-club-card-body h3 {
+  color: var(--club-accent);
 }
 .gaming-club-card-body p {
   margin: 0;
@@ -224,19 +312,31 @@
   margin-top: 14px;
 }
 .gaming-club-card-footer > span {
-  color: #7e7e89;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #a9a4b3;
   font-size: 11px;
+  font-weight: 700;
 }
 .gaming-club-card-footer button,
 .club-event-item button {
   border: 1px solid #7430bd;
   background: rgba(168, 50, 255, 0.1);
   color: var(--gv-accent-bright);
-  border-radius: 8px;
-  padding: 8px 11px;
+  border-radius: 999px;
+  padding: 8px 13px;
   font-weight: 800;
   font-size: 11px;
   cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+.gaming-club-card-footer button:hover,
+.club-event-item button:hover {
+  transform: translateY(-1px);
+  background: rgba(168, 50, 255, 0.2);
 }
 .gaming-club-card-footer button.joined {
   border-color: #a832ff;

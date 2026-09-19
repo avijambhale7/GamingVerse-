@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import {
   get,
@@ -11,23 +10,25 @@ import {
   set,
 } from "firebase/database";
 import { auth, db } from "../firebase";
+import PageSkeleton from "../components/PageSkeleton.jsx";
 import "./Cafe.css";
 
-import { CAFES, TOTAL_STATIONS } from "./cafe/data/cafes.js";
 import {
   loadLocalBookings,
   localSlotCount,
   saveLocalBookings,
 } from "./cafe/utils/localBookings.js";
 import { getTimeSlots, todayISO } from "./cafe/utils/time.js";
+import { isDateBlocked, normalizeCafe } from "./cafe/utils/cafeModel.js";
+import CafeQrModal from "./cafe/views/CafeQrModal.jsx";
 
 export default function Cafe() {
-  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [area, setArea] = useState("All");
-  const [selectedCafe, setSelectedCafe] = useState(null);
+  const [cafes, setCafes] = useState([]);
+  const [selectedCafeId, setSelectedCafeId] = useState(null);
+  const [selectedSpec, setSelectedSpec] = useState(null);
   const [selectedDate, setSelectedDate] = useState(todayISO());
   const [selectedTime, setSelectedTime] = useState("");
   const [bookings, setBookings] = useState([]);
@@ -36,6 +37,34 @@ export default function Cafe() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [showBookings, setShowBookings] = useState(false);
+  const [qrBooking, setQrBooking] = useState(null);
+
+  // Cafés are entirely owner-created and live here. Reading from the same
+  // subscription every café card and the booking view render from means a
+  // café's details stay live-updated wherever it's shown.
+  useEffect(() => {
+    const unsubscribe = onValue(
+      ref(db, "cafes"),
+      (snapshot) => {
+        const data = snapshot.val() || {};
+        const next = Object.entries(data)
+          .map(([id, raw]) => normalizeCafe(id, raw))
+          .filter(Boolean)
+          .sort((a, b) => b.createdAt - a.createdAt);
+        setCafes(next);
+      },
+      (error) => {
+        console.error("Cafes listener error:", error);
+        setMessage("Could not load cafés. Please try again later.");
+      },
+    );
+    return () => unsubscribe();
+  }, []);
+
+  const selectedCafe = useMemo(
+    () => cafes.find((c) => c.id === selectedCafeId) || null,
+    [cafes, selectedCafeId],
+  );
 
   useEffect(() => {
     let unsubscribeBookings = () => {};
@@ -100,36 +129,20 @@ export default function Cafe() {
     window.gvCafeMessageTimer = window.setTimeout(() => setMessage(""), 3500);
   };
 
-  const areas = useMemo(
-    () => [
-      "All",
-      ...Array.from(
-        new Set(
-          CAFES.map((c) => {
-            const match = c.address.match(
-              /,\s*([^,]+),\s*(Pune|Pimpri-Chinchwad)/i,
-            );
-            return match ? match[1].trim() : "Pune";
-          }),
-        ),
-      ),
-    ],
-    [],
-  );
-
   const filteredCafes = useMemo(() => {
+    // Customers only ever browse admin-approved cafés — a newly listed
+    // café stays invisible here until it's reviewed.
+    const approved = cafes.filter((c) => c.status === "approved");
     const q = search.trim().toLowerCase();
-    return CAFES.filter((c) => {
-      const areaMatch =
-        area === "All" || c.address.toLowerCase().includes(area.toLowerCase());
-      const textMatch =
-        !q || `${c.name} ${c.address}`.toLowerCase().includes(q);
-      return areaMatch && textMatch;
-    });
-  }, [search, area]);
+    if (!q) return approved;
+    return approved.filter((c) =>
+      `${c.name} ${c.address}`.toLowerCase().includes(q),
+    );
+  }, [cafes, search]);
 
   const selectCafe = (cafe) => {
-    setSelectedCafe(cafe);
+    setSelectedCafeId(cafe.id);
+    setSelectedSpec(null);
     setSelectedTime("");
     setShowBookings(false);
   };
@@ -137,6 +150,8 @@ export default function Cafe() {
   const timeSlots = selectedCafe
     ? getTimeSlots(selectedCafe.opening, selectedCafe.closing)
     : [];
+
+  const totalSeats = selectedCafe?.totalSeats || 0;
 
   useEffect(() => {
     let cancelled = false;
@@ -168,10 +183,10 @@ export default function Cafe() {
               );
               next[slot] = Math.min(
                 Math.max(Number(snap.val() || 0), localCount),
-                TOTAL_STATIONS,
+                totalSeats,
               );
             } catch {
-              next[slot] = Math.min(localCount, TOTAL_STATIONS);
+              next[slot] = Math.min(localCount, totalSeats);
             }
           }),
         );
@@ -184,7 +199,7 @@ export default function Cafe() {
           timeSlots.forEach((slot) => {
             fallback[slot] = Math.min(
               localSlotCount(selectedCafe.id, selectedDate, slot, user.uid),
-              TOTAL_STATIONS,
+              totalSeats,
             );
           });
           setSlotAvailability(fallback);
@@ -197,7 +212,7 @@ export default function Cafe() {
     return () => {
       cancelled = true;
     };
-  }, [selectedCafe, selectedDate, user]);
+  }, [selectedCafe, selectedDate, user, totalSeats]);
 
   const bookCafe = async () => {
     if (!user) {
@@ -222,6 +237,17 @@ export default function Cafe() {
       return;
     }
 
+    if (
+      isDateBlocked(
+        selectedCafe,
+        new Date(`${selectedDate}T00:00:00`),
+        selectedDate,
+      )
+    ) {
+      notify("The café is closed on that date. Please choose another day.");
+      return;
+    }
+
     const locallyBooked = localSlotCount(
       selectedCafe.id,
       selectedDate,
@@ -234,11 +260,11 @@ export default function Cafe() {
       locallyBooked,
     );
 
-    if (currentlyBooked >= TOTAL_STATIONS) {
+    if (currentlyBooked >= totalSeats) {
       notify("That slot is full. Please choose another time.");
       setSlotAvailability((prev) => ({
         ...prev,
-        [selectedTime]: TOTAL_STATIONS,
+        [selectedTime]: totalSeats,
       }));
       return;
     }
@@ -249,6 +275,10 @@ export default function Cafe() {
       .toString(36)
       .slice(2, 8)}`;
 
+    const pricePerHour = selectedSpec
+      ? Number(selectedSpec.price) || selectedCafe.pricePerHour
+      : selectedCafe.pricePerHour;
+
     const bookingBase = {
       localId,
       cafeId: selectedCafe.id,
@@ -256,7 +286,10 @@ export default function Cafe() {
       address: selectedCafe.address,
       date: selectedDate,
       time: selectedTime,
-      station: `Station ${(locallyBooked % TOTAL_STATIONS) + 1}`,
+      station: `Station ${(locallyBooked % totalSeats) + 1}`,
+      specLabel: selectedSpec ? selectedSpec.label : "",
+      pricePerHour,
+      totalPrice: pricePerHour,
       status: "Pending",
       customerName:
         user.displayName || user.email?.split("@")[0] || "GamingVerse User",
@@ -279,7 +312,7 @@ export default function Cafe() {
         const tx = await runTransaction(slotRef, (current) => {
           const booked = Number(current?.booked || 0);
 
-          if (booked >= TOTAL_STATIONS) return;
+          if (booked >= totalSeats) return;
 
           return {
             booked: booked + 1,
@@ -291,7 +324,7 @@ export default function Cafe() {
           notify("That slot is full. Please choose another time.");
           setSlotAvailability((prev) => ({
             ...prev,
-            [selectedTime]: TOTAL_STATIONS,
+            [selectedTime]: totalSeats,
           }));
           return;
         }
@@ -336,7 +369,7 @@ export default function Cafe() {
         ...prev,
         [selectedTime]: Math.min(
           Number(prev[selectedTime] || 0) + 1,
-          TOTAL_STATIONS,
+          totalSeats,
         ),
       }));
     } catch (error) {
@@ -427,26 +460,12 @@ export default function Cafe() {
   };
 
   if (loading)
-    return <div className="cafe-loading">Loading GamingVerse Cafés...</div>;
+    return <PageSkeleton variant="grid" />;
 
   return (
     <div className="cafe-page">
       <header className="cafe-header">
-        <button
-          className="cafe-brand"
-          type="button"
-          onClick={() => navigate("/games")}
-        >
-          <span className="cafe-brand-icon">🎮</span>
-          <span>
-            <strong>GamingVerse</strong>
-            <small>Level up your gaming experience</small>
-          </span>
-        </button>
         <div className="cafe-header-actions">
-          <button type="button" onClick={() => navigate("/games")}>
-            ← Games
-          </button>
           <button
             type="button"
             className="cafe-bookings-btn"
@@ -465,12 +484,12 @@ export default function Cafe() {
               Book your <b>gaming session.</b>
             </h1>
             <p>
-              Discover gaming cafés in Pune, choose your date and hourly slot,
-              then send a booking request to the café owner.
+              Discover gaming cafés listed by their owners, choose your date
+              and hourly slot, then send a booking request.
             </p>
           </div>
           <div className="cafe-hero-stat">
-            <strong>{CAFES.length}</strong>
+            <strong>{cafes.length}</strong>
             <small>cafés listed</small>
           </div>
         </section>
@@ -479,16 +498,8 @@ export default function Cafe() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search café name or area..."
+            placeholder="Search café name or address..."
           />
-          <select value={area} onChange={(e) => setArea(e.target.value)}>
-            <option value="All">All Areas</option>
-            {areas.slice(1).map((x) => (
-              <option key={x} value={x}>
-                {x}
-              </option>
-            ))}
-          </select>
         </section>
 
         {message && <div className="cafe-message">{message}</div>}
@@ -540,15 +551,25 @@ export default function Cafe() {
                         </small>
                       </div>
                       <div>
-                        <a
-                          href={
-                            CAFES.find((c) => c.id === b.cafeId)?.mapUrl || "#"
-                          }
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          Open Map ↗
-                        </a>
+                        {cafes.find((c) => c.id === b.cafeId)?.mapUrl && (
+                          <a
+                            href={cafes.find((c) => c.id === b.cafeId).mapUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Open Map ↗
+                          </a>
+                        )}
+                        {status === "Confirmed" &&
+                          !String(b.id || "").startsWith("local-") && (
+                            <button
+                              type="button"
+                              className="show-ticket"
+                              onClick={() => setQrBooking(b)}
+                            >
+                              🎫 Ticket
+                            </button>
+                          )}
                         {canCancel && (
                           <button
                             type="button"
@@ -576,21 +597,36 @@ export default function Cafe() {
             <button
               className="cafe-back"
               type="button"
-              onClick={() => setSelectedCafe(null)}
+              onClick={() => setSelectedCafeId(null)}
             >
               ← Back to cafés
             </button>
             <div className="cafe-detail-grid">
               <div className="cafe-detail-card">
-                <div className="cafe-cover-icon">🎮</div>
-                <div className="cafe-rating">★ {selectedCafe.rating}</div>
+                {selectedCafe.photos.length > 0 ? (
+                  <div className="cafe-photo-gallery">
+                    {selectedCafe.photos.slice(0, 4).map((url, i) => (
+                      <img
+                        key={url + i}
+                        src={url}
+                        alt={`${selectedCafe.name} photo ${i + 1}`}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="cafe-cover-icon">🎮</div>
+                )}
                 <h2>{selectedCafe.name}</h2>
                 <p>📍 {selectedCafe.address}</p>
+                {selectedCafe.about && (
+                  <p className="cafe-about-text">{selectedCafe.about}</p>
+                )}
                 <div className="cafe-info-pills">
                   <span>
                     🕘 {selectedCafe.opening} – {selectedCafe.closing}
                   </span>
-                  <span>🎮 {TOTAL_STATIONS} demo stations</span>
+                  <span>🎮 {totalSeats} gaming stations</span>
+                  <span>₹{selectedCafe.pricePerHour}/hr</span>
                 </div>
                 <div className="cafe-links">
                   {selectedCafe.website && (
@@ -602,33 +638,69 @@ export default function Cafe() {
                       Official / Info ↗
                     </a>
                   )}
-                  <a
-                    href={selectedCafe.mapUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Google Maps ↗
-                  </a>
-                  {selectedCafe.phone !== "Not available" && (
+                  {selectedCafe.mapUrl && (
+                    <a
+                      href={selectedCafe.mapUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Google Maps ↗
+                    </a>
+                  )}
+                  {selectedCafe.phone && (
                     <a href={`tel:${selectedCafe.phone}`}>Call</a>
                   )}
                 </div>
               </div>
               <div className="cafe-slot-card">
-                <span className="cafe-step">STEP 1</span>
+                {selectedCafe.specs.length > 0 && (
+                  <>
+                    <span className="cafe-step">STEP 1</span>
+                    <h2>Choose your setup</h2>
+                    <div className="cafe-spec-list">
+                      {selectedCafe.specs.map((spec) => (
+                        <button
+                          key={spec.id}
+                          type="button"
+                          className={`cafe-spec-card ${selectedSpec?.id === spec.id ? "selected" : ""}`}
+                          onClick={() => setSelectedSpec(spec)}
+                        >
+                          <strong>{spec.label || spec.type}</strong>
+                          {spec.details && <small>{spec.details}</small>}
+                          <span>₹{spec.price}/hr</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+                <span className="cafe-step">
+                  {selectedCafe.specs.length > 0 ? "STEP 2" : "STEP 1"}
+                </span>
                 <h2>Choose date & hourly slot</h2>
-                <label>
-                  Date
-                  <input
-                    type="date"
-                    min={todayISO()}
-                    value={selectedDate}
-                    onChange={(e) => {
-                      setSelectedDate(e.target.value);
-                      setSelectedTime("");
-                    }}
-                  />
-                </label>
+                <div className="cafe-date-chips">
+                  {Array.from({ length: 7 }, (_, i) => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + i);
+                    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                    const blocked = isDateBlocked(selectedCafe, d, iso);
+                    const selected = selectedDate === iso;
+                    return (
+                      <button
+                        key={iso}
+                        type="button"
+                        className={`cafe-date-chip ${selected ? "selected" : ""} ${blocked ? "blocked" : ""}`}
+                        disabled={blocked}
+                        onClick={() => {
+                          setSelectedDate(iso);
+                          setSelectedTime("");
+                        }}
+                      >
+                        <strong>{d.toLocaleDateString("en-US", { weekday: "short" })}</strong>
+                        <span>{d.getDate()}</span>
+                      </button>
+                    );
+                  })}
+                </div>
                 {/online appointment/i.test(selectedCafe.opening) ? null : (
                   <>
                     <div className="slot-header">
@@ -636,13 +708,13 @@ export default function Cafe() {
                       <small>
                         {loadingSlots
                           ? "Checking availability..."
-                          : `${TOTAL_STATIONS} stations per slot`}
+                          : `${totalSeats} stations per slot`}
                       </small>
                     </div>
                     <div className="slots-grid">
                       {timeSlots.map((slot) => {
                         const booked = Number(slotAvailability[slot] || 0);
-                        const full = booked >= TOTAL_STATIONS;
+                        const full = booked >= totalSeats;
                         return (
                           <button
                             key={slot}
@@ -655,7 +727,7 @@ export default function Cafe() {
                             <small>
                               {full
                                 ? "Full"
-                                : `${TOTAL_STATIONS - booked} available`}
+                                : `${totalSeats - booked} available`}
                             </small>
                           </button>
                         );
@@ -670,7 +742,7 @@ export default function Cafe() {
                       {saving
                         ? "Sending Request..."
                         : selectedTime
-                          ? `Request ${selectedTime} Booking`
+                          ? `Request ${selectedTime} Booking • ₹${selectedSpec ? selectedSpec.price : selectedCafe.pricePerHour}/hr`
                           : "Select a Time Slot"}
                     </button>
                   </>
@@ -679,8 +751,8 @@ export default function Cafe() {
                   <div className="online-appointment">
                     <strong>Online appointment</strong>
                     <p>
-                      This café does not publish normal opening/closing hours in
-                      the supplied directory.
+                      This café hasn't published fixed hours. Check their
+                      contact details below.
                     </p>
                     {selectedCafe.website && (
                       <a
@@ -709,8 +781,11 @@ export default function Cafe() {
               {filteredCafes.map((cafe) => (
                 <article className="cafe-card" key={cafe.id}>
                   <div className="cafe-card-image">
-                    <div>🎮</div>
-                    <span>★ {cafe.rating}</span>
+                    {cafe.photos[0] ? (
+                      <img src={cafe.photos[0]} alt={cafe.name} />
+                    ) : (
+                      <div>🎮</div>
+                    )}
                   </div>
                   <div className="cafe-card-content">
                     <small>GAMING CAFÉ</small>
@@ -720,15 +795,17 @@ export default function Cafe() {
                       <span>
                         🕘 {cafe.opening} – {cafe.closing}
                       </span>
-                      <span>🎮 Gaming stations</span>
+                      <span>₹{cafe.pricePerHour}/hr</span>
                     </div>
                     <div className="cafe-card-actions">
                       <button type="button" onClick={() => selectCafe(cafe)}>
                         Book Slot
                       </button>
-                      <a href={cafe.mapUrl} target="_blank" rel="noreferrer">
-                        Map ↗
-                      </a>
+                      {cafe.mapUrl && (
+                        <a href={cafe.mapUrl} target="_blank" rel="noreferrer">
+                          Map ↗
+                        </a>
+                      )}
                     </div>
                   </div>
                 </article>
@@ -737,13 +814,24 @@ export default function Cafe() {
             {!filteredCafes.length && (
               <div className="cafe-empty">
                 <div>🔎</div>
-                <h3>No cafés found</h3>
-                <p>Try another café name or area.</p>
+                <h3>No cafés listed yet</h3>
+                <p>
+                  Café owners haven't added a café here yet — check back soon,
+                  or sign up as a business owner to list yours.
+                </p>
               </div>
             )}
           </section>
         )}
       </main>
+
+      {qrBooking && user && (
+        <CafeQrModal
+          booking={qrBooking}
+          uid={user.uid}
+          onClose={() => setQrBooking(null)}
+        />
+      )}
     </div>
   );
 }

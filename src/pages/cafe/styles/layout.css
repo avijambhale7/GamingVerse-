@@ -32,41 +32,9 @@
   padding: 20px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   gap: 20px;
-}
-.cafe-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: none;
-  border: 0;
-  color: #fff;
-  cursor: pointer;
-  text-align: left;
-  font: inherit;
-}
-.cafe-brand-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 15px;
-  display: grid;
-  place-items: center;
-  background: linear-gradient(135deg, #7c2cff, var(--gv-accent));
-  font-size: 25px;
-}
-.cafe-brand strong,
-.cafe-brand small {
-  display: block;
-}
-.cafe-brand strong {
-  font-size: 22px;
-}
-.cafe-brand small {
-  margin-top: 3px;
-  color: #888493;
-  font-size: 12px;
 }
 .cafe-header-actions {
   display: flex;

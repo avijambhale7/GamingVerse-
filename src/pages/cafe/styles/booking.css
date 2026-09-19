@@ -181,3 +181,111 @@
   font-weight: 850;
   text-decoration: none;
 }
+
+/* Owner-supplied photos, replacing the plain cover icon when present. */
+.cafe-photo-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.cafe-photo-gallery img {
+  width: 100%;
+  height: 90px;
+  object-fit: cover;
+  display: block;
+}
+.cafe-photo-gallery img:first-child {
+  grid-column: 1 / -1;
+  height: 150px;
+}
+.cafe-about-text {
+  color: #a9a5b1;
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 6px 0 0;
+}
+
+/* Owner-defined PC/console setups, shown before the date/slot step. */
+.cafe-spec-list {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 20px;
+}
+.cafe-spec-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+  padding: 12px 14px;
+  cursor: pointer;
+  font: inherit;
+}
+.cafe-spec-card strong {
+  display: block;
+  font-size: 13px;
+}
+.cafe-spec-card small {
+  display: block;
+  margin-top: 2px;
+  color: #898591;
+  font-size: 10px;
+}
+.cafe-spec-card span {
+  flex: none;
+  color: #78dca0;
+  font-weight: 900;
+  font-size: 12px;
+}
+.cafe-spec-card.selected {
+  border-color: var(--gv-accent);
+  background: rgba(143, 69, 255, 0.15);
+}
+
+/* 7-day picker, replacing the native date input so closed/blocked days
+   can be shown disabled instead of silently rejected on submit. */
+.cafe-date-chips {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin: 10px 0 4px;
+}
+.cafe-date-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #cfcbd6;
+  padding: 9px 0;
+  cursor: pointer;
+  font: inherit;
+}
+.cafe-date-chip strong {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.cafe-date-chip span {
+  font-size: 13px;
+  font-weight: 900;
+}
+.cafe-date-chip.selected {
+  border-color: var(--gv-accent);
+  background: rgba(143, 69, 255, 0.15);
+  color: #fff;
+}
+.cafe-date-chip.blocked {
+  opacity: 0.35;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}

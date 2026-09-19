@@ -25,10 +25,8 @@ export default function GamesNavbar({
   setNotificationTab,
   setNotifications,
   setSearch,
-  setShowDiscoverMenu,
   setShowNotifications,
   setSpacesSection,
-  showDiscoverMenu,
   showNotifications,
 }) {
   return (
@@ -55,7 +53,6 @@ export default function GamesNavbar({
             setActiveCategory("All");
             setSearch("");
             setShowNotifications(false);
-            setShowDiscoverMenu(false);
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
         >
@@ -263,22 +260,6 @@ export default function GamesNavbar({
             <div className="navbar-icon-actions">
               <button
                 type="button"
-                className={`navbar-icon-button discover-menu-button ${showDiscoverMenu ? "active" : ""}`}
-                onClick={() => {
-                  setShowDiscoverMenu((current) => !current);
-                  setShowNotifications(false);
-                }}
-                aria-label="Discover menu"
-                aria-expanded={showDiscoverMenu}
-                title="Discover"
-              >
-                <span className="navbar-icon">
-                  <GVIcon name="grid" size={19} />
-                </span>
-              </button>
-
-              <button
-                type="button"
                 className={`navbar-icon-button ${showNotifications ? "active" : ""}`}
                 onClick={() => {
                   setShowNotifications((current) => !current);
@@ -307,44 +288,6 @@ export default function GamesNavbar({
                 </span>
               </button>
             </div>
-
-            {showDiscoverMenu && (
-              <div className="navbar-popover discover-popover">
-                <div className="discover-grid">
-                  {[
-                    { icon: "〽", label: "Following Activity" },
-                    { icon: "⌖", label: "Discover" },
-                    { icon: "♛", label: "Top 100" },
-                  ].map((item) => (
-                    <button
-                      key={item.label}
-                      type="button"
-                      className="discover-menu-item"
-                      onMouseDown={() => {
-                        if (item.label === "Discover") {
-                          setActiveView("discover");
-                          setSearch("");
-                          window.scrollTo({ top: 0, behavior: "smooth" });
-                        }
-                      }}
-                      onClick={() => {
-                        setShowDiscoverMenu(false);
-                        if (item.label === "Following Activity") {
-                          navigate("/games?view=following");
-                        } else if (item.label === "Top 100") {
-                          navigate("/games?view=top100");
-                        }
-                      }}
-                    >
-                      <span className="discover-menu-icon" aria-hidden="true">
-                        {item.icon}
-                      </span>
-                      <span>{item.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {showNotifications && (
               <div className="navbar-popover notifications-popover">

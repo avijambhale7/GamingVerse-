@@ -12,3 +12,5 @@
 @import "./owner/styles/orders.css"; /* ORDERS + LOADING */
 @import "./owner/styles/responsive.css"; /* RESPONSIVE BREAKPOINTS */
 @import "./owner/styles/booking-approval.css"; /* CAFÉ OWNER BOOKING APPROVAL */
+@import "./owner/styles/cafe-editor.css"; /* OWNER-EDITABLE CAFÉ DETAILS + REVENUE */
+@import "./cafe/styles/qr.css"; /* QR TICKET MODAL + OWNER SCANNER (shared with Cafe.jsx) */

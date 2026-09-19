@@ -1,0 +1,124 @@
+/* =========================================================
+   QR TICKET MODAL + OWNER SCANNER
+   Shared between the customer-facing CafeQrModal
+   (Cafe.jsx) and the owner-facing scan tool
+   (OwnerDashboard.jsx).
+========================================================= */
+
+.cafe-qr-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  background: rgba(4, 4, 8, 0.72);
+  backdrop-filter: blur(6px);
+  padding: 20px;
+}
+.cafe-qr-modal {
+  width: min(320px, 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  background: var(--gv-surface-2);
+  padding: 26px;
+  text-align: center;
+  position: relative;
+}
+.cafe-qr-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  border: 0;
+  background: transparent;
+  color: #999;
+  font-size: 22px;
+  cursor: pointer;
+}
+.cafe-qr-modal h3 {
+  margin: 4px 0 2px;
+}
+.cafe-qr-modal > p {
+  color: #8b8794;
+  font-size: 12px;
+  margin: 0 0 16px;
+}
+.cafe-qr-image {
+  width: 240px;
+  height: 240px;
+  margin: 0 auto;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f5f5f7;
+  display: grid;
+  place-items: center;
+}
+.cafe-qr-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.cafe-qr-modal small {
+  display: block;
+  margin-top: 14px;
+  color: #74717d;
+  font-size: 11px;
+}
+
+/* Owner scanner (rendered inside OwnerDashboard's café tab) */
+.owner-scanner-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: var(--gv-surface-2);
+  padding: 20px;
+  display: grid;
+  gap: 14px;
+}
+.owner-scanner-video-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 1 / 1;
+}
+.owner-scanner-video-wrap video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.owner-scanner-video-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 15%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  border-radius: 14px;
+  pointer-events: none;
+}
+.owner-scan-result {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 13px;
+  background: var(--gv-surface-1);
+  padding: 16px;
+  display: grid;
+  gap: 6px;
+}
+.owner-scan-result.error {
+  border-color: rgba(255, 92, 115, 0.3);
+  background: rgba(255, 92, 115, 0.06);
+  color: #ff9ba8;
+}
+.owner-scan-result.success {
+  border-color: rgba(80, 210, 142, 0.3);
+  background: rgba(80, 210, 142, 0.06);
+}
+.owner-scan-result strong {
+  font-size: 15px;
+}
+.owner-scan-result p,
+.owner-scan-result small {
+  margin: 0;
+  color: #a19dab;
+  font-size: 12px;
+}

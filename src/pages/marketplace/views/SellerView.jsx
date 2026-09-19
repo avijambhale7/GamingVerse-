@@ -4,8 +4,10 @@
    Rendered by ../../Marketplace.jsx.
 ========================================================= */
 
+import { useState } from "react";
 import { EMPTY_PRODUCT, ORDER_STEPS } from "../data/catalog.js";
 import { money } from "../utils/format.js";
+import ImageUploadButton from "../../../components/ImageUploadButton.jsx";
 
 export default function SellerView({
   deleteProduct,
@@ -20,6 +22,8 @@ export default function SellerView({
   updateOrderStatus,
   user,
 }) {
+  const [imageUploadError, setImageUploadError] = useState("");
+
   const renderSeller = () => {
     if (!user) {
       return (
@@ -163,17 +167,41 @@ export default function SellerView({
               </label>
 
               <label className="full">
-                Image URL
-                <input
-                  value={sellerForm.image}
-                  onChange={(e) =>
-                    setSellerForm((prev) => ({
-                      ...prev,
-                      image: e.target.value,
-                    }))
-                  }
-                  placeholder="https://..."
-                />
+                Image
+                <div className="image-field-row">
+                  <input
+                    value={sellerForm.image}
+                    onChange={(e) =>
+                      setSellerForm((prev) => ({
+                        ...prev,
+                        image: e.target.value,
+                      }))
+                    }
+                    placeholder="Paste a URL, or upload a photo →"
+                  />
+                  {user && (
+                    <ImageUploadButton
+                      pathPrefix={`productImages/${user.uid}`}
+                      label="Upload"
+                      onUploaded={(url) =>
+                        setSellerForm((prev) => ({ ...prev, image: url }))
+                      }
+                      onError={setImageUploadError}
+                    />
+                  )}
+                </div>
+                {sellerForm.image && (
+                  <img
+                    src={sellerForm.image}
+                    alt=""
+                    className="image-field-preview"
+                  />
+                )}
+                {imageUploadError && (
+                  <small className="image-field-error">
+                    {imageUploadError}
+                  </small>
+                )}
               </label>
 
               <label className="full">

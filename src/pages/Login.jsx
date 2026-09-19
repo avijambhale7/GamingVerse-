@@ -1,12 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   GoogleAuthProvider,
   signInWithPopup,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
   updateProfile,
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
@@ -47,25 +45,39 @@ function Login() {
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
   const [signupDob, setSignupDob] = useState("");
 
+  const [ownerSignupName, setOwnerSignupName] = useState("");
+  const [ownerSignupEmail, setOwnerSignupEmail] = useState("");
+  const [ownerSignupPassword, setOwnerSignupPassword] = useState("");
+  const [ownerSignupConfirmPassword, setOwnerSignupConfirmPassword] =
+    useState("");
+  const [ownerSignupRole, setOwnerSignupRole] = useState("cafe_owner");
+  const [ownerSignupBusinessName, setOwnerSignupBusinessName] = useState("");
+
   const [resetEmail, setResetEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [confirmationResult, setConfirmationResult] = useState(null);
-  const recaptchaVerifierRef = useRef(null);
   const [loading, setLoading] = useState(false);
+  const [notice, setNotice] = useState(null);
+
+  const notify = (text, type = "info") => {
+    setNotice({ text, type });
+    window.clearTimeout(window.gvLoginNoticeTimer);
+    window.gvLoginNoticeTimer = window.setTimeout(
+      () => setNotice(null),
+      4000,
+    );
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     if (!email || !password) {
-      alert("Please enter email and password.");
+      notify("Please enter email and password.", "error");
       return;
     }
 
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const cred = await signInWithEmailAndPassword(auth, email, password);
 
       if (rememberMe) {
         localStorage.setItem("gamingVerseEmail", email);
@@ -73,17 +85,36 @@ function Login() {
         localStorage.removeItem("gamingVerseEmail");
       }
 
-      alert("Login successful!");
-      navigate("/games");
+      const { ref, get } = await import("firebase/database");
+      const { db } = await import("../firebase");
+      const roleSnap = await get(ref(db, `users/${cred.user.uid}/role`));
+      const role = String(roleSnap.val() || "").toLowerCase();
+      const ownerRoles = new Set([
+        "owner",
+        "cafe_owner",
+        "shop_owner",
+        "accessory_owner",
+      ]);
+
+      notify("Login successful!", "success");
+      setTimeout(() => {
+        navigate(
+          role === "admin"
+            ? "/admin"
+            : ownerRoles.has(role)
+              ? "/owner-dashboard"
+              : "/games",
+        );
+      }, 600);
     } catch (error) {
       console.error(error);
 
       if (error.code === "auth/invalid-credential") {
-        alert("Invalid email or password.");
+        notify("Invalid email or password.", "error");
       } else if (error.code === "auth/invalid-email") {
-        alert("Invalid email address.");
+        notify("Invalid email address.", "error");
       } else {
-        alert("Login failed: " + error.message);
+        notify("Login failed: " + error.message, "error");
       }
     } finally {
       setLoading(false);
@@ -120,29 +151,29 @@ function Login() {
       !signupPassword ||
       !signupConfirmPassword
     ) {
-      alert("Please fill all fields.");
+      notify("Please fill all fields.", "error");
       return;
     }
 
     if (signupPassword.length < 6) {
-      alert("Password must contain at least 6 characters.");
+      notify("Password must contain at least 6 characters.", "error");
       return;
     }
 
     if (signupPassword !== signupConfirmPassword) {
-      alert("Passwords do not match.");
+      notify("Passwords do not match.", "error");
       return;
     }
 
     if (!signupDob) {
-      alert("Please select your date of birth.");
+      notify("Please select your date of birth.", "error");
       return;
     }
 
     const signupAge = calculateAge(signupDob);
 
     if (signupAge === null || signupAge < 0 || signupAge > 120) {
-      alert("Please enter a valid date of birth.");
+      notify("Please enter a valid date of birth.", "error");
       return;
     }
 
@@ -172,7 +203,7 @@ function Login() {
         createdAt: Date.now(),
       });
 
-      alert("Account created successfully!");
+      notify("Account created successfully!", "success");
 
       setSignupName("");
       setSignupEmail("");
@@ -181,18 +212,110 @@ function Login() {
       setSignupDob("");
       setModal(null);
 
-      navigate("/games");
+      setTimeout(() => navigate("/games"), 600);
     } catch (error) {
       console.error(error);
 
       if (error.code === "auth/email-already-in-use") {
-        alert("This email is already registered.");
+        notify("This email is already registered.", "error");
       } else if (error.code === "auth/invalid-email") {
-        alert("Invalid email address.");
+        notify("Invalid email address.", "error");
       } else if (error.code === "auth/weak-password") {
-        alert("Password is too weak.");
+        notify("Password is too weak.", "error");
       } else {
-        alert("Account creation failed: " + error.message);
+        notify("Account creation failed: " + error.message, "error");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOwnerSignup = async (e) => {
+    e.preventDefault();
+
+    if (
+      !ownerSignupName.trim() ||
+      !ownerSignupEmail.trim() ||
+      !ownerSignupPassword ||
+      !ownerSignupConfirmPassword
+    ) {
+      notify("Please fill all fields.", "error");
+      return;
+    }
+
+    if (ownerSignupPassword.length < 6) {
+      notify("Password must contain at least 6 characters.", "error");
+      return;
+    }
+
+    if (ownerSignupPassword !== ownerSignupConfirmPassword) {
+      notify("Passwords do not match.", "error");
+      return;
+    }
+
+    if (ownerSignupRole === "shop_owner" && !ownerSignupBusinessName.trim()) {
+      notify("Enter your shop or business name.", "error");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const result = await createUserWithEmailAndPassword(
+        auth,
+        ownerSignupEmail.trim(),
+        ownerSignupPassword,
+      );
+
+      await updateProfile(result.user, {
+        displayName: ownerSignupName.trim(),
+      });
+
+      const { ref, set } = await import("firebase/database");
+      const { db } = await import("../firebase");
+
+      await set(ref(db, `users/${result.user.uid}`), {
+        firstName: ownerSignupName.trim().split(" ")[0] || ownerSignupName.trim(),
+        lastName: ownerSignupName.trim().split(" ").slice(1).join(" "),
+        username: ownerSignupName.trim(),
+        email: ownerSignupEmail.trim(),
+        role: ownerSignupRole,
+        businessName:
+          ownerSignupRole === "shop_owner"
+            ? ownerSignupBusinessName.trim()
+            : "",
+        createdAt: Date.now(),
+      });
+
+      notify(
+        ownerSignupRole === "cafe_owner"
+          ? "Business account created! List your café from the dashboard next."
+          : "Business account created! Taking you to your dashboard.",
+        "success",
+      );
+
+      setOwnerSignupName("");
+      setOwnerSignupEmail("");
+      setOwnerSignupPassword("");
+      setOwnerSignupConfirmPassword("");
+      setOwnerSignupBusinessName("");
+      setModal(null);
+
+      setTimeout(() => navigate("/owner-dashboard"), 600);
+    } catch (error) {
+      console.error(error);
+
+      if (error.code === "auth/email-already-in-use") {
+        notify(
+          "This email is already registered. Log in above instead.",
+          "error",
+        );
+      } else if (error.code === "auth/invalid-email") {
+        notify("Invalid email address.", "error");
+      } else if (error.code === "auth/weak-password") {
+        notify("Password is too weak.", "error");
+      } else {
+        notify("Account creation failed: " + error.message, "error");
       }
     } finally {
       setLoading(false);
@@ -203,7 +326,7 @@ function Login() {
     e.preventDefault();
 
     if (!resetEmail.trim()) {
-      alert("Enter your email address.");
+      notify("Enter your email address.", "error");
       return;
     }
 
@@ -212,7 +335,7 @@ function Login() {
     try {
       await sendPasswordResetEmail(auth, resetEmail.trim());
 
-      alert("Password reset email sent!\n\nCheck your inbox.");
+      notify("Password reset email sent — check your inbox.", "success");
 
       setResetEmail("");
       setModal(null);
@@ -220,163 +343,11 @@ function Login() {
       console.error(error);
 
       if (error.code === "auth/user-not-found") {
-        alert("No account found with this email.");
+        notify("No account found with this email.", "error");
       } else if (error.code === "auth/invalid-email") {
-        alert("Invalid email address.");
+        notify("Invalid email address.", "error");
       } else {
-        alert("Could not send reset email: " + error.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const clearRecaptcha = () => {
-    const verifier = recaptchaVerifierRef.current;
-
-    if (verifier) {
-      try {
-        verifier.clear();
-      } catch (error) {
-        console.warn("Could not clear reCAPTCHA:", error);
-      }
-    }
-
-    recaptchaVerifierRef.current = null;
-
-    const container = document.getElementById("phone-recaptcha-container");
-    if (container) {
-      container.innerHTML = "";
-    }
-  };
-
-  const resetPhoneAuthState = () => {
-    clearRecaptcha();
-    setConfirmationResult(null);
-    setVerificationCode("");
-    setPhoneNumber("");
-  };
-
-  const setupRecaptcha = async () => {
-    if (recaptchaVerifierRef.current) {
-      return recaptchaVerifierRef.current;
-    }
-
-    const container = document.getElementById("phone-recaptcha-container");
-
-    if (!container) {
-      throw new Error("reCAPTCHA container is not available.");
-    }
-
-    // Prevent Firebase from seeing an already-rendered widget in this element.
-    container.innerHTML = "";
-
-    const verifier = new RecaptchaVerifier(auth, container, {
-      size: "invisible",
-      callback: () => {},
-      "expired-callback": () => {
-        clearRecaptcha();
-      },
-    });
-
-    recaptchaVerifierRef.current = verifier;
-
-    try {
-      await verifier.render();
-    } catch (error) {
-      try {
-        verifier.clear();
-      } catch {
-        // Best effort: the reCAPTCHA widget may already be torn down.
-      }
-      recaptchaVerifierRef.current = null;
-      container.innerHTML = "";
-      throw error;
-    }
-
-    return verifier;
-  };
-
-  useEffect(() => {
-    if (modal !== "phone") {
-      clearRecaptcha();
-    }
-
-    return () => {
-      clearRecaptcha();
-    };
-  }, [modal]);
-
-  const handleSendPhoneCode = async (e) => {
-    e.preventDefault();
-
-    const cleanPhone = phoneNumber.trim().replace(/[\s()-]/g, "");
-
-    if (!/^\+[1-9]\d{7,14}$/.test(cleanPhone)) {
-      alert(
-        "Enter a valid phone number with country code. Example: +919876543210",
-      );
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const verifier = recaptchaVerifierRef.current || (await setupRecaptcha());
-      const result = await signInWithPhoneNumber(auth, cleanPhone, verifier);
-
-      setConfirmationResult(result);
-      setVerificationCode("");
-      alert("OTP sent successfully!");
-    } catch (error) {
-      console.error("Phone login error:", error);
-
-      clearRecaptcha();
-
-      if (error.code === "auth/invalid-phone-number") {
-        alert("Invalid phone number.");
-      } else if (error.code === "auth/too-many-requests") {
-        alert("Too many attempts. Please try again later.");
-      } else if (error.code === "auth/operation-not-allowed") {
-        alert("Phone authentication is not enabled in Firebase yet.");
-      } else {
-        alert("Could not send OTP: " + error.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerifyPhoneCode = async (e) => {
-    e.preventDefault();
-
-    if (!confirmationResult) {
-      alert("Please request an OTP first.");
-      return;
-    }
-
-    if (!/^\\d{6}$/.test(verificationCode.trim())) {
-      alert("Enter the 6-digit OTP.");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      await confirmationResult.confirm(verificationCode.trim());
-      alert("Mobile login successful!");
-      resetPhoneAuthState();
-      setModal(null);
-      navigate("/games");
-    } catch (error) {
-      console.error("OTP verification error:", error);
-
-      if (error.code === "auth/invalid-verification-code") {
-        alert("Invalid OTP. Please check the code and try again.");
-      } else if (error.code === "auth/code-expired") {
-        alert("This OTP has expired. Request a new one.");
-      } else {
-        alert("OTP verification failed: " + error.message);
+        notify("Could not send reset email: " + error.message, "error");
       }
     } finally {
       setLoading(false);
@@ -391,13 +362,13 @@ function Login() {
 
       await signInWithPopup(auth, provider);
 
-      alert("Google login successful!");
-      navigate("/games");
+      notify("Google login successful!", "success");
+      setTimeout(() => navigate("/games"), 600);
     } catch (error) {
       console.error(error);
 
       if (error.code !== "auth/popup-closed-by-user") {
-        alert("Google login failed: " + error.message);
+        notify("Google login failed: " + error.message, "error");
       }
     } finally {
       setLoading(false);
@@ -406,6 +377,19 @@ function Login() {
 
   return (
     <div className="login-page">
+      {notice && (
+        <div className={`login-toast ${notice.type}`} role="status">
+          <span className="login-toast-icon">
+            {notice.type === "success"
+              ? "✓"
+              : notice.type === "error"
+                ? "⚠"
+                : "ℹ"}
+          </span>
+          <span>{notice.text}</span>
+        </div>
+      )}
+
       {/* Flowing game background */}
       <div className="game-background">
         <div className="image-row row-1">
@@ -531,19 +515,6 @@ function Login() {
           Continue with Google
         </button>
 
-        <button
-          type="button"
-          className="social-button"
-          onClick={() => {
-            setModal("phone");
-            setVerificationCode("");
-          }}
-          disabled={loading}
-        >
-          <span>📱</span>
-          Continue with Mobile No.
-        </button>
-
         <p className="create-account">
           Don't have an account?
           <button type="button" onClick={() => setModal("create")}>
@@ -551,119 +522,19 @@ function Login() {
           </button>
         </p>
 
+        <div className="login-footer-divider">
+          <span>Own a café or shop?</span>
+        </div>
+
         <button
           type="button"
-          onClick={() => navigate("/owner-dashboard")}
-          style={{
-            width: "100%",
-            marginTop: "14px",
-            padding: "12px 16px",
-            borderRadius: "10px",
-            border: "1px solid rgba(168, 85, 247, 0.35)",
-            background: "rgba(139, 92, 246, 0.08)",
-            color: "#d8b4fe",
-            fontWeight: 700,
-            cursor: "pointer",
-          }}
+          className="business-account-button"
+          onClick={() => setModal("owner-create")}
         >
-          ☕ 🖱 Business Owner Login
+          <span>☕🖱</span>
+          Create Business Account
         </button>
       </div>
-
-      {/* Mobile phone login modal */}
-      {modal === "phone" && (
-        <div className="modal-backdrop" onClick={resetPhoneAuthState}>
-          <div
-            className="auth-modal phone-auth-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="modal-close"
-              type="button"
-              onClick={() => {
-                resetPhoneAuthState();
-                setModal(null);
-              }}
-              aria-label="Close"
-            >
-              ×
-            </button>
-
-            <div className="modal-icon">📱</div>
-            <h2>Continue with Mobile No.</h2>
-            <p>
-              {confirmationResult
-                ? "Enter the 6-digit OTP sent to your mobile number."
-                : "Enter your mobile number with country code."}
-            </p>
-            <div
-              id="phone-recaptcha-container"
-              className="phone-recaptcha-container"
-              aria-hidden="true"
-            />
-
-            {!confirmationResult ? (
-              <form onSubmit={handleSendPhoneCode}>
-                <input
-                  type="tel"
-                  placeholder="+919876543210"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  autoComplete="tel"
-                  inputMode="tel"
-                  required
-                />
-
-                <button
-                  type="submit"
-                  className="modal-submit"
-                  disabled={loading}
-                >
-                  {loading ? "Sending OTP..." : "Send OTP"}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleVerifyPhoneCode}>
-                <input
-                  type="text"
-                  placeholder="Enter 6-digit OTP"
-                  value={verificationCode}
-                  onChange={(e) =>
-                    setVerificationCode(
-                      e.target.value.replace(/\D/g, "").slice(0, 6),
-                    )
-                  }
-                  inputMode="numeric"
-                  maxLength={6}
-                  autoComplete="one-time-code"
-                  required
-                />
-
-                <button
-                  type="submit"
-                  className="modal-submit"
-                  disabled={loading}
-                >
-                  {loading ? "Verifying..." : "Verify & Continue"}
-                </button>
-
-                <button
-                  type="button"
-                  className="phone-resend-button"
-                  onClick={() => {
-                    clearRecaptcha();
-                    setConfirmationResult(null);
-                    setVerificationCode("");
-                  }}
-                  disabled={loading}
-                >
-                  Change Number / Resend OTP
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Create account modal */}
       {modal === "create" && (
@@ -737,6 +608,107 @@ function Login() {
 
               <button type="submit" className="modal-submit" disabled={loading}>
                 {loading ? "Creating..." : "Create Account"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Business owner signup modal */}
+      {modal === "owner-create" && (
+        <div className="modal-backdrop" onClick={() => setModal(null)}>
+          <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              className="modal-close"
+              type="button"
+              onClick={() => setModal(null)}
+              aria-label="Close"
+            >
+              ×
+            </button>
+
+            <div className="modal-icon">☕🖱</div>
+
+            <h2>Create Business Account</h2>
+            <p>List your café or shop on GamingVerse</p>
+
+            <form onSubmit={handleOwnerSignup}>
+              <div className="owner-signup-role-toggle">
+                <button
+                  type="button"
+                  className={ownerSignupRole === "cafe_owner" ? "active" : ""}
+                  onClick={() => setOwnerSignupRole("cafe_owner")}
+                >
+                  ☕ Café Owner
+                </button>
+                <button
+                  type="button"
+                  className={ownerSignupRole === "shop_owner" ? "active" : ""}
+                  onClick={() => setOwnerSignupRole("shop_owner")}
+                >
+                  🖱 Accessories Shop
+                </button>
+              </div>
+
+              <input
+                type="text"
+                placeholder="Your Name"
+                value={ownerSignupName}
+                onChange={(e) => setOwnerSignupName(e.target.value)}
+                autoComplete="name"
+                required
+              />
+
+              <input
+                type="email"
+                placeholder="Business email address"
+                value={ownerSignupEmail}
+                onChange={(e) => setOwnerSignupEmail(e.target.value)}
+                autoComplete="email"
+                required
+              />
+
+              <input
+                type="password"
+                placeholder="Password"
+                value={ownerSignupPassword}
+                onChange={(e) => setOwnerSignupPassword(e.target.value)}
+                autoComplete="new-password"
+                minLength={6}
+                required
+              />
+
+              <input
+                type="password"
+                placeholder="Confirm password"
+                value={ownerSignupConfirmPassword}
+                onChange={(e) =>
+                  setOwnerSignupConfirmPassword(e.target.value)
+                }
+                autoComplete="new-password"
+                minLength={6}
+                required
+              />
+
+              {ownerSignupRole === "cafe_owner" ? (
+                <p className="owner-signup-hint">
+                  You'll list your café's name, address and details from the
+                  dashboard right after signing up.
+                </p>
+              ) : (
+                <input
+                  type="text"
+                  placeholder="Shop / business name"
+                  value={ownerSignupBusinessName}
+                  onChange={(e) =>
+                    setOwnerSignupBusinessName(e.target.value)
+                  }
+                  required
+                />
+              )}
+
+              <button type="submit" className="modal-submit" disabled={loading}>
+                {loading ? "Creating..." : "Create Business Account"}
               </button>
             </form>
           </div>

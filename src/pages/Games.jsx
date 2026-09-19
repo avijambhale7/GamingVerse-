@@ -14,10 +14,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
+  limitToLast,
   onValue,
   push,
+  query,
   ref,
   remove,
+  runTransaction,
   serverTimestamp,
   set,
   update,
@@ -40,10 +43,7 @@ import TrailerModal from "./games/views/TrailerModal.jsx";
 import UpcomingsView from "./games/views/UpcomingsView.jsx";
 
 import { gameAgeRatings } from "./games/data/ageRatings.js";
-import {
-  DEFAULT_CLUB_DISCUSSIONS,
-  DEFAULT_GAMING_CLUBS,
-} from "./games/data/clubs.js";
+import { getClubInterestMeta } from "./games/data/clubs.js";
 import { currentGamingNews } from "./games/data/news.js";
 import { emptyCounts } from "./games/data/reviewOptions.js";
 import {
@@ -171,7 +171,6 @@ function Games() {
 
   const [heroIndex, setHeroIndex] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showDiscoverMenu, setShowDiscoverMenu] = useState(false);
   const [notificationTab, setNotificationTab] = useState("all");
   const [notifications, setNotifications] = useState(() => {
     try {
@@ -280,29 +279,12 @@ function Games() {
   const [upcomingGames, setUpcomingGames] = useState([]);
   const [upcomingGamesLoading, setUpcomingGamesLoading] = useState(true);
   const [upcomingGamesError, setUpcomingGamesError] = useState("");
-  const [gamingClubs, setGamingClubs] = useState(() => {
-    try {
-      const saved = JSON.parse(
-        localStorage.getItem("gamingverse_clubs") || "null",
-      );
-      return Array.isArray(saved) && saved.length
-        ? saved
-        : DEFAULT_GAMING_CLUBS;
-    } catch {
-      return DEFAULT_GAMING_CLUBS;
-    }
-  });
+  // Gaming Clubs, their membership and chat all live in Firebase now, so
+  // two users actually see the same clubs instead of each browser holding
+  // its own private copy in localStorage.
+  const [gamingClubs, setGamingClubs] = useState([]);
   const [selectedClubId, setSelectedClubId] = useState(null);
-  const [joinedClubIds, setJoinedClubIds] = useState(() => {
-    try {
-      const saved = JSON.parse(
-        localStorage.getItem("gamingverse_joined_clubs") || "[]",
-      );
-      return Array.isArray(saved) ? saved : [];
-    } catch {
-      return [];
-    }
-  });
+  const [joinedClubIds, setJoinedClubIds] = useState([]);
   const [clubInterest, setClubInterest] = useState("All");
   const [clubSearch, setClubSearch] = useState("");
   const [showCreateClub, setShowCreateClub] = useState(false);
@@ -311,26 +293,79 @@ function Games() {
   const [newClubDescription, setNewClubDescription] = useState("");
   const [clubPost, setClubPost] = useState("");
   const [communityTalkPost, setCommunityTalkPost] = useState("");
-  const [communityTalks, setCommunityTalks] = useState(() => {
-    try {
-      const saved = JSON.parse(
-        localStorage.getItem("gamingverse_community_talks") || "[]",
-      );
-      return Array.isArray(saved) ? saved : [];
-    } catch {
-      return [];
-    }
-  });
-  const [clubDiscussions, setClubDiscussions] = useState(() => {
-    try {
-      const saved = JSON.parse(
-        localStorage.getItem("gamingverse_club_discussions") || "null",
-      );
-      return Array.isArray(saved) ? saved : DEFAULT_CLUB_DISCUSSIONS;
-    } catch {
-      return DEFAULT_CLUB_DISCUSSIONS;
-    }
-  });
+  const [communityTalks, setCommunityTalks] = useState([]);
+  const [clubDiscussions, setClubDiscussions] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = onValue(
+      ref(db, "clubs"),
+      (snapshot) => {
+        const data = snapshot.val() || {};
+        const next = Object.entries(data).map(([id, club]) => ({
+          id,
+          ...club,
+        }));
+        next.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+        setGamingClubs(next);
+      },
+      (error) => console.error("Gaming clubs listener error:", error),
+    );
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // Games.jsx only ever mounts while ProtectedRoute has an authenticated
+    // user; logging out unmounts it, so there's no user-less case to
+    // reset for here — joinedClubIds already starts at [].
+    if (!auth.currentUser) return undefined;
+    const unsubscribe = onValue(
+      ref(db, `userClubs/${auth.currentUser.uid}`),
+      (snapshot) => {
+        const data = snapshot.val() || {};
+        setJoinedClubIds(Object.keys(data));
+      },
+      (error) => console.error("Joined clubs listener error:", error),
+    );
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const talksQuery = query(ref(db, "communityTalks"), limitToLast(50));
+    const unsubscribe = onValue(
+      talksQuery,
+      (snapshot) => {
+        const data = snapshot.val() || {};
+        const next = Object.entries(data).map(([id, talk]) => ({
+          id,
+          ...talk,
+        }));
+        next.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+        setCommunityTalks(next);
+      },
+      (error) => console.error("Community talks listener error:", error),
+    );
+    return () => unsubscribe();
+  }, []);
+
+  // Only the open club's discussion thread is fetched — with real clubs
+  // there's no reason to pull every club's chat history up front.
+  useEffect(() => {
+    if (!selectedClubId) return undefined;
+    const unsubscribe = onValue(
+      ref(db, `clubDiscussions/${selectedClubId}`),
+      (snapshot) => {
+        const data = snapshot.val() || {};
+        const next = Object.entries(data).map(([id, discussion]) => ({
+          id,
+          ...discussion,
+        }));
+        next.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+        setClubDiscussions(next);
+      },
+      (error) => console.error("Club discussion listener error:", error),
+    );
+    return () => unsubscribe();
+  }, [selectedClubId]);
 
   /* =======================================================
        LOAD USER AGE FROM FIREBASE
@@ -801,58 +836,70 @@ function Games() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const toggleClubMembership = (clubId) => {
-    setJoinedClubIds((current) => {
-      const alreadyJoined = current.includes(clubId);
-      // The card's Joined button is an OPEN action. Leaving a club is only
-      // possible from inside the opened club, so it can never close by accident.
-      if (alreadyJoined) {
-        openClub(clubId);
-        return current;
-      }
-
-      const next = [...current, clubId];
-      localStorage.setItem("gamingverse_joined_clubs", JSON.stringify(next));
+  const toggleClubMembership = async (clubId) => {
+    // The card's Joined button is an OPEN action. Leaving a club is only
+    // possible from inside the opened club, so it can never close by accident.
+    if (joinedClubIds.includes(clubId)) {
       openClub(clubId);
-      return next;
-    });
+      return;
+    }
+    if (!auth.currentUser) return;
+    const uid = auth.currentUser.uid;
+    try {
+      await runTransaction(ref(db, `clubs/${clubId}/memberCount`), (current) =>
+        Math.max(0, Number(current) || 0) + 1,
+      );
+      await set(ref(db, `userClubs/${uid}/${clubId}`), true);
+    } catch (error) {
+      console.error("Join club error:", error);
+    }
+    openClub(clubId);
+  };
+
+  const leaveClub = async (clubId) => {
+    if (!auth.currentUser) return;
+    const uid = auth.currentUser.uid;
+    try {
+      await runTransaction(ref(db, `clubs/${clubId}/memberCount`), (current) =>
+        Math.max(0, (Number(current) || 0) - 1),
+      );
+      await remove(ref(db, `userClubs/${uid}/${clubId}`));
+    } catch (error) {
+      console.error("Leave club error:", error);
+    }
+    closeClub();
   };
 
   const closeClub = () => {
     setSelectedClubId(null);
+    setClubDiscussions([]);
   };
 
-  const createGamingClub = () => {
+  const createGamingClub = async () => {
     const name = newClubName.trim();
     const description =
       newClubDescription.trim() ||
       `A GamingVerse community for ${newClubInterest} gamers.`;
 
-    if (!name) {
-      return;
+    if (!name || !auth.currentUser) return;
+
+    const uid = auth.currentUser.uid;
+    try {
+      const clubRef = push(ref(db, "clubs"));
+      await set(clubRef, {
+        name,
+        interest: newClubInterest,
+        description,
+        accent: getClubInterestMeta(newClubInterest).color,
+        ownerUid: uid,
+        memberCount: 1,
+        createdAt: serverTimestamp(),
+      });
+      await set(ref(db, `userClubs/${uid}/${clubRef.key}`), true);
+      setSelectedClubId(clubRef.key);
+    } catch (error) {
+      console.error("Create club error:", error);
     }
-
-    const club = {
-      id: `club-${Date.now()}`,
-      name,
-      interest: newClubInterest,
-      description,
-      members: 1,
-      accent: "#b04cff",
-    };
-
-    setGamingClubs((current) => {
-      const next = [club, ...current];
-      localStorage.setItem("gamingverse_clubs", JSON.stringify(next));
-      return next;
-    });
-
-    setJoinedClubIds((current) => {
-      const next = [...current, club.id];
-      localStorage.setItem("gamingverse_joined_clubs", JSON.stringify(next));
-      return next;
-    });
-    setSelectedClubId(club.id);
 
     setNewClubName("");
     setNewClubInterest("Action");
@@ -860,64 +907,56 @@ function Games() {
     setShowCreateClub(false);
   };
 
-  const postClubDiscussion = () => {
+  const postClubDiscussion = async () => {
     const text = clubPost.trim();
-    if (!text) return;
+    if (!text || !selectedClubId || !auth.currentUser) return;
 
-    const discussion = {
-      id: `club-discussion-${Date.now()}`,
-      clubId: selectedClubId || joinedClubIds[0] || "action-adventure",
-      title: text,
-      author:
-        auth.currentUser?.displayName ||
-        auth.currentUser?.email?.split("@")[0] ||
-        "Gamer",
-      meta: "Just now • 0 replies",
-    };
-
-    setClubDiscussions((current) => {
-      const next = [discussion, ...current];
-      localStorage.setItem(
-        "gamingverse_club_discussions",
-        JSON.stringify(next),
-      );
-      return next;
-    });
-    setClubPost("");
+    try {
+      await push(ref(db, `clubDiscussions/${selectedClubId}`), {
+        title: text,
+        author:
+          auth.currentUser.displayName ||
+          auth.currentUser.email?.split("@")[0] ||
+          "Gamer",
+        authorUid: auth.currentUser.uid,
+        createdAt: serverTimestamp(),
+      });
+      setClubPost("");
+    } catch (error) {
+      console.error("Post club discussion error:", error);
+    }
   };
 
-  const postCommunityTalk = () => {
+  const postCommunityTalk = async () => {
     const text = communityTalkPost.trim();
-    if (!text) return;
+    if (!text || !auth.currentUser) return;
 
-    const talk = {
-      id: `community-talk-${Date.now()}`,
-      title: text,
-      author:
-        auth.currentUser?.displayName ||
-        auth.currentUser?.email?.split("@")[0] ||
-        "Gamer",
-      meta: "Just now • 0 replies",
-    };
-
-    setCommunityTalks((current) => {
-      const next = [talk, ...current];
-      localStorage.setItem("gamingverse_community_talks", JSON.stringify(next));
-      return next;
-    });
-    setCommunityTalkPost("");
+    try {
+      await push(ref(db, "communityTalks"), {
+        title: text,
+        author:
+          auth.currentUser.displayName ||
+          auth.currentUser.email?.split("@")[0] ||
+          "Gamer",
+        authorUid: auth.currentUser.uid,
+        createdAt: serverTimestamp(),
+      });
+      setCommunityTalkPost("");
+    } catch (error) {
+      console.error("Post community talk error:", error);
+    }
   };
 
   const filteredGamingClubs = useMemo(() => {
-    const query = clubSearch.trim().toLowerCase();
+    const searchText = clubSearch.trim().toLowerCase();
 
     return gamingClubs.filter((club) => {
       const matchesInterest =
         clubInterest === "All" || club.interest === clubInterest;
       const matchesSearch =
-        !query ||
-        club.name.toLowerCase().includes(query) ||
-        club.description.toLowerCase().includes(query);
+        !searchText ||
+        club.name.toLowerCase().includes(searchText) ||
+        club.description.toLowerCase().includes(searchText);
       return matchesInterest && matchesSearch;
     });
   }, [gamingClubs, clubInterest, clubSearch]);
@@ -930,13 +969,11 @@ function Games() {
       const target = event.target;
       if (profileMenuRef.current && !profileMenuRef.current.contains(target)) {
         setShowNotifications(false);
-        setShowDiscoverMenu(false);
       }
     };
     const handleEscape = (event) => {
       if (event.key === "Escape") {
         setShowNotifications(false);
-        setShowDiscoverMenu(false);
       }
     };
     document.addEventListener("mousedown", handleDocumentClick);
@@ -2458,10 +2495,8 @@ function Games() {
         setNotificationTab={setNotificationTab}
         setNotifications={setNotifications}
         setSearch={setSearch}
-        setShowDiscoverMenu={setShowDiscoverMenu}
         setShowNotifications={setShowNotifications}
         setSpacesSection={setSpacesSection}
-        showDiscoverMenu={showDiscoverMenu}
         showNotifications={showNotifications}
       />
 
@@ -2573,6 +2608,7 @@ function Games() {
         filteredPosters={filteredPosters}
         gamingClubs={gamingClubs}
         joinedClubIds={joinedClubIds}
+        leaveClub={leaveClub}
         liveNews={liveNews}
         newClubDescription={newClubDescription}
         newClubInterest={newClubInterest}
@@ -2591,7 +2627,6 @@ function Games() {
         setClubPost={setClubPost}
         setClubSearch={setClubSearch}
         setCommunityTalkPost={setCommunityTalkPost}
-        setJoinedClubIds={setJoinedClubIds}
         setNewClubDescription={setNewClubDescription}
         setNewClubInterest={setNewClubInterest}
         setNewClubName={setNewClubName}

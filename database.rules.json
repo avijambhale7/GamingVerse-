@@ -1,9 +1,16 @@
 {
   "rules": {
     "users": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid"
+        ".write": "auth != null && auth.uid === $uid",
+        "isBanned": {
+          ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+        },
+        "role": {
+          ".validate": "auth.uid !== $uid || newData.val() === 'cafe_owner' || newData.val() === 'shop_owner' || newData.val() === 'accessory_owner' || !newData.exists()"
+        }
       }
     },
 
@@ -11,8 +18,8 @@
       ".read": "auth != null",
       "$gameId": {
         "$uid": {
-          ".write": "auth != null && auth.uid === $uid",
-          ".validate": "newData.hasChildren(['review', 'userId', 'gameId'])",
+          ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+          ".validate": "newData.hasChildren(['review', 'userId', 'gameId']) && root.child('users').child(auth.uid).child('isBanned').val() !== true",
           "review": {
             ".validate": "newData.isString() && (newData.val() === 'skip' || newData.val() === 'timepass' || newData.val() === 'go-for-it' || newData.val() === 'perfection')"
           },
@@ -36,7 +43,7 @@
 
           "comments": {
             "$commentId": {
-              ".write": "auth != null && ((!data.exists() && newData.child('userId').val() === auth.uid) || (data.exists() && data.child('userId').val() === auth.uid) || auth.uid === $uid)",
+              ".write": "auth != null && ((!data.exists() && newData.child('userId').val() === auth.uid && root.child('users').child(auth.uid).child('isBanned').val() !== true) || (data.exists() && data.child('userId').val() === auth.uid) || auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
               ".validate": "newData.hasChildren(['userId', 'text', 'createdAt'])",
               "userId": { ".validate": "newData.val() === auth.uid" },
               "userName": { ".validate": "newData.isString()" },
@@ -71,7 +78,7 @@
     "products": {
       ".read": "auth != null",
       "$productId": {
-        ".write": "auth != null && (data.child('sellerId').val() === auth.uid || newData.child('sellerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'cafe_owner' || root.child('users').child(auth.uid).child('role').val() === 'shop_owner' || root.child('users').child(auth.uid).child('role').val() === 'accessory_owner')"
+        ".write": "auth != null && (data.child('sellerId').val() === auth.uid || newData.child('sellerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'cafe_owner' || root.child('users').child(auth.uid).child('role').val() === 'shop_owner' || root.child('users').child(auth.uid).child('role').val() === 'accessory_owner' || root.child('users').child(auth.uid).child('role').val() === 'admin')"
       }
     },
 
@@ -83,17 +90,63 @@
       }
     },
 
+    "cafes": {
+      ".read": true,
+      "$cafeId": {
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('ownedCafeIds').child($cafeId).val() === true)",
+        "status": {
+          ".validate": "newData.val() === 'pending' || root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'owner'"
+        }
+      }
+    },
+
     "cafeBookings": {
-      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'cafe_owner')",
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'cafe_owner' || root.child('users').child(auth.uid).child('role').val() === 'admin')",
       "$customerId": {
         ".read": "auth != null && auth.uid === $customerId",
-        ".write": "auth != null && (auth.uid === $customerId || root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'cafe_owner')"
+        ".write": "auth != null && ((auth.uid === $customerId && root.child('users').child(auth.uid).child('isBanned').val() !== true) || root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'cafe_owner' || root.child('users').child(auth.uid).child('role').val() === 'admin')"
       }
     },
 
     "cafeSlots": {
       ".read": "auth != null",
       ".write": "auth != null"
+    },
+
+    "clubs": {
+      ".read": true,
+      "$clubId": {
+        ".write": "auth != null && ((!data.exists() && newData.child('ownerUid').val() === auth.uid && root.child('users').child(auth.uid).child('isBanned').val() !== true) || (data.exists() && data.child('ownerUid').val() === auth.uid) || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        "memberCount": {
+          ".write": "auth != null",
+          ".validate": "newData.isNumber() && newData.val() >= 0 && (newData.val() === (data.exists() ? data.val() : 0) + 1 || newData.val() === (data.exists() ? data.val() : 0) - 1)"
+        }
+      }
+    },
+
+    "userClubs": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+
+    "clubDiscussions": {
+      "$clubId": {
+        ".read": "auth != null",
+        "$discussionId": {
+          ".write": "auth != null && ((!data.exists() && newData.child('authorUid').val() === auth.uid && root.child('users').child(auth.uid).child('isBanned').val() !== true) || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+          ".validate": "newData.hasChildren(['title', 'authorUid', 'createdAt']) && newData.child('title').isString() && newData.child('title').val().length > 0 && newData.child('title').val().length <= 200"
+        }
+      }
+    },
+
+    "communityTalks": {
+      ".read": "auth != null",
+      "$talkId": {
+        ".write": "auth != null && ((!data.exists() && newData.child('authorUid').val() === auth.uid && root.child('users').child(auth.uid).child('isBanned').val() !== true) || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".validate": "newData.hasChildren(['title', 'authorUid', 'createdAt']) && newData.child('title').isString() && newData.child('title').val().length > 0 && newData.child('title').val().length <= 200"
+      }
     }
   }
 }
