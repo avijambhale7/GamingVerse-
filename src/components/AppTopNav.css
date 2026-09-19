@@ -1,0 +1,52 @@
+/* =========================================================
+   APP TOP NAV
+   Icon-only desktop nav row shared by every page. Hidden below
+   750px, where AppBottomNav takes over instead.
+========================================================= */
+.app-top-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.app-top-nav-link {
+  display: grid;
+  place-items: center;
+
+  width: 40px;
+  height: 40px;
+
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #9a9aa4;
+
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-top-nav-link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.app-top-nav-link:active {
+  transform: scale(0.92);
+}
+
+.app-top-nav-link.active {
+  color: #fff;
+  background: linear-gradient(135deg, #8f2df0, #b04cff);
+  box-shadow: 0 6px 18px rgba(168, 50, 255, 0.4);
+}
+
+@media (max-width: 750px) {
+  .app-top-nav {
+    display: none;
+  }
+}

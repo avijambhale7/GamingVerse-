@@ -121,6 +121,13 @@ export default function GameDetailsModal({
 
             {(() => {
               const details = getGameDetails(selectedGame.name);
+              // A game that hasn't released yet can't have been "played",
+              // so swap that action to expressing interest instead.
+              const isUpcoming =
+                Boolean(details.releaseDate) &&
+                details.releaseDate !== "TBA" &&
+                !Number.isNaN(new Date(details.releaseDate).getTime()) &&
+                new Date(details.releaseDate) > new Date();
               const trailerKey = normalizeTrailerGameName(selectedGame.name);
               const liveTrailerMedia = trailerMediaMap[trailerKey];
               const heroTrailerUrl =
@@ -262,6 +269,8 @@ export default function GameDetailsModal({
                       <div className="reference-hero-actions">
                         <button
                           className={`reference-watch-button ${
+                            isUpcoming ? "reference-interest-button" : ""
+                          } ${
                             watchedGames.includes(selectedGame.name)
                               ? "is-active"
                               : ""
@@ -269,43 +278,81 @@ export default function GameDetailsModal({
                           type="button"
                           onClick={toggleWatched}
                         >
-                          👁{" "}
+                          {isUpcoming ? "🔔" : "👁"}{" "}
                           {watchedGames.includes(selectedGame.name)
-                            ? "Marked as Played"
-                            : "Mark as Played"}
+                            ? isUpcoming
+                              ? "Marked as Interested"
+                              : "Marked as Played"
+                            : isUpcoming
+                              ? "Mark as Interested"
+                              : "Mark as Played"}
                         </button>
 
-                        <div className="reference-secondary-actions">
-                          <button
-                            className={`reference-utility-button ${
-                              collectionGames.includes(selectedGame.name)
-                                ? "is-active"
-                                : ""
-                            }`}
-                            type="button"
-                            onClick={toggleCollection}
-                          >
-                            ♧{" "}
-                            {collectionGames.includes(selectedGame.name)
-                              ? "In Collections"
-                              : "Collections"}
-                          </button>
+                        {isUpcoming ? (
+                          <>
+                            <button
+                              className={`reference-utility-button reference-collections-button reference-full-width-button ${
+                                collectionGames.includes(selectedGame.name)
+                                  ? "is-active"
+                                  : ""
+                              }`}
+                              type="button"
+                              onClick={toggleCollection}
+                            >
+                              🔖{" "}
+                              {collectionGames.includes(selectedGame.name)
+                                ? "In Collection"
+                                : "Add to Collection"}
+                            </button>
 
-                          <button
-                            className={`reference-utility-button ${
-                              watchLaterGames.includes(selectedGame.name)
-                                ? "is-active"
-                                : ""
-                            }`}
-                            type="button"
-                            onClick={toggleWatchLater}
-                          >
-                            ◷{" "}
-                            {watchLaterGames.includes(selectedGame.name)
-                              ? "Saved for Later"
-                              : "Watch Later"}
-                          </button>
-                        </div>
+                            <button
+                              className={`reference-utility-button reference-later-button reference-full-width-button ${
+                                watchLaterGames.includes(selectedGame.name)
+                                  ? "is-active"
+                                  : ""
+                              }`}
+                              type="button"
+                              onClick={toggleWatchLater}
+                            >
+                              ◷{" "}
+                              {watchLaterGames.includes(selectedGame.name)
+                                ? "Added to Play Later"
+                                : "Play Later"}
+                            </button>
+                          </>
+                        ) : (
+                          <div className="reference-secondary-actions">
+                            <button
+                              className={`reference-utility-button reference-collections-button ${
+                                collectionGames.includes(selectedGame.name)
+                                  ? "is-active"
+                                  : ""
+                              }`}
+                              type="button"
+                              onClick={toggleCollection}
+                            >
+                              ♧{" "}
+                              {collectionGames.includes(selectedGame.name)
+                                ? "In Collections"
+                                : "Collections"}
+                            </button>
+
+                            <button
+                              className={`reference-utility-button reference-later-button ${
+                                watchLaterGames.includes(selectedGame.name)
+                                  ? "is-active"
+                                  : ""
+                              }`}
+                              type="button"
+                              onClick={toggleWatchLater}
+                            >
+                              ◷{" "}
+                              {watchLaterGames.includes(selectedGame.name)
+                                ? "Saved for Later"
+                                : "Watch Later"}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </section>
@@ -387,6 +434,10 @@ export default function GameDetailsModal({
                     </aside>
                   </div>
 
+                  {/* A game that hasn't released has no verdict and no
+                      players to review it yet, so the meter and community
+                      comments don't apply — only show them once it's out. */}
+                  {!isUpcoming && (
                   <section
                     className="inline-gv-meter"
                     aria-label="GamingVerse Meter"
@@ -649,6 +700,7 @@ export default function GameDetailsModal({
                       </div>
                     </section>
                   </section>
+                  )}
                 </>
               );
             })()}

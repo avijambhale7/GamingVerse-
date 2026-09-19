@@ -74,6 +74,20 @@ export function GVIcon({ name, size = 21 }) {
         <path d="M5.5 20c.8-3.4 3-5.2 6.5-5.2s5.7 1.8 6.5 5.2" />
       </>
     ),
+    home: (
+      <>
+        <path d="m4 11 8-7 8 7" />
+        <path d="M6 9.5V20h12V9.5" />
+        <path d="M10 20v-6h4v6" />
+      </>
+    ),
+    coffee: (
+      <>
+        <path d="M5 9h11v6a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V9Z" />
+        <path d="M16 10.5h1.5a2.5 2.5 0 0 1 0 5H16" />
+        <path d="M8 5v1.6M11 5v1.6M14 5v1.6" />
+      </>
+    ),
   };
 
   return <svg {...common}>{paths[name]}</svg>;

@@ -1,0 +1,88 @@
+/* =========================================================
+   APP BOTTOM NAV
+   Floating mobile tab bar shared by every page that renders
+   <AppBottomNav />. Kept in one file so Games and Profile
+   (and anywhere else it's used) always look identical.
+========================================================= */
+.games-bottom-tabbar {
+  display: none;
+}
+
+@media (max-width: 750px) {
+  .games-bottom-tabbar {
+    position: fixed;
+    left: 50%;
+    bottom: 16px;
+    z-index: 500;
+    transform: translateX(-50%);
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2px;
+
+    width: calc(100vw - 24px);
+    max-width: 420px;
+    padding: 6px 10px;
+
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    background: rgba(12, 10, 16, 0.86);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow:
+      0 18px 45px rgba(0, 0, 0, 0.55),
+      0 0 0 1px rgba(168, 50, 255, 0.06);
+  }
+
+  .bottom-tab-link {
+    display: grid;
+    place-items: center;
+    flex: 1 1 0;
+
+    width: auto;
+    min-width: 40px;
+    height: 44px;
+
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #8c8c96;
+
+    cursor: pointer;
+    transition:
+      background 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+      color 0.22s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bottom-tab-link:active {
+    transform: scale(0.9);
+  }
+
+  .bottom-tab-link.active {
+    color: #fff;
+    background: linear-gradient(135deg, #8f2df0, #b04cff);
+    box-shadow: 0 6px 18px rgba(168, 50, 255, 0.45);
+  }
+
+  .bottom-tab-label {
+    /* Icon-only bar — six labelled tabs would overflow a phone
+       width. The text stays in the DOM for screen readers. */
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 380px) {
+  .bottom-tab-link {
+    min-width: 36px;
+    height: 40px;
+  }
+}

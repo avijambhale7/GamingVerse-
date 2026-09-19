@@ -5,6 +5,8 @@
 ========================================================= */
 
 import { formatGameName, getGameImage } from "../utils/gameImages.js";
+import AppTopNav from "../../../components/AppTopNav.jsx";
+import AppBottomNav from "../../../components/AppBottomNav.jsx";
 
 export default function ProfileView({
   activeTab,
@@ -47,6 +49,11 @@ export default function ProfileView({
             <small>Level up your gaming experience</small>
           </span>
         </button>
+
+        {/* Profile has its own page/route, so it never showed the Games
+            page's nav bar — this is the exact same AppTopNav Games uses,
+            so navigation looks and behaves identically on every page. */}
+        <AppTopNav />
       </header>
 
       <main className="profile-content">
@@ -551,6 +558,8 @@ export default function ProfileView({
           </section>
         </div>
       )}
+
+      <AppBottomNav />
     </div>
   );
 }

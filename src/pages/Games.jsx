@@ -118,19 +118,26 @@ function Games() {
 
   useEffect(() => {
     const view = searchParams.get("view");
-    setActiveView(
-      view === "collections"
-        ? "home"
-        : view === "following"
-          ? "following"
-          : view === "top100"
-            ? "top100"
-            : view === "spaces"
-              ? "trailers"
-              : view === "clubs"
-                ? "clubs"
-                : "home",
-    );
+    // Lets other pages (e.g. the Profile header/bottom nav) deep-link
+    // straight into a section via /games?view=X instead of only the
+    // in-page nav buttons being able to reach it.
+    const viewToActiveView = {
+      collections: "home",
+      following: "following",
+      top100: "top100",
+      spaces: "trailers",
+      clubs: "clubs",
+      upcomings: "upcomings",
+      marketplace: "marketplace",
+      cafe: "cafe",
+    };
+    setActiveView(viewToActiveView[view] || "home");
+    // AppTopNav/AppBottomNav switch sections purely by navigating (no
+    // local setters to call), so this is the one place that needs to
+    // reset a stale search/filter left over from whichever section the
+    // user was just on — matching what each nav button used to do itself.
+    setActiveCategory("All");
+    setSearch("");
     if (view === "clubs") {
       setSpacesSection("clubs");
     } else if (view === "spaces") {
@@ -984,6 +991,13 @@ function Games() {
     };
   }, []);
   const getCatalogueImage = (game) => {
+    // Curated local art (src/assets/Posters, src/assets/horizontal) is
+    // properly composed for these titles, unlike RAWG's landscape
+    // screenshots, which crop badly in a poster tile. Prefer it over
+    // any RAWG image whenever we have a confident local match.
+    const localImage = getBestLocalCatalogueImage(game);
+    if (localImage) return localImage;
+
     if (game?.image) return game.image;
 
     const candidates = [
@@ -1007,7 +1021,7 @@ function Games() {
       if (key && catalogueImageMap[key]) return catalogueImageMap[key];
     }
 
-    return getBestLocalCatalogueImage(game);
+    return "";
   };
 
   const filteredPosters = useMemo(() => {

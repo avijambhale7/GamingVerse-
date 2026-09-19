@@ -89,3 +89,93 @@
     display: none;
   }
 }
+
+/* =========================================================
+   GAME DETAILS — collection action buttons, colour-coded:
+   purple = Marked as Played, green = Collections, amber =
+   Watch Later. Several earlier-imported stylesheets also
+   target these selectors for sizing, so this lives in the
+   last-imported file to reliably win on colour.
+========================================================= */
+.reference-watch-button,
+.reference-hero-actions .reference-watch-button {
+  background: linear-gradient(90deg, var(--gv-accent), #8f3cf4);
+  box-shadow: 0 10px 28px rgba(154, 60, 255, 0.28);
+}
+
+.reference-watch-button:hover,
+.reference-hero-actions .reference-watch-button:hover {
+  box-shadow: 0 14px 34px rgba(154, 60, 255, 0.38);
+}
+
+.reference-watch-button.is-active,
+.reference-hero-actions .reference-watch-button.is-active {
+  background: linear-gradient(90deg, #7d31df, var(--gv-accent));
+}
+
+.reference-collections-button.is-active {
+  background: rgba(10, 212, 139, 0.16);
+  border-color: rgba(10, 212, 139, 0.5);
+  color: #8ff0cd;
+}
+
+.reference-collections-button:hover {
+  border-color: rgba(10, 212, 139, 0.35);
+}
+
+/* Upcoming games: "Mark as Interested" gets its own warm
+   orange-to-red gradient instead of the played/watch purple,
+   so it reads as a distinct, lighter-commitment action. */
+.reference-watch-button.reference-interest-button,
+.reference-hero-actions .reference-watch-button.reference-interest-button {
+  background: linear-gradient(90deg, #ff7a45, #ff3d68);
+  box-shadow: 0 10px 28px rgba(255, 61, 104, 0.32);
+}
+
+.reference-watch-button.reference-interest-button:hover,
+.reference-hero-actions
+  .reference-watch-button.reference-interest-button:hover {
+  box-shadow: 0 14px 34px rgba(255, 61, 104, 0.42);
+}
+
+.reference-watch-button.reference-interest-button.is-active,
+.reference-hero-actions
+  .reference-watch-button.reference-interest-button.is-active {
+  background: linear-gradient(90deg, #e8632f, #ff7a45);
+}
+
+.reference-full-width-button {
+  width: 100%;
+}
+
+.reference-later-button.is-active {
+  background: rgba(240, 178, 31, 0.16);
+  border-color: rgba(240, 178, 31, 0.5);
+  color: #f6d488;
+}
+
+.reference-later-button:hover {
+  border-color: rgba(240, 178, 31, 0.35);
+}
+
+/* =========================================================
+   MOBILE — GAMES-PAGE-SPECIFIC NAV ADJUSTMENTS
+   The floating bar itself (.games-bottom-tabbar/.bottom-tab-link)
+   is shared with the Profile page too, so its styling lives in
+   src/components/AppBottomNav.css instead of here.
+========================================================= */
+@media (max-width: 750px) {
+  .games-navbar .games-main-nav {
+    display: none;
+  }
+
+  /* The bottom tab bar already has a Profile icon — showing this
+     one too meant two profile buttons on screen at once. */
+  .navbar-profile-desktop-only {
+    display: none;
+  }
+
+  .games-content {
+    padding-bottom: 104px;
+  }
+}

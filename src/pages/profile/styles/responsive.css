@@ -115,3 +115,12 @@
     width: 100%;
   }
 }
+
+/* Leaves room for the fixed AppBottomNav bar so it doesn't sit on
+   top of the last row of content. AppTopNav already hides itself
+   below 750px (see AppTopNav.css), where AppBottomNav takes over. */
+@media (max-width: 750px) {
+  .profile-content {
+    padding-bottom: 104px;
+  }
+}

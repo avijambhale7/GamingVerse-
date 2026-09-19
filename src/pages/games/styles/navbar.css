@@ -88,6 +88,18 @@
 }
 
 /* =====================================================
+   RIGHT-SIDE GROUP
+   AppTopNav and search/notifications/profile sit together
+   as one cluster on the right, like the reference navbar,
+   instead of being split apart by the header's space-between.
+===================================================== */
+.games-navbar-right-group {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+/* =====================================================
    NAVIGATION
 ===================================================== */
 

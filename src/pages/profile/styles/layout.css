@@ -42,8 +42,8 @@ textarea {
 
 /* =========================================================
    PROFILE HEADER
-   Compact GamingVerse branding — no Games / Collections
-   buttons on the right.
+   Branding on the left, the shared AppTopNav on the right —
+   the same nav row every other page shows.
 ========================================================= */
 
 .profile-header {
@@ -51,6 +51,7 @@ textarea {
   padding: 0 32px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   background: var(--gv-surface-1);
   border-bottom: 1px solid #32106e;
   box-shadow: 0 8px 25px rgba(87, 17, 170, 0.08);

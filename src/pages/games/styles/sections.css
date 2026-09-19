@@ -275,7 +275,14 @@
 
   width: 100%;
 
-  aspect-ratio: 2 / 3;
+  /* RAWG only gives us landscape key art (no true portrait box
+     covers, roughly 16:9), so any noticeably-taller-than-wide
+     crop still slices off logos positioned near an image's
+     edge (e.g. Red Dead Redemption's title). This ratio is
+     close enough to the source's own shape that centre-cropping
+     keeps ~90% of the artwork's width, so titles stay intact
+     for virtually every image instead of just most of them. */
+  aspect-ratio: 16 / 10;
 
   overflow: hidden;
 
@@ -297,6 +304,7 @@
   height: 100%;
 
   object-fit: cover;
+  object-position: center;
 
   display: block;
 

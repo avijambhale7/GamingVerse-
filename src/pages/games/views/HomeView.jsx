@@ -19,7 +19,6 @@ export default function HomeView({
   heroGames,
   heroIndex,
   openDetails,
-  openMeter,
   setActiveCategory,
   setHeroIndex,
   setSearch,
@@ -482,26 +481,6 @@ export default function HomeView({
                           <div className="poster-meta">
                             <span>⭐ 4.7</span>
                             <span className="genre">Action</span>
-                          </div>
-
-                          <div className="poster-actions">
-                            <button
-                              className="meter-button"
-                              type="button"
-                              onClick={() => openMeter(game)}
-                            >
-                              {accessible
-                                ? "GamingVerse Meter"
-                                : "🔒 Restricted"}
-                            </button>
-
-                            <button
-                              className="details-button-small"
-                              type="button"
-                              onClick={() => openDetails(game)}
-                            >
-                              {accessible ? "Details" : "View Access"}
-                            </button>
                           </div>
                         </div>
                       </div>

@@ -7,10 +7,10 @@
 import GVIcon from "../components/GVIcon.jsx";
 import { formatActivityDate } from "../utils/text.js";
 import { getGameDetails } from "../utils/gameInfo.js";
+import AppTopNav from "../../../components/AppTopNav.jsx";
+import AppBottomNav from "../../../components/AppBottomNav.jsx";
 
 export default function GamesNavbar({
-  activeCategory,
-  activeView,
   focusSearch,
   navigate,
   notificationTab,
@@ -26,7 +26,6 @@ export default function GamesNavbar({
   setNotifications,
   setSearch,
   setShowNotifications,
-  setSpacesSection,
   showNotifications,
 }) {
   return (
@@ -69,99 +68,10 @@ export default function GamesNavbar({
           </span>
         </button>
 
-        <nav className="games-main-nav">
-          <button
-            className={`nav-icon-link ${
-              activeView === "home" && activeCategory === "All" ? "active" : ""
-            }`}
-            title="Home"
-            aria-label="Home"
-            onClick={() => {
-              setActiveView("home");
-              setActiveCategory("All");
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          >
-            <span className="home-navbar-icon" aria-hidden="true">
-              ⌂
-            </span>
-            <span className="nav-icon-label">Home</span>
-          </button>
+        <div className="games-navbar-right-group">
+          <AppTopNav />
 
-          <button
-            className={`nav-icon-link ${
-              activeView === "upcomings" ? "active" : ""
-            }`}
-            title="Upcomings"
-            aria-label="Upcomings"
-            onClick={() => {
-              setActiveView("upcomings");
-              setActiveCategory("All");
-              setSearch("");
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          >
-            <GVIcon name="calendar" />
-            <span className="nav-icon-label">Upcomings</span>
-          </button>
-
-          <button
-            className={`nav-icon-link ${
-              activeView === "trailers" ? "active" : ""
-            }`}
-            title="Spaces"
-            aria-label="Spaces"
-            onClick={() => {
-              setActiveView("trailers");
-              setSpacesSection("feed");
-            }}
-          >
-            <GVIcon name="spaces" />
-            <span className="nav-icon-label">Spaces</span>
-          </button>
-
-          {/* CD MARKETPLACE */}
-          <button
-            className={`nav-icon-link marketplace-nav-button ${
-              activeView === "marketplace" ? "active" : ""
-            }`}
-            type="button"
-            title="Marketplace • Games, CDs & Accessories"
-            aria-label="CD Marketplace"
-            onClick={() => {
-              setActiveView("marketplace");
-              setActiveCategory("All");
-              setSearch("");
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          >
-            <GVIcon name="cart" />
-            <span className="nav-icon-label">Marketplace</span>
-          </button>
-
-          {/* GAMING CAFÉ BOOKING */}
-          <button
-            className={`nav-icon-link cafe-nav-button ${
-              activeView === "cafe" ? "active" : ""
-            }`}
-            type="button"
-            title="Café • Book a Gaming Session"
-            aria-label="Gaming Café Booking"
-            onClick={() => {
-              setActiveView("cafe");
-              setActiveCategory("All");
-              setSearch("");
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-          >
-            <span className="cafe-navbar-icon" aria-hidden="true">
-              🎮
-            </span>
-            <span className="nav-icon-label">Café</span>
-          </button>
-        </nav>
-
-        <div className="navbar-right">
+          <div className="navbar-right">
           <div className="search-box">
             <button
               type="button"
@@ -275,7 +185,7 @@ export default function GamesNavbar({
 
               <button
                 type="button"
-                className="navbar-icon-button"
+                className="navbar-icon-button navbar-profile-desktop-only"
                 onClick={() => {
                   setShowNotifications(false);
                   navigate("/profile");
@@ -396,7 +306,15 @@ export default function GamesNavbar({
             )}
           </div>
         </div>
+        </div>
       </header>
+
+      {/* Mobile-only floating bottom tab bar — the horizontal scroll-row
+          inside the header works, but reaching it means scrolling back
+          up first. A fixed bottom bar keeps navigation one thumb-tap
+          away, matching how native apps place primary navigation.
+          Shared with Profile so every page has the same one. */}
+      <AppBottomNav />
     </>
   );
 }

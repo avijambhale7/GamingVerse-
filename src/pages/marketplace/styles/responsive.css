@@ -188,3 +188,45 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =====================================================
+   MOBILE PRODUCT GRID — clean poster-style tile
+   Taller image, title + price only, matching the reference
+   "poster grid" look instead of the dense desktop card with
+   a description paragraph and rating row.
+===================================================== */
+@media (max-width: 560px) {
+  .product-card:not(.product-card-poster) .product-image {
+    height: auto;
+    aspect-ratio: 2 / 3;
+  }
+
+  .product-card:not(.product-card-poster) .product-content {
+    padding: 10px 4px 4px;
+  }
+
+  .product-card:not(.product-card-poster) .product-content > small,
+  .product-card:not(.product-card-poster) .rating {
+    display: none;
+  }
+
+  .product-card:not(.product-card-poster) .product-content h3 {
+    margin: 0 0 6px;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .product-card:not(.product-card-poster) .product-content p {
+    display: none;
+  }
+
+  .product-card:not(.product-card-poster) .product-bottom strong {
+    font-size: 15px;
+  }
+
+  .product-card:not(.product-card-poster) .product-bottom small {
+    font-size: 9px;
+  }
+}
