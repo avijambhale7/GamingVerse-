@@ -98,6 +98,12 @@
   background: rgba(166, 59, 255, 0.1);
   box-shadow: 0 7px 22px rgba(120, 35, 200, 0.12);
 }
+.admin-tabs button {
+  -webkit-tap-highlight-color: transparent;
+}
+.admin-tabs button:active {
+  transform: scale(0.96);
+}
 
 .admin-main {
   width: min(1260px, calc(100% - 48px));

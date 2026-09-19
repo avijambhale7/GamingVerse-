@@ -1,0 +1,34 @@
+/* =========================================================
+   TOUCH DEVICE POLISH
+   Part of GamingVerse Cafe booking styles
+
+   Card lift/glow here is written as :hover, which a touch
+   screen never triggers, so every café card sits flat on
+   mobile. This gives touch devices a permanent, toned-down
+   version of the glow plus a tap press-down for feedback.
+   Imported last so it always wins.
+========================================================= */
+
+@media (hover: none) {
+  .cafe-card {
+    border-color: rgba(163, 92, 255, 0.22);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+  }
+}
+
+.cafe-card,
+.cafe-card-actions button,
+.cafe-card-actions a,
+.cafe-section-title button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cafe-card:active {
+  transform: scale(0.98);
+}
+
+.cafe-card-actions button:active,
+.cafe-card-actions a:active,
+.cafe-section-title button:active {
+  transform: scale(0.95);
+}

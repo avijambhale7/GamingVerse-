@@ -1,0 +1,91 @@
+/* =========================================================
+   TOUCH DEVICE POLISH
+   Part of GamingVerse Games page styles
+
+   Card lift/glow, image zoom and overlay reveals across this
+   page are all written as :hover rules. That reads great with
+   a mouse, but a touch screen never fires :hover, so on phones
+   every card just sits flat with no accent, no depth and no
+   reaction to a tap — which is what reads as "boring" on
+   mobile even though the desktop version looks lively.
+
+   This file gives touch devices ( @media (hover: none) ) a
+   permanent, slightly toned-down version of the same glow so
+   the UI has visual depth without needing a mouse, and adds a
+   universal :active press-down so tapping anything gives
+   instant tactile feedback. Imported last so it always wins.
+========================================================= */
+
+@media (hover: none) {
+  .poster-image-wrapper {
+    border-color: rgba(168, 50, 255, 0.22);
+    box-shadow:
+      var(--gv-shadow-sm),
+      0 0 16px rgba(168, 50, 255, 0.1);
+  }
+
+  .poster-overlay {
+    opacity: 1;
+    background: rgba(0, 0, 0, 0.32);
+  }
+
+  .quick-play {
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+    box-shadow: 0 6px 18px rgba(145, 38, 236, 0.45);
+  }
+
+  .horizontal-card {
+    border-color: rgba(168, 50, 255, 0.16);
+  }
+
+  .gaming-club-card {
+    border-color: rgba(168, 50, 255, 0.22);
+  }
+
+  .cafe-card,
+  .product-card {
+    border-color: rgba(163, 92, 255, 0.2);
+  }
+}
+
+.poster-card,
+.horizontal-card,
+.gaming-club-card,
+.view-all,
+.play-button,
+.details-button,
+.quick-play,
+.hero-carousel-arrows button,
+.club-open-footer button,
+.gaming-club-card-footer button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.poster-card:active,
+.horizontal-card:active,
+.gaming-club-card:active {
+  transform: scale(0.97);
+}
+
+.play-button:active,
+.details-button:active,
+.view-all:active,
+.quick-play:active,
+.hero-carousel-arrows button:active,
+.club-open-footer button:active,
+.gaming-club-card-footer button:active {
+  transform: scale(0.94);
+}
+
+@media (max-width: 750px) {
+  .games-navbar nav {
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .games-navbar nav::-webkit-scrollbar {
+    display: none;
+  }
+}

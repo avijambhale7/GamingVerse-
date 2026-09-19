@@ -1,0 +1,26 @@
+/* =========================================================
+   TOUCH DEVICE POLISH
+   Part of GamingVerse Profile page styles
+
+   Review card lift and the filter/tab hover states are all
+   :hover-only, so they never react to a tap on a phone. This
+   adds a tap press-down for feedback. Imported last so it
+   always wins.
+========================================================= */
+
+.my-review-card,
+.filter-btn,
+.view-tool,
+.profile-tab {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.my-review-card:active {
+  border-color: #3c3c3c;
+  transform: scale(0.99);
+}
+
+.filter-btn:active,
+.view-tool:active {
+  transform: scale(0.94);
+}

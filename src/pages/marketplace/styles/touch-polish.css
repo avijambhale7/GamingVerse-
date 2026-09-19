@@ -1,0 +1,40 @@
+/* =========================================================
+   TOUCH DEVICE POLISH
+   Part of GamingVerse Marketplace styles
+
+   Product card lift/glow and the wishlist button's hover
+   color are all :hover-only, so on a phone every card sits
+   flat and the wishlist heart never reacts until it's tapped.
+   This gives touch devices a permanent, toned-down glow plus
+   a tap press-down for feedback. Imported last so it wins.
+========================================================= */
+
+@media (hover: none) {
+  .product-card {
+    border-color: rgba(163, 92, 255, 0.2);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.24);
+  }
+}
+
+.product-card,
+.wishlist-button,
+.primary-btn,
+.secondary-btn,
+.danger-btn {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.product-card:active {
+  transform: scale(0.98);
+}
+
+.wishlist-button:active {
+  background: rgba(128, 53, 255, 0.75);
+  transform: scale(0.9);
+}
+
+.primary-btn:active:not(:disabled),
+.secondary-btn:active,
+.danger-btn:active {
+  transform: scale(0.96);
+}

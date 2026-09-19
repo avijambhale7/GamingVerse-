@@ -41,3 +41,4 @@
 @import "./games/styles/inline-meter.css"; /* INLINE GAMINGVERSE METER */
 @import "./games/styles/media-fallbacks.css"; /* GAME MEDIA FALLBACKS */
 @import "./games/styles/club-chat.css"; /* OPEN CLUB GROUP CHAT */
+@import "./games/styles/touch-polish.css"; /* TOUCH-DEVICE CARD GLOW + PRESS FEEDBACK */

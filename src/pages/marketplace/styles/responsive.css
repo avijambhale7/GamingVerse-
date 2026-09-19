@@ -108,7 +108,8 @@
   }
 
   .products-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
   }
 
   .market-hero {
@@ -179,5 +180,11 @@
   .seller-row button,
   .seller-order button {
     justify-self: start;
+  }
+}
+
+@media (max-width: 400px) {
+  .products-grid {
+    grid-template-columns: 1fr;
   }
 }

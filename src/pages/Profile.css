@@ -15,3 +15,4 @@
 @import "./profile/styles/follow-modal.css"; /* FOLLOWERS / FOLLOWING MODAL */
 @import "./profile/styles/collections.css"; /* COLLECTIONS LIBRARY + EXPANDED LIBRARY */
 @import "./profile/styles/owner-business.css"; /* CAFÉ OWNER BUSINESS PROFILE */
+@import "./profile/styles/touch-polish.css"; /* TOUCH-DEVICE PRESS FEEDBACK */

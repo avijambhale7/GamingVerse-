@@ -1,0 +1,24 @@
+/* =========================================================
+   TOUCH DEVICE POLISH
+   Part of GamingVerse Login page styles
+
+   Removes the default blue tap-highlight flash on mobile
+   browsers and adds a press-down scale so buttons feel
+   responsive to touch. Imported last so it always wins.
+========================================================= */
+
+.login-button,
+.social-button,
+.business-account-button,
+.create-account button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.login-button:active {
+  transform: scale(0.98);
+}
+
+.social-button:active,
+.business-account-button:active {
+  transform: scale(0.97);
+}

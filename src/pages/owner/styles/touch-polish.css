@@ -1,0 +1,36 @@
+/* =========================================================
+   TOUCH DEVICE POLISH
+   Part of GamingVerse Owner dashboard styles
+
+   The module/stat cards here are clickable but have no hover
+   or active feedback at all, so tapping one on a phone gives
+   no visual response. This adds a subtle accent glow and a
+   tap press-down so the dashboard feels responsive to touch.
+   Imported last so it wins.
+========================================================= */
+
+.owner-module-card {
+  transition:
+    transform var(--gv-t) var(--gv-ease),
+    border-color var(--gv-t) var(--gv-ease),
+    box-shadow var(--gv-t) var(--gv-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.owner-module-card:hover,
+.owner-module-card:active {
+  border-color: rgba(168, 50, 255, 0.4);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.3), 0 0 22px rgba(168, 50, 255, 0.14);
+}
+
+.owner-module-card:active {
+  transform: scale(0.98);
+}
+
+.owner-dashboard-tabs button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.owner-dashboard-tabs button:active {
+  transform: scale(0.96);
+}

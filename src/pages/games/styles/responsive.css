@@ -83,24 +83,6 @@
     display: none;
   }
 
-  .hero-section {
-    padding: 15px 15px 0;
-  }
-
-  .hero-image-wrapper {
-    height: 430px;
-  }
-
-  .hero-content {
-    left: 25px;
-    right: 25px;
-    bottom: 30px;
-  }
-
-  .hero-content h1 {
-    font-size: 34px;
-  }
-
   .games-content {
     padding: 40px 18px 60px;
   }
