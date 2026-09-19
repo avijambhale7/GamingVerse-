@@ -50,6 +50,7 @@
     color: #8c8c96;
 
     cursor: pointer;
+    outline: none;
     transition:
       background 0.22s cubic-bezier(0.4, 0, 0.2, 1),
       color 0.22s cubic-bezier(0.4, 0, 0.2, 1),
@@ -62,10 +63,25 @@
     transform: scale(0.9);
   }
 
+  /* A default browser focus ring is a rectangle; on a pill-shaped
+     button that reads as a stray, misaligned line. Replace it
+     with a glow that actually follows the button's shape. */
+  .bottom-tab-link:focus-visible {
+    box-shadow: 0 0 0 3px rgba(168, 50, 255, 0.45);
+  }
+
   .bottom-tab-link.active {
     color: #fff;
     background: linear-gradient(135deg, #8f2df0, #b04cff);
-    box-shadow: 0 6px 18px rgba(168, 50, 255, 0.45);
+    /* A tight, symmetric shadow that hugs the pill — a wide glow
+       made the active tab visually read as bigger than the rest. */
+    box-shadow: 0 0 0 1px rgba(168, 50, 255, 0.5);
+  }
+
+  .bottom-tab-link.active:focus-visible {
+    box-shadow:
+      0 0 0 1px rgba(168, 50, 255, 0.5),
+      0 0 0 4px rgba(168, 50, 255, 0.45);
   }
 
   .bottom-tab-label {

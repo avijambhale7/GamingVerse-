@@ -19,6 +19,7 @@
   background: transparent;
   color: #aaaab4;
   cursor: pointer;
+  outline: none;
   transition: 0.2s ease;
 }
 
@@ -27,6 +28,13 @@
   color: #fff;
   background: rgba(168, 50, 255, 0.1);
   border-color: rgba(168, 50, 255, 0.22);
+}
+
+/* A default browser focus ring is a rectangle; on a circular
+   button that reads as a stray, misaligned line. Replace it
+   with a round glow that actually follows the button's shape. */
+.navbar-icon-button:focus-visible {
+  box-shadow: 0 0 0 3px rgba(168, 50, 255, 0.45);
 }
 
 .navbar-icon {

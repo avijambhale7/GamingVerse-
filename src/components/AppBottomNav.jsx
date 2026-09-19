@@ -11,6 +11,16 @@ import GVIcon from "../pages/games/components/GVIcon.jsx";
 import { NAV_TABS, getActiveNavKey } from "./navTabs.js";
 import "./AppBottomNav.css";
 
+// Desktop has a dedicated profile avatar button in the header, so
+// AppTopNav's icon row skips it — but the mobile bar is the only
+// nav mobile users see, and its header avatar is hidden there (see
+// AppBottomNav.css/.navbar-icon-button), so Profile needs its own
+// tab here specifically.
+const MOBILE_TABS = [
+  ...NAV_TABS,
+  { key: "profile", label: "Profile", icon: "user", to: "/profile" },
+];
+
 export default function AppBottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -18,7 +28,7 @@ export default function AppBottomNav() {
 
   return (
     <nav className="games-bottom-tabbar" aria-label="Primary">
-      {NAV_TABS.map((tab) => (
+      {MOBILE_TABS.map((tab) => (
         <button
           key={tab.key}
           className={`bottom-tab-link ${activeKey === tab.key ? "active" : ""}`}

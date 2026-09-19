@@ -165,17 +165,14 @@
    src/components/AppBottomNav.css instead of here.
 ========================================================= */
 @media (max-width: 750px) {
-  .games-navbar .games-main-nav {
-    display: none;
-  }
-
-  /* The bottom tab bar already has a Profile icon — showing this
-     one too meant two profile buttons on screen at once. */
-  .navbar-profile-desktop-only {
-    display: none;
-  }
-
   .games-content {
     padding-bottom: 104px;
+  }
+
+  /* AppBottomNav's Profile tab covers this on mobile — showing
+     the header's avatar button too meant two profile buttons
+     on screen at once. */
+  .navbar-profile-desktop-only {
+    display: none;
   }
 }

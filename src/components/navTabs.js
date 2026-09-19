@@ -3,6 +3,11 @@
    Single source of truth for GamingVerse's main sections, so
    AppTopNav (desktop) and AppBottomNav (mobile) always offer
    the exact same destinations and highlight the same tab.
+
+   Profile isn't listed here on purpose — every page already has
+   its own dedicated profile avatar button (top-right on desktop,
+   in the bottom bar on mobile), so repeating it in this row was
+   a redundant, duplicate button.
 ========================================================= */
 export const NAV_TABS = [
   { key: "home", label: "Home", icon: "home", to: "/games" },
@@ -15,7 +20,6 @@ export const NAV_TABS = [
   { key: "spaces", label: "Spaces", icon: "spaces", to: "/games?view=spaces" },
   { key: "shop", label: "Shop", icon: "cart", to: "/games?view=marketplace" },
   { key: "cafe", label: "Café", icon: "coffee", to: "/games?view=cafe" },
-  { key: "profile", label: "Profile", icon: "user", to: "/profile" },
 ];
 
 export function getActiveNavKey(pathname, search) {
