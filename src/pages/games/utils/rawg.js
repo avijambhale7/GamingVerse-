@@ -2,6 +2,8 @@
    AUTOMATIC GAME CATALOGUE (RAWG)
    RAWG supplies the live PC + PlayStation + Xbox game data behind
    "Latest PC & Console Games" and "Upcoming Games".
+   (Redeploy trigger: forces a clean Vercel build to pick up the
+   newly-added VITE_RAWG_API_KEY environment variable.)
 
    WHERE TO PUT YOUR API KEY
    Get one free at https://rawg.io/apidocs, then either:
