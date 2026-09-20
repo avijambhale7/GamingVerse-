@@ -8,6 +8,12 @@ import PageSkeleton from "../components/PageSkeleton.jsx";
 import { normalizeCafe } from "./cafe/utils/cafeModel.js";
 import ImageUploadButton from "../components/ImageUploadButton.jsx";
 import { normalizeGameSearchText } from "./games/utils/text.js";
+import AdminActivityChart from "./admin/AdminActivityChart.jsx";
+
+// Module scope, evaluated once at page load — not a render-time call, so
+// the activity chart's "last 14 days" window doesn't need Date.now() (an
+// impure function) inside a hook.
+const PAGE_LOAD_TIME = Date.now();
 
 const EMPTY_GAME_FORM = {
   name: "",
@@ -33,6 +39,8 @@ export default function Admin() {
   const [products, setProducts] = useState([]);
   const [cafes, setCafes] = useState([]);
   const [bookingCount, setBookingCount] = useState(0);
+  const [bookings, setBookings] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [games, setGames] = useState([]);
   const [hiddenGames, setHiddenGames] = useState([]);
 
@@ -212,14 +220,32 @@ export default function Admin() {
       ref(db, "cafeBookings"),
       (snapshot) => {
         const data = snapshot.val() || {};
-        let count = 0;
+        const flattened = [];
         Object.values(data).forEach((customerBookings) => {
-          count += Object.keys(customerBookings || {}).length;
+          Object.values(customerBookings || {}).forEach((booking) => {
+            flattened.push(booking);
+          });
         });
-        setBookingCount(count);
+        setBookingCount(flattened.length);
+        setBookings(flattened);
       },
       (error) => {
         console.error("Admin bookings listener error:", error);
+      },
+    );
+    return () => unsubscribe();
+  }, [authorized]);
+
+  useEffect(() => {
+    if (!authorized) return undefined;
+    const unsubscribe = onValue(
+      ref(db, "orders"),
+      (snapshot) => {
+        const data = snapshot.val() || {};
+        setOrders(Object.values(data));
+      },
+      (error) => {
+        console.error("Admin orders listener error:", error);
       },
     );
     return () => unsubscribe();
@@ -239,6 +265,35 @@ export default function Admin() {
   }, [users, userSearch, userFilter, user]);
 
   const bannedCount = users.filter((u) => u.isBanned).length;
+
+  // Daily counts for the last 14 days, for the Overview activity chart.
+  const activityDays = useMemo(() => {
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const days = Array.from({ length: 14 }, (_, index) => {
+      const date = new Date(PAGE_LOAD_TIME - (13 - index) * DAY_MS);
+      return {
+        key: date.toISOString().slice(0, 10),
+        label: date.toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+        }),
+        signups: 0,
+        bookings: 0,
+        orders: 0,
+      };
+    });
+    const byKey = new Map(days.map((day) => [day.key, day]));
+    const bump = (timestamp, field) => {
+      if (!timestamp) return;
+      const key = new Date(Number(timestamp)).toISOString().slice(0, 10);
+      const day = byKey.get(key);
+      if (day) day[field] += 1;
+    };
+    users.forEach((u) => bump(u.createdAt, "signups"));
+    bookings.forEach((b) => bump(b.createdAt, "bookings"));
+    orders.forEach((o) => bump(o.createdAt, "orders"));
+    return days;
+  }, [users, bookings, orders]);
 
   const setBanned = async (uid, banned) => {
     try {
@@ -450,7 +505,7 @@ export default function Admin() {
       )}
 
       {section === "overview" && (
-        <main className="admin-main">
+        <main className="admin-main gv-page-enter">
           <section className="admin-stat-grid">
             <article>
               <span>Total Users</span>
@@ -481,11 +536,20 @@ export default function Admin() {
               </small>
             </article>
           </section>
+
+          <section className="admin-section-head">
+            <div>
+              <span className="admin-kicker">TRENDS</span>
+              <h2>Activity, last 14 days</h2>
+              <p>Signups, café bookings and marketplace orders, by day.</p>
+            </div>
+          </section>
+          <AdminActivityChart days={activityDays} />
         </main>
       )}
 
       {section === "users" && (
-        <main className="admin-main">
+        <main className="admin-main gv-page-enter">
           <section className="admin-section-head">
             <div>
               <span className="admin-kicker">USER MANAGEMENT</span>
@@ -571,7 +635,7 @@ export default function Admin() {
       )}
 
       {section === "reviews" && (
-        <main className="admin-main">
+        <main className="admin-main gv-page-enter">
           <section className="admin-section-head">
             <div>
               <span className="admin-kicker">MODERATION</span>
@@ -638,7 +702,7 @@ export default function Admin() {
       )}
 
       {section === "listings" && (
-        <main className="admin-main">
+        <main className="admin-main gv-page-enter">
           <section className="admin-section-head">
             <div>
               <span className="admin-kicker">MODERATION</span>
@@ -689,7 +753,7 @@ export default function Admin() {
       )}
 
       {section === "cafes" && (
-        <main className="admin-main">
+        <main className="admin-main gv-page-enter">
           <section className="admin-section-head">
             <div>
               <span className="admin-kicker">MODERATION</span>
@@ -762,7 +826,7 @@ export default function Admin() {
       )}
 
       {section === "games" && (
-        <main className="admin-main">
+        <main className="admin-main gv-page-enter">
           <section className="admin-section-head">
             <div>
               <span className="admin-kicker">CATALOGUE</span>

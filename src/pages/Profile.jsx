@@ -59,6 +59,9 @@ function Profile() {
     return tab === "collections" ? "collections" : "reviews";
   });
   const [filter, setFilter] = useState("all");
+  const [reviewViewMode, setReviewViewMode] = useState("list");
+  const [showReviewSearch, setShowReviewSearch] = useState(false);
+  const [reviewSearch, setReviewSearch] = useState("");
 
   const [collectionGames] = useState(() => {
     try {
@@ -206,7 +209,11 @@ function Profile() {
         Object.entries(data).forEach(([gameId, gameEntries]) => {
           const mine = gameEntries?.[uid];
           const text = String(mine?.text || "").trim();
-          if (!text || !mine?.review) return;
+          // A verdict alone (no written text) is still a review — it was
+          // being silently dropped here, so voting Skip/Timepass/Go For
+          // It/Perfection without typing anything never showed up on the
+          // profile at all.
+          if (!mine?.review) return;
 
           const storedGameName = mine.gameName || gameId;
           reviews.push({
@@ -239,20 +246,23 @@ function Profile() {
     "GamingVerse User";
 
   const filteredReviews = useMemo(() => {
-    if (filter === "all") return myReviews;
+    let list = myReviews;
 
     if (filter === "recent") {
-      return [...myReviews].sort(
-        (a, b) => (b.createdAt || 0) - (a.createdAt || 0),
+      list = [...list].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    } else if (["skip", "timepass", "go-for-it", "perfection"].includes(filter)) {
+      list = list.filter((review) => review.verdict === filter);
+    }
+
+    const query = reviewSearch.trim().toLowerCase();
+    if (query) {
+      list = list.filter((review) =>
+        review.gameName.toLowerCase().includes(query),
       );
     }
 
-    if (["skip", "timepass", "go-for-it", "perfection"].includes(filter)) {
-      return myReviews.filter((review) => review.verdict === filter);
-    }
-
-    return myReviews;
-  }, [myReviews, filter]);
+    return list;
+  }, [myReviews, filter, reviewSearch]);
 
   const openSocialModal = async (type) => {
     const entries = socialLists[type] || [];
@@ -609,10 +619,16 @@ function Profile() {
       playedGames={playedGames}
       playLaterGames={playLaterGames}
       profile={profile}
+      reviewSearch={reviewSearch}
+      reviewViewMode={reviewViewMode}
       setActiveTab={setActiveTab}
       setFilter={setFilter}
       setIsEditing={setIsEditing}
+      setReviewSearch={setReviewSearch}
+      setReviewViewMode={setReviewViewMode}
+      setShowReviewSearch={setShowReviewSearch}
       setSocialModal={setSocialModal}
+      showReviewSearch={showReviewSearch}
       socialLists={socialLists}
       socialLoading={socialLoading}
       socialMembers={socialMembers}

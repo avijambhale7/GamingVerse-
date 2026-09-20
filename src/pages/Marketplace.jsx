@@ -807,7 +807,7 @@ export default function Marketplace({ embedded = false }) {
         </div>
       )}
 
-      <main className="market-main">
+      <main className="market-main gv-page-enter">
         <ProductCatalogue
           addToCart={addToCart}
           category={category}

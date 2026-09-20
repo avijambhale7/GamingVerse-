@@ -1,0 +1,121 @@
+/* =========================================================
+   ADMIN ACTIVITY CHART
+========================================================= */
+.admin-activity-chart {
+  padding: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: var(--gv-surface-2);
+}
+
+.admin-activity-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.admin-activity-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #c9c9d2;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.admin-activity-legend-key {
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.admin-activity-chart-body {
+  position: relative;
+}
+
+.admin-activity-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.admin-activity-gridline {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+}
+
+.admin-activity-axis-label {
+  fill: #7a7a85;
+  font-size: 10px;
+}
+
+.admin-activity-crosshair {
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1;
+}
+
+.admin-activity-dot {
+  stroke: var(--gv-surface-2);
+  stroke-width: 2;
+}
+
+.admin-activity-tooltip {
+  position: absolute;
+  top: 6px;
+  transform: translateX(-50%);
+  min-width: 172px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: #17171e;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  z-index: 2;
+}
+.admin-activity-tooltip.align-left {
+  transform: translateX(0);
+}
+.admin-activity-tooltip.align-right {
+  transform: translateX(-100%);
+}
+
+.admin-activity-tooltip strong {
+  display: block;
+  margin-bottom: 6px;
+  color: #fff;
+  font-size: 11px;
+}
+
+.admin-activity-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 4px;
+  font-size: 11px;
+}
+
+.admin-activity-tooltip-key {
+  width: 10px;
+  height: 3px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.admin-activity-tooltip-value {
+  color: #fff;
+  font-weight: 800;
+}
+
+.admin-activity-tooltip-label {
+  color: #9a9aa4;
+}
+
+@media (max-width: 760px) {
+  .admin-activity-tooltip {
+    min-width: 150px;
+    font-size: 10px;
+  }
+}

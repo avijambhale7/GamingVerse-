@@ -17,7 +17,7 @@ export default function UpcomingsView({
     <>
       {activeView === "upcomings" && (
         <section className="games-upcomings-page">
-          <div className="games-content">
+          <div className="games-content gv-page-enter">
             <section className="game-section upcoming-games-section">
               <div className="section-heading automatic-games-heading">
                 <div>

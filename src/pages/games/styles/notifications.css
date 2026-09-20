@@ -39,27 +39,38 @@
 }
 
 .notification-tabs {
-  background: rgba(255, 255, 255, 0.012);
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .notification-tabs button {
-  min-height: 62px;
-  color: #7f7f8b;
-  font-size: 13px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: transparent;
+  color: #8d8d99;
+  font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.1px;
+  transition: 0.18s ease;
+}
+
+.notification-tabs button:hover {
+  color: #d8d8e0;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .notification-tabs button.active {
-  color: #ffffff;
+  color: #fff;
+  background: linear-gradient(135deg, #8f2df0, #b04cff);
+  box-shadow: 0 4px 14px rgba(168, 50, 255, 0.32);
 }
 
 .notification-tabs button.active::after {
-  left: 18%;
-  right: 18%;
-  height: 3px;
-  background: #ffffff;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.18);
+  display: none;
 }
 
 .notification-body {
@@ -136,33 +147,38 @@
 }
 
 .notification-item:not(.is-read) {
-  background:
-    linear-gradient(90deg, rgba(168, 50, 255, 0.1), transparent 34%), #101019 !important;
-}
-
-.notification-item:not(.is-read)::before {
-  content: "";
-  width: 3px;
-  align-self: stretch;
-  flex: 0 0 3px;
-  margin: -14px 1px -14px 0;
-  border-radius: 0 3px 3px 0;
-  background: #a832ff;
-  box-shadow: 0 0 12px rgba(168, 50, 255, 0.28);
+  background: #101019 !important;
 }
 
 .notification-avatar {
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: linear-gradient(145deg, #596377, #454d5f);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  font-size: 16px;
 }
 
-.notification-avatar.purple {
+/* Icon + colour per notification category, so the row is
+   scannable at a glance instead of every avatar looking
+   identical. */
+.notification-avatar.tone-verdict {
   background: linear-gradient(135deg, #7722df, #b92cff);
   box-shadow: 0 6px 18px rgba(168, 50, 255, 0.22);
+}
+
+.notification-avatar.tone-review {
+  background: linear-gradient(135deg, #1c6fd9, #3fa6f0);
+  box-shadow: 0 6px 18px rgba(41, 130, 220, 0.22);
+}
+
+.notification-avatar.tone-collection {
+  background: linear-gradient(135deg, #0aa06a, #29d491);
+  box-shadow: 0 6px 18px rgba(10, 200, 130, 0.2);
 }
 
 .notification-copy {
@@ -171,27 +187,39 @@
   padding: 1px 0;
 }
 
-.notification-copy strong {
+.notification-kicker {
   display: block;
-  overflow: hidden;
-  color: var(--gv-text);
-  font-size: 12px;
-  font-weight: 800;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  margin-bottom: 3px;
+  color: #8d8d99;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
 }
 
 .notification-copy p {
-  margin: 5px 0 5px;
-  color: #afb0bb;
-  font-size: 12px;
+  margin: 0 0 5px;
+  color: #e9e9ee;
+  font-size: 13px;
+  font-weight: 650;
   line-height: 1.45;
 }
 
-.notification-copy span {
+.notification-time {
   color: #70717d;
   font-size: 10px;
   font-weight: 600;
+}
+
+.notification-unread-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 8px;
+  align-self: flex-start;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--gv-accent, #a832ff);
+  box-shadow: 0 0 8px rgba(168, 50, 255, 0.6);
 }
 
 .notification-footer {

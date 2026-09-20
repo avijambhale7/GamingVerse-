@@ -476,7 +476,7 @@ export default function Cafe() {
         </div>
       </header>
 
-      <main className="cafe-main">
+      <main className="cafe-main gv-page-enter">
         <section className="cafe-hero">
           <div>
             <span>GAMINGVERSE CAFÉ BOOKING</span>

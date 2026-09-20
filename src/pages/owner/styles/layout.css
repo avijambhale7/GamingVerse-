@@ -33,6 +33,11 @@
 .owner-dashboard-header h1,
 .owner-section-head h2 {
   margin: 7px 0 5px;
+
+  background: linear-gradient(120deg, #fff 45%, #d9aaff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .owner-dashboard-header p,
 .owner-section-head p {

@@ -116,10 +116,31 @@
   --gv-verdict-soft: var(--gv-perfection-soft);
 }
 
+/* A soft one-shot entrance for a page's main content — applied to
+   each page's top-level content wrapper so navigating somewhere
+   feels like arriving, not a hard cut. */
+@keyframes gv-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.gv-page-enter {
+  animation: gv-page-enter 0.45s var(--gv-ease) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --gv-t-fast: 0.01ms;
     --gv-t: 0.01ms;
     --gv-t-slow: 0.01ms;
+  }
+
+  .gv-page-enter {
+    animation: none;
   }
 }

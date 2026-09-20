@@ -844,7 +844,7 @@ export default function OwnerDashboard() {
       )}
 
       {section === "overview" && role === "owner" && (
-        <main className="owner-dashboard-main">
+        <main className="owner-dashboard-main gv-page-enter">
           <section className="owner-stat-grid">
             <article>
               <span>Café Bookings</span>
@@ -903,7 +903,7 @@ export default function OwnerDashboard() {
       )}
 
       {section === "cafe" && canCafe && (
-        <main className="owner-dashboard-main">
+        <main className="owner-dashboard-main gv-page-enter">
           <nav className="owner-cafe-subtabs">
             {["bookings", "details", "revenue", "scan"].map((item) => (
               <button
@@ -1572,7 +1572,7 @@ export default function OwnerDashboard() {
       )}
 
       {section === "accessories" && canAccessories && (
-        <main className="owner-dashboard-main">
+        <main className="owner-dashboard-main gv-page-enter">
           <section className="owner-section-head">
             <div>
               <span className="owner-dashboard-kicker">

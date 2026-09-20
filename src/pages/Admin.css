@@ -40,6 +40,11 @@
 .admin-header h1,
 .admin-section-head h2 {
   margin: 7px 0 5px;
+
+  background: linear-gradient(120deg, #fff 45%, #d9aaff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .admin-header p,
 .admin-section-head p {

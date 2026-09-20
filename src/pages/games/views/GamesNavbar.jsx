@@ -10,8 +10,23 @@ import { getGameDetails } from "../utils/gameInfo.js";
 import AppTopNav from "../../../components/AppTopNav.jsx";
 import AppBottomNav from "../../../components/AppBottomNav.jsx";
 
+/* The title on every notification is redundant branding text
+   ("GamingVerse", "GamingVerse Verdict", "GamingVerse Review") —
+   this turns it into an icon + short category label instead, so
+   the actual message can be the bold, primary line. */
+function getNotificationMeta(title) {
+  if (title === "GamingVerse Verdict") {
+    return { icon: "🎯", label: "Verdict", tone: "verdict" };
+  }
+  if (title === "GamingVerse Review") {
+    return { icon: "✎", label: "Review", tone: "review" };
+  }
+  return { icon: "♡", label: "Collection", tone: "collection" };
+}
+
 export default function GamesNavbar({
   focusSearch,
+  markNotificationRead,
   navigate,
   notificationTab,
   notifications,
@@ -23,7 +38,6 @@ export default function GamesNavbar({
   setActiveCategory,
   setActiveView,
   setNotificationTab,
-  setNotifications,
   setSearch,
   setShowNotifications,
   showNotifications,
@@ -250,36 +264,39 @@ export default function GamesNavbar({
                     return visibleNotifications.length ? (
                       <>
                         <div className="notification-period">Last 30 Days</div>
-                        {visibleNotifications.map((item) => (
-                          <button
-                            key={item.id}
-                            type="button"
-                            className={`notification-item ${item.read ? "is-read" : ""}`}
-                            onClick={() => {
-                              const next = notifications.map((notification) =>
-                                notification.id === item.id
-                                  ? { ...notification, read: true }
-                                  : notification,
-                              );
-                              setNotifications(next);
-                              localStorage.setItem(
-                                "gamingverse_notifications",
-                                JSON.stringify(next),
-                              );
-                            }}
-                          >
-                            <div
-                              className={`notification-avatar ${item.type === "update" ? "purple" : ""}`}
+                        {visibleNotifications.map((item) => {
+                          const meta = getNotificationMeta(item.title);
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              className={`notification-item ${item.read ? "is-read" : ""}`}
+                              onClick={() => markNotificationRead(item.id)}
                             >
-                              {item.type === "update" ? "★" : "G"}
-                            </div>
-                            <div className="notification-copy">
-                              <strong>{item.title}</strong>
-                              <p>{item.message}</p>
-                              <span>{formatActivityDate(item.createdAt)}</span>
-                            </div>
-                          </button>
-                        ))}
+                              <div
+                                className={`notification-avatar tone-${meta.tone}`}
+                                aria-hidden="true"
+                              >
+                                {meta.icon}
+                              </div>
+                              <div className="notification-copy">
+                                <span className="notification-kicker">
+                                  {meta.label}
+                                </span>
+                                <p>{item.message}</p>
+                                <span className="notification-time">
+                                  {formatActivityDate(item.createdAt)}
+                                </span>
+                              </div>
+                              {!item.read && (
+                                <span
+                                  className="notification-unread-dot"
+                                  aria-hidden="true"
+                                />
+                              )}
+                            </button>
+                          );
+                        })}
                       </>
                     ) : (
                       <div className="notification-empty-state">

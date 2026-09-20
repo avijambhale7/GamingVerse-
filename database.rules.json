@@ -83,7 +83,7 @@
     },
 
     "orders": {
-      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'cafe_owner' || root.child('users').child(auth.uid).child('role').val() === 'shop_owner' || root.child('users').child(auth.uid).child('role').val() === 'accessory_owner')",
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'cafe_owner' || root.child('users').child(auth.uid).child('role').val() === 'shop_owner' || root.child('users').child(auth.uid).child('role').val() === 'accessory_owner' || root.child('users').child(auth.uid).child('role').val() === 'admin')",
       "$orderId": {
         ".read": "auth != null && (data.child('buyerId').val() === auth.uid || data.child('sellerId').val() === auth.uid)",
         ".write": "auth != null && (data.child('sellerId').val() === auth.uid || data.child('buyerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'cafe_owner' || root.child('users').child(auth.uid).child('role').val() === 'shop_owner' || root.child('users').child(auth.uid).child('role').val() === 'accessory_owner')"
@@ -160,6 +160,13 @@
       ".read": true,
       "$gameKey": {
         ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
+      }
+    },
+
+    "notifications": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
       }
     }
   }

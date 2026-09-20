@@ -179,58 +179,49 @@ function Games() {
   const [heroIndex, setHeroIndex] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationTab, setNotificationTab] = useState("all");
-  const [notifications, setNotifications] = useState(() => {
-    try {
-      const saved = JSON.parse(
-        localStorage.getItem("gamingverse_notifications") || "[]",
-      );
-      return Array.isArray(saved) ? saved : [];
-    } catch {
-      return [];
-    }
-  });
+  const [notifications, setNotifications] = useState([]);
 
+  // Notifications live in Firebase now, keyed by uid, so they follow the
+  // account across devices/browsers instead of staying stuck in whichever
+  // browser generated them.
   const addGamingVerseNotification = (title, message, type = "activity") => {
-    const notification = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+    push(ref(db, `notifications/${uid}`), {
       title,
       message,
       type,
-      createdAt: Date.now(),
+      createdAt: serverTimestamp(),
       read: false,
-    };
-    setNotifications((current) => {
-      const next = [notification, ...current].slice(0, 100);
-      localStorage.setItem("gamingverse_notifications", JSON.stringify(next));
-      return next;
     });
   };
 
+  const markNotificationRead = (notificationId) => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+    update(ref(db, `notifications/${uid}/${notificationId}`), { read: true });
+  };
+
   useEffect(() => {
-    const loadNotifications = () => {
-      try {
-        const saved = JSON.parse(
-          localStorage.getItem("gamingverse_notifications") || "[]",
-        );
-        setNotifications(Array.isArray(saved) ? saved : []);
-      } catch {
-        setNotifications([]);
-      }
-    };
-    loadNotifications();
-    const handleNotificationUpdate = () => loadNotifications();
-    window.addEventListener(
-      "gamingverse-notification",
-      handleNotificationUpdate,
+    // Games.jsx only ever mounts while ProtectedRoute has an authenticated
+    // user, so there's no user-less case to reset for here — notifications
+    // already starts at [].
+    const uid = auth.currentUser?.uid;
+    if (!uid) return undefined;
+    const unsubscribe = onValue(
+      query(ref(db, `notifications/${uid}`), limitToLast(100)),
+      (snapshot) => {
+        const data = snapshot.val() || {};
+        const next = Object.entries(data).map(([id, item]) => ({
+          id,
+          ...item,
+        }));
+        next.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+        setNotifications(next);
+      },
+      (error) => console.error("Notifications listener error:", error),
     );
-    window.addEventListener("storage", handleNotificationUpdate);
-    return () => {
-      window.removeEventListener(
-        "gamingverse-notification",
-        handleNotificationUpdate,
-      );
-      window.removeEventListener("storage", handleNotificationUpdate);
-    };
+    return () => unsubscribe();
   }, []);
   const profileMenuRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -1647,7 +1638,6 @@ function Games() {
         }.`,
         "activity",
       );
-      window.dispatchEvent(new Event("gamingverse-notification"));
       return next;
     });
   };
@@ -1726,9 +1716,13 @@ function Games() {
     if (!requestedGameName) return;
 
     const requestedKey = normalizeLibraryGameName(requestedGameName);
+    // fullGameCatalogue already covers horizontalGames/posterGames plus
+    // gamesdata.jsx's database entries and admin-added games — searching
+    // only the first two meant a game that exists solely in the database
+    // (no local art), like VALORANT, could never be found here, so this
+    // screen would sit on "Opening ..." forever.
     const allGameSources = [
-      ...horizontalGames,
-      ...posterGames,
+      ...fullGameCatalogue,
       ...automaticGames,
       ...upcomingGames,
     ];
@@ -1762,7 +1756,14 @@ function Games() {
       : "/games";
 
     navigate(nextUrl, { replace: true });
-  }, [ageLoading, automaticGames, upcomingGames, searchParams, navigate]);
+  }, [
+    ageLoading,
+    automaticGames,
+    upcomingGames,
+    fullGameCatalogue,
+    searchParams,
+    navigate,
+  ]);
 
   const closeDetails = () => {
     const returnToProfile = searchParams.get("return") === "profile";
@@ -2090,7 +2091,6 @@ function Games() {
         `Your ${composerVerdict.replace("-", " ")} verdict for ${selectedGame.name} was saved.`,
         "activity",
       );
-      window.dispatchEvent(new Event("gamingverse-notification"));
       return;
     }
 
@@ -2101,7 +2101,6 @@ function Games() {
       `Your ${composerVerdict.replace("-", " ")} review for ${selectedGame.name} was posted.`,
       "activity",
     );
-    window.dispatchEvent(new Event("gamingverse-notification"));
   };
 
   /* Your review is the record keyed by your uid, so removing it is a single
@@ -2579,6 +2578,7 @@ function Games() {
         activeView={activeView}
         focusSearch={focusSearch}
         navigate={navigate}
+        markNotificationRead={markNotificationRead}
         notificationTab={notificationTab}
         notifications={notifications}
         openDetails={openDetails}
@@ -2589,7 +2589,6 @@ function Games() {
         setActiveCategory={setActiveCategory}
         setActiveView={setActiveView}
         setNotificationTab={setNotificationTab}
-        setNotifications={setNotifications}
         setSearch={setSearch}
         setShowNotifications={setShowNotifications}
         setSpacesSection={setSpacesSection}

@@ -22,10 +22,16 @@ export default function ProfileView({
   playedGames,
   playLaterGames,
   profile,
+  reviewSearch,
+  reviewViewMode,
   setActiveTab,
   setFilter,
   setIsEditing,
+  setReviewSearch,
+  setReviewViewMode,
+  setShowReviewSearch,
   setSocialModal,
+  showReviewSearch,
   socialLists,
   socialLoading,
   socialMembers,
@@ -56,7 +62,7 @@ export default function ProfileView({
         <AppTopNav />
       </header>
 
-      <main className="profile-content">
+      <main className="profile-content gv-page-enter">
         <section className="profile-left-card">
           <div className="profile-avatar">
             {profile.photoURL ? (
@@ -197,17 +203,61 @@ export default function ProfileView({
                 ))}
 
                 <div className="review-view-tools">
-                  <button type="button" className="view-tool active">
+                  <button
+                    type="button"
+                    className={
+                      reviewViewMode === "list"
+                        ? "view-tool active"
+                        : "view-tool"
+                    }
+                    title="List view"
+                    aria-label="List view"
+                    onClick={() => setReviewViewMode("list")}
+                  >
                     ☷
                   </button>
-                  <button type="button" className="view-tool">
+                  <button
+                    type="button"
+                    className={
+                      reviewViewMode === "grid"
+                        ? "view-tool active"
+                        : "view-tool"
+                    }
+                    title="Grid view"
+                    aria-label="Grid view"
+                    onClick={() => setReviewViewMode("grid")}
+                  >
                     ▦
                   </button>
-                  <button type="button" className="view-tool">
+                  <button
+                    type="button"
+                    className={
+                      showReviewSearch ? "view-tool active" : "view-tool"
+                    }
+                    title="Search your reviews"
+                    aria-label="Search your reviews"
+                    onClick={() =>
+                      setShowReviewSearch((current) => {
+                        if (current) setReviewSearch("");
+                        return !current;
+                      })
+                    }
+                  >
                     ⌕
                   </button>
                 </div>
               </div>
+
+              {showReviewSearch && (
+                <input
+                  type="search"
+                  className="review-search-input"
+                  value={reviewSearch}
+                  onChange={(event) => setReviewSearch(event.target.value)}
+                  placeholder="Search your reviews by game name..."
+                  autoFocus
+                />
+              )}
 
               {filteredReviews.length === 0 ? (
                 <div className="profile-empty-state">
@@ -232,7 +282,13 @@ export default function ProfileView({
                   )}
                 </div>
               ) : (
-                <div className="my-reviews-list">
+                <div
+                  className={
+                    reviewViewMode === "grid"
+                      ? "my-reviews-list my-reviews-grid"
+                      : "my-reviews-list"
+                  }
+                >
                   {filteredReviews.map((review) => (
                     <article
                       className="my-review-card my-review-card-clickable"
@@ -290,7 +346,13 @@ export default function ProfileView({
                         </span>
                       </div>
 
-                      <p className="my-review-text">{review.text}</p>
+                      {review.text ? (
+                        <p className="my-review-text">{review.text}</p>
+                      ) : (
+                        <p className="my-review-text my-review-text-empty">
+                          No written comment — verdict only.
+                        </p>
+                      )}
 
                       <div className="my-review-footer">
                         <span>♡ {review.likes || 0}</span>

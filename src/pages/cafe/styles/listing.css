@@ -15,6 +15,11 @@
 .cafe-section-title h2 {
   font-size: 29px;
   margin: 7px 0 3px;
+
+  background: linear-gradient(120deg, #fff 45%, #d9aaff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .cafe-section-title p {
   margin: 0;

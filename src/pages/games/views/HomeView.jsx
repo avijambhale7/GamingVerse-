@@ -125,7 +125,7 @@ export default function HomeView({
             FEATURED GAMES
         =================================================== */}
 
-          <main className="games-content">
+          <main className="games-content gv-page-enter">
             <section className="game-section">
               <div className="section-heading featured-games-heading">
                 <div>
