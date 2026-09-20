@@ -34,25 +34,38 @@
 ===================================================== */
 
 @media (max-width: 750px) {
-  .featured-games-heading {
-    align-items: stretch;
-    gap: 18px;
+  /* Match the cleaner reference layout on mobile: no small eyebrow
+     label above each heading, and the category filter tucked away
+     (still reachable — it just doesn't compete with "See All" for
+     space on a narrow screen). */
+  .section-label {
+    display: none;
   }
 
-  .featured-games-actions {
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
+  .section-heading h2 {
+    font-size: 20px;
+  }
+
+  .view-all {
+    padding: 0 12px;
+    font-size: 12px;
+    height: 32px;
+  }
+
+  .featured-games-heading {
+    flex-direction: row;
+    align-items: center;
     gap: 12px;
   }
 
-  .home-category-select,
-  .home-category-select select {
-    width: 100%;
+  .featured-games-actions {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
   }
 
-  .featured-games-actions .view-all {
-    align-self: flex-start;
+  .home-category-select {
+    display: none;
   }
 
   .games-navbar {
@@ -92,12 +105,26 @@
   }
 
   .poster-grid {
-    grid-template-columns: repeat(2, 1fr);
-    row-gap: 28px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    row-gap: 18px;
   }
 
   .poster-info {
-    padding: 12px 2px;
+    padding: 8px 1px;
+  }
+
+  .poster-info h3 {
+    font-size: 11px;
+  }
+
+  .poster-meta {
+    font-size: 9px;
+  }
+
+  .genre {
+    padding: 1px 6px;
+    font-size: 8px;
   }
 
   .games-footer {

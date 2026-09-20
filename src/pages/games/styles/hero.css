@@ -272,14 +272,17 @@
 
 @media (max-width: 600px) {
   .hero-image-wrapper {
-    height: 650px;
+    /* Was 650px — on a typical phone that's most of the viewport
+       before any scrolling, which is what made the page feel like
+       one giant hero crammed against everything below it. */
+    height: 540px;
     border-radius: 0 0 16px 16px;
   }
 
   .hero-content {
     left: 20px;
     right: 20px;
-    bottom: 145px;
+    bottom: 130px;
   }
 
   .hero-content h1 {
