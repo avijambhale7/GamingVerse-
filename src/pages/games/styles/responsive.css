@@ -96,6 +96,11 @@
     display: none;
   }
 
+  /* Hero thumbnail strip — mobile only. Desktop keeps it. */
+  .hero-carousel {
+    display: none;
+  }
+
   .games-content {
     padding: 40px 18px 60px;
   }
