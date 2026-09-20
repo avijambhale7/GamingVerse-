@@ -286,6 +286,13 @@ function Games() {
   const [upcomingGames, setUpcomingGames] = useState([]);
   const [upcomingGamesLoading, setUpcomingGamesLoading] = useState(true);
   const [upcomingGamesError, setUpcomingGamesError] = useState("");
+  // Games the admin has added directly, stored in Firebase so they show
+  // up in the catalogue for every visitor, not just this browser.
+  const [adminGames, setAdminGames] = useState([]);
+  // Games the admin has hidden — works for RAWG/local games too, not
+  // just admin-added ones, since it's keyed by normalised name rather
+  // than a record id.
+  const [hiddenGames, setHiddenGames] = useState({});
   // Gaming Clubs, their membership and chat all live in Firebase now, so
   // two users actually see the same clubs instead of each browser holding
   // its own private copy in localStorage.
@@ -302,6 +309,35 @@ function Games() {
   const [communityTalkPost, setCommunityTalkPost] = useState("");
   const [communityTalks, setCommunityTalks] = useState([]);
   const [clubDiscussions, setClubDiscussions] = useState([]);
+
+  useEffect(() => {
+    const unsubscribe = onValue(
+      ref(db, "hiddenGames"),
+      (snapshot) => {
+        setHiddenGames(snapshot.val() || {});
+      },
+      (error) => console.error("Hidden games listener error:", error),
+    );
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onValue(
+      ref(db, "adminGames"),
+      (snapshot) => {
+        const data = snapshot.val() || {};
+        const next = Object.entries(data).map(([id, game]) => ({
+          id,
+          databaseKey: id,
+          source: "Admin",
+          ...game,
+        }));
+        setAdminGames(next);
+      },
+      (error) => console.error("Admin games listener error:", error),
+    );
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onValue(
@@ -1024,9 +1060,49 @@ function Games() {
     return "";
   };
 
+  // Lets getGameDetails() resolve an admin-added game's own description,
+  // genre, platforms etc. instead of falling back to the generic
+  // placeholder copy it uses for a name it doesn't recognise.
+  useEffect(() => {
+    adminGames.forEach((game) => {
+      automaticGameDetailsCache[game.name] = {
+        title: game.name,
+        description:
+          game.description ||
+          `Added to GamingVerse by the team. Discover ${game.name}, its platforms, release information and community verdict.`,
+        genre: game.genre || "Game",
+        platforms: game.platforms || "PC • Console • Mobile",
+        releaseDate: game.releaseDate || "—",
+        developer: game.developer || "—",
+        publisher: game.publisher || "—",
+        trailerUrl: game.trailerUrl || "",
+      };
+    });
+  }, [adminGames]);
+
+  const fullGameCatalogue = useMemo(() => {
+    // An admin game whose name matches an existing RAWG/local game is
+    // an edit of that game (its fields win); one that matches nothing
+    // is a brand-new addition.
+    const adminByKey = new Map(
+      adminGames.map((game) => [normalizeGameSearchText(game.name), game]),
+    );
+    const overridden = completeGameCatalogue.map((game) => {
+      const override = adminByKey.get(normalizeGameSearchText(game.name));
+      if (!override) return game;
+      adminByKey.delete(normalizeGameSearchText(game.name));
+      return { ...game, ...override, id: game.id, databaseKey: game.databaseKey };
+    });
+    const newAdminGames = Array.from(adminByKey.values());
+
+    return [...newAdminGames, ...overridden].filter(
+      (game) => !hiddenGames[normalizeGameSearchText(game.name)],
+    );
+  }, [adminGames, hiddenGames]);
+
   const filteredPosters = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return completeGameCatalogue
+    return fullGameCatalogue
       .filter(
         (game) =>
           game.name.toLowerCase().includes(query) &&
@@ -1036,7 +1112,7 @@ function Games() {
         ...game,
         image: getCatalogueImage(game),
       }));
-  }, [search, activeCategory, catalogueImageMap]);
+  }, [search, activeCategory, catalogueImageMap, fullGameCatalogue]);
 
   // Resolve missing poster images from RAWG.
   // This runs only for games that still have no local image.
@@ -1373,9 +1449,10 @@ function Games() {
       (game) =>
         game.name.toLowerCase().includes(query) &&
         matchesHomeCategory(game, activeCategory) &&
-        !containsBlockedGameTerm(game.name),
+        !containsBlockedGameTerm(game.name) &&
+        !hiddenGames[normalizeGameSearchText(game.name)],
     );
-  }, [automaticGames, search, activeCategory]);
+  }, [automaticGames, search, activeCategory, hiddenGames]);
 
   const visibleAutomaticGames = useMemo(() => {
     return showAllAutomaticGames
@@ -1390,10 +1467,11 @@ function Games() {
         game.name.toLowerCase().includes(query) &&
         matchesHomeCategory(game, activeCategory) &&
         !containsBlockedGameTerm(game.name) &&
+        !hiddenGames[normalizeGameSearchText(game.name)] &&
         game.releaseDate &&
         game.releaseDate > new Date().toISOString().slice(0, 10),
     );
-  }, [upcomingGames, search, activeCategory]);
+  }, [upcomingGames, search, activeCategory, hiddenGames]);
 
   const searchResults = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -1402,20 +1480,24 @@ function Games() {
       return [];
     }
 
-    const combined = [...automaticGames, ...completeGameCatalogue];
+    const combined = [...automaticGames, ...fullGameCatalogue];
     const seen = new Set();
 
     return combined.filter((game) => {
       const key = game.name.toLowerCase();
 
-      if (seen.has(key) || !key.includes(query)) {
+      if (
+        seen.has(key) ||
+        !key.includes(query) ||
+        hiddenGames[normalizeGameSearchText(game.name)]
+      ) {
         return false;
       }
 
       seen.add(key);
       return true;
     });
-  }, [search, automaticGames]);
+  }, [search, automaticGames, fullGameCatalogue, hiddenGames]);
 
   const heroGames = useMemo(() => {
     const preferred = [

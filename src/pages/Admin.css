@@ -401,6 +401,104 @@
   font-size: 12px;
 }
 
+.admin-game-form {
+  margin-bottom: 20px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: var(--gv-surface-2);
+  display: grid;
+  gap: 14px;
+}
+.admin-game-form h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.admin-game-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #898592;
+  font-size: 11px;
+  font-weight: 800;
+}
+.admin-game-form input,
+.admin-game-form textarea {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: #111118;
+  color: #fff;
+  padding: 10px 12px;
+  font: inherit;
+  resize: vertical;
+}
+.admin-game-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.admin-game-image-preview {
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.admin-game-form-actions {
+  display: flex;
+  gap: 10px;
+}
+.admin-game-form-actions button {
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 9px;
+  background: #121218;
+  color: #eee;
+  padding: 10px 16px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-hide-game-form {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+.admin-hide-game-form input {
+  flex: 1;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: #111118;
+  color: #fff;
+  padding: 10px 12px;
+  font: inherit;
+}
+.admin-hide-game-form button {
+  border: 1px solid rgba(255, 92, 115, 0.18);
+  border-radius: 9px;
+  background: rgba(255, 92, 115, 0.08);
+  color: #ff9ba8;
+  padding: 10px 16px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .admin-game-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-hide-game-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .admin-empty {
   min-height: 200px;
   display: grid;

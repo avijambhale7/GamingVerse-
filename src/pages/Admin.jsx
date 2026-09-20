@@ -1,11 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import "./Admin.css";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { get, onValue, ref, remove, set } from "firebase/database";
+import { get, onValue, push, ref, remove, set } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
 import PageSkeleton from "../components/PageSkeleton.jsx";
 import { normalizeCafe } from "./cafe/utils/cafeModel.js";
+import ImageUploadButton from "../components/ImageUploadButton.jsx";
+import { normalizeGameSearchText } from "./games/utils/text.js";
+
+const EMPTY_GAME_FORM = {
+  name: "",
+  image: "",
+  genre: "",
+  platforms: "",
+  releaseDate: "",
+  developer: "",
+  publisher: "",
+  description: "",
+};
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -20,9 +33,16 @@ export default function Admin() {
   const [products, setProducts] = useState([]);
   const [cafes, setCafes] = useState([]);
   const [bookingCount, setBookingCount] = useState(0);
+  const [games, setGames] = useState([]);
+  const [hiddenGames, setHiddenGames] = useState([]);
 
   const [userSearch, setUserSearch] = useState("");
   const [userFilter, setUserFilter] = useState("all"); // all | banned | active
+
+  const [gameForm, setGameForm] = useState(EMPTY_GAME_FORM);
+  const [editingGameId, setEditingGameId] = useState(null);
+  const [gameImageError, setGameImageError] = useState("");
+  const [hideGameName, setHideGameName] = useState("");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -151,6 +171,44 @@ export default function Admin() {
   useEffect(() => {
     if (!authorized) return undefined;
     const unsubscribe = onValue(
+      ref(db, "adminGames"),
+      (snapshot) => {
+        const data = snapshot.val() || {};
+        const next = Object.entries(data)
+          .map(([id, game]) => ({ id, ...game }))
+          .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+        setGames(next);
+      },
+      (error) => {
+        console.error("Admin games listener error:", error);
+        setMessage("Could not load games.");
+      },
+    );
+    return () => unsubscribe();
+  }, [authorized]);
+
+  useEffect(() => {
+    if (!authorized) return undefined;
+    const unsubscribe = onValue(
+      ref(db, "hiddenGames"),
+      (snapshot) => {
+        const data = snapshot.val() || {};
+        const next = Object.entries(data)
+          .map(([key, value]) => ({ key, ...value }))
+          .sort((a, b) => Number(b.hiddenAt || 0) - Number(a.hiddenAt || 0));
+        setHiddenGames(next);
+      },
+      (error) => {
+        console.error("Admin hidden games listener error:", error);
+        setMessage("Could not load hidden games.");
+      },
+    );
+    return () => unsubscribe();
+  }, [authorized]);
+
+  useEffect(() => {
+    if (!authorized) return undefined;
+    const unsubscribe = onValue(
       ref(db, "cafeBookings"),
       (snapshot) => {
         const data = snapshot.val() || {};
@@ -241,6 +299,92 @@ export default function Admin() {
     }
   };
 
+  const resetGameForm = () => {
+    setGameForm(EMPTY_GAME_FORM);
+    setEditingGameId(null);
+    setGameImageError("");
+  };
+
+  const startEditGame = (game) => {
+    setGameForm({
+      name: game.name || "",
+      image: game.image || "",
+      genre: game.genre || "",
+      platforms: game.platforms || "",
+      releaseDate: game.releaseDate || "",
+      developer: game.developer || "",
+      publisher: game.publisher || "",
+      description: game.description || "",
+    });
+    setEditingGameId(game.id);
+    setGameImageError("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const saveGame = async (event) => {
+    event.preventDefault();
+    const name = gameForm.name.trim();
+    if (!name || !gameForm.image) {
+      setMessage("A game needs at least a name and a poster image.");
+      return;
+    }
+    try {
+      const gameId = editingGameId || push(ref(db, "adminGames")).key;
+      await set(ref(db, `adminGames/${gameId}`), {
+        ...gameForm,
+        name,
+        createdAt: editingGameId
+          ? games.find((g) => g.id === editingGameId)?.createdAt || Date.now()
+          : Date.now(),
+        updatedAt: Date.now(),
+      });
+      setMessage(editingGameId ? "Game updated." : "Game added.");
+      resetGameForm();
+    } catch (error) {
+      console.error("Save game error:", error);
+      setMessage("Could not save the game.");
+    }
+  };
+
+  const deleteGame = async (gameId, name) => {
+    if (!window.confirm(`Delete "${name}" from the catalogue?`)) return;
+    try {
+      await remove(ref(db, `adminGames/${gameId}`));
+      setMessage("Game deleted.");
+      if (editingGameId === gameId) resetGameForm();
+    } catch (error) {
+      console.error("Delete game error:", error);
+      setMessage("Could not delete the game.");
+    }
+  };
+
+  const hideGame = async (event) => {
+    event.preventDefault();
+    const name = hideGameName.trim();
+    if (!name) return;
+    try {
+      await set(ref(db, `hiddenGames/${normalizeGameSearchText(name)}`), {
+        name,
+        hiddenAt: Date.now(),
+      });
+      setMessage(`"${name}" is now hidden from the site.`);
+      setHideGameName("");
+    } catch (error) {
+      console.error("Hide game error:", error);
+      setMessage("Could not hide that game.");
+    }
+  };
+
+  const unhideGame = async (key, name) => {
+    try {
+      await remove(ref(db, `hiddenGames/${key}`));
+      setMessage(`"${name}" is visible again.`);
+    } catch (error) {
+      console.error("Unhide game error:", error);
+      setMessage("Could not unhide that game.");
+    }
+  };
+
   const logout = async () => {
     await signOut(auth);
     navigate("/login", { replace: true });
@@ -268,28 +412,32 @@ export default function Admin() {
       </header>
 
       <nav className="admin-tabs">
-        {["overview", "users", "reviews", "listings", "cafes"].map((item) => (
-          <button
-            key={item}
-            type="button"
-            className={section === item ? "active" : ""}
-            onClick={() => setSection(item)}
-          >
-            {item === "overview"
-              ? "Overview"
-              : item === "users"
-                ? "👥 Users"
-                : item === "reviews"
-                  ? "💬 Reviews"
-                  : item === "listings"
-                    ? "🛒 Listings"
-                    : `☕ Cafés${
-                        cafes.filter((c) => c.status === "pending").length
-                          ? ` (${cafes.filter((c) => c.status === "pending").length})`
-                          : ""
-                      }`}
-          </button>
-        ))}
+        {["overview", "users", "reviews", "listings", "cafes", "games"].map(
+          (item) => (
+            <button
+              key={item}
+              type="button"
+              className={section === item ? "active" : ""}
+              onClick={() => setSection(item)}
+            >
+              {item === "overview"
+                ? "Overview"
+                : item === "users"
+                  ? "👥 Users"
+                  : item === "reviews"
+                    ? "💬 Reviews"
+                    : item === "listings"
+                      ? "🛒 Listings"
+                      : item === "cafes"
+                        ? `☕ Cafés${
+                            cafes.filter((c) => c.status === "pending").length
+                              ? ` (${cafes.filter((c) => c.status === "pending").length})`
+                              : ""
+                          }`
+                        : `🎮 Games (${games.length})`}
+            </button>
+          ),
+        )}
       </nav>
 
       {message && (
@@ -604,6 +752,251 @@ export default function Admin() {
                           ✕ Reject
                         </button>
                       )}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        </main>
+      )}
+
+      {section === "games" && (
+        <main className="admin-main">
+          <section className="admin-section-head">
+            <div>
+              <span className="admin-kicker">CATALOGUE</span>
+              <h2>Games</h2>
+              <p>
+                Add a brand-new game, or type the exact name of an existing
+                RAWG/database game below to override its details — either
+                way it's saved here and can be edited or deleted any time.
+              </p>
+            </div>
+            <div className="admin-mini-stat">
+              <strong>{games.length}</strong>
+              <span>Admin games</span>
+            </div>
+          </section>
+
+          <form className="admin-game-form" onSubmit={saveGame}>
+            <h3>{editingGameId ? "Edit game" : "Add a new game"}</h3>
+
+            <div className="admin-game-form-grid">
+              <label>
+                <span>Name</span>
+                <input
+                  value={gameForm.name}
+                  onChange={(e) =>
+                    setGameForm((f) => ({ ...f, name: e.target.value }))
+                  }
+                  placeholder="Game name"
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Genre</span>
+                <input
+                  value={gameForm.genre}
+                  onChange={(e) =>
+                    setGameForm((f) => ({ ...f, genre: e.target.value }))
+                  }
+                  placeholder="Action, RPG, Adventure..."
+                />
+              </label>
+
+              <label>
+                <span>Platforms</span>
+                <input
+                  value={gameForm.platforms}
+                  onChange={(e) =>
+                    setGameForm((f) => ({ ...f, platforms: e.target.value }))
+                  }
+                  placeholder="PC • PS5 • Xbox Series X"
+                />
+              </label>
+
+              <label>
+                <span>Release date</span>
+                <input
+                  value={gameForm.releaseDate}
+                  onChange={(e) =>
+                    setGameForm((f) => ({
+                      ...f,
+                      releaseDate: e.target.value,
+                    }))
+                  }
+                  placeholder="2026 or 12 Mar 2026"
+                />
+              </label>
+
+              <label>
+                <span>Developer</span>
+                <input
+                  value={gameForm.developer}
+                  onChange={(e) =>
+                    setGameForm((f) => ({ ...f, developer: e.target.value }))
+                  }
+                />
+              </label>
+
+              <label>
+                <span>Publisher</span>
+                <input
+                  value={gameForm.publisher}
+                  onChange={(e) =>
+                    setGameForm((f) => ({ ...f, publisher: e.target.value }))
+                  }
+                />
+              </label>
+            </div>
+
+            <label>
+              <span>Description</span>
+              <textarea
+                value={gameForm.description}
+                onChange={(e) =>
+                  setGameForm((f) => ({ ...f, description: e.target.value }))
+                }
+                rows={3}
+                placeholder="What's this game about?"
+              />
+            </label>
+
+            <div className="image-field-row">
+              <input
+                value={gameForm.image}
+                onChange={(e) =>
+                  setGameForm((f) => ({ ...f, image: e.target.value }))
+                }
+                placeholder="Poster image URL, or upload one"
+              />
+              <ImageUploadButton
+                pathPrefix={`gameImages/${user.uid}`}
+                onUploaded={(url) =>
+                  setGameForm((f) => ({ ...f, image: url }))
+                }
+                onError={setGameImageError}
+              />
+            </div>
+            {gameImageError && (
+              <p className="image-field-error">{gameImageError}</p>
+            )}
+            {gameForm.image && (
+              <img
+                className="admin-game-image-preview"
+                src={gameForm.image}
+                alt=""
+              />
+            )}
+
+            <div className="admin-game-form-actions">
+              <button type="submit" className="admin-unban-btn">
+                {editingGameId ? "Save changes" : "Add game"}
+              </button>
+              {editingGameId && (
+                <button type="button" onClick={resetGameForm}>
+                  Cancel edit
+                </button>
+              )}
+            </div>
+          </form>
+
+          <section className="admin-table-card">
+            {games.length === 0 ? (
+              <div className="admin-empty">
+                <span>🎮</span>
+                <strong>No admin-added games yet</strong>
+                <p>Games added above will show up here.</p>
+              </div>
+            ) : (
+              <div className="admin-user-list">
+                {games.map((game) => (
+                  <article key={game.id} className="admin-listing-row">
+                    <div className="admin-listing-thumb">
+                      {game.image ? (
+                        <img src={game.image} alt="" />
+                      ) : (
+                        <span>🎮</span>
+                      )}
+                    </div>
+                    <div className="admin-review-info">
+                      <strong>{game.name}</strong>
+                      <span>
+                        {game.genre || "Game"}
+                        {game.releaseDate ? ` • ${game.releaseDate}` : ""}
+                      </span>
+                    </div>
+                    <div className="admin-row-actions">
+                      <button
+                        type="button"
+                        onClick={() => startEditGame(game)}
+                      >
+                        ✎ Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={() => deleteGame(game.id, game.name)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="admin-section-head">
+            <div>
+              <span className="admin-kicker">MODERATION</span>
+              <h2>Hide a game</h2>
+              <p>
+                Remove any game from the site by its exact name — this
+                works for RAWG and database games too, not just the ones
+                added above.
+              </p>
+            </div>
+            <div className="admin-mini-stat">
+              <strong>{hiddenGames.length}</strong>
+              <span>Hidden games</span>
+            </div>
+          </section>
+
+          <form className="admin-game-form admin-hide-game-form" onSubmit={hideGame}>
+            <input
+              value={hideGameName}
+              onChange={(e) => setHideGameName(e.target.value)}
+              placeholder="Exact game name, e.g. Red Dead Redemption 2"
+            />
+            <button type="submit" className="danger">
+              Hide game
+            </button>
+          </form>
+
+          <section className="admin-table-card">
+            {hiddenGames.length === 0 ? (
+              <div className="admin-empty">
+                <span>🙈</span>
+                <strong>No hidden games</strong>
+              </div>
+            ) : (
+              <div className="admin-user-list">
+                {hiddenGames.map((hidden) => (
+                  <article key={hidden.key} className="admin-user-row">
+                    <div className="admin-user-info">
+                      <strong>{hidden.name}</strong>
+                    </div>
+                    <div className="admin-row-actions">
+                      <button
+                        type="button"
+                        className="admin-unban-btn"
+                        onClick={() => unhideGame(hidden.key, hidden.name)}
+                      >
+                        ✓ Unhide
+                      </button>
                     </div>
                   </article>
                 ))}

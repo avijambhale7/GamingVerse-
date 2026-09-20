@@ -147,6 +147,20 @@
         ".write": "auth != null && ((!data.exists() && newData.child('authorUid').val() === auth.uid && root.child('users').child(auth.uid).child('isBanned').val() !== true) || root.child('users').child(auth.uid).child('role').val() === 'admin')",
         ".validate": "newData.hasChildren(['title', 'authorUid', 'createdAt']) && newData.child('title').isString() && newData.child('title').val().length > 0 && newData.child('title').val().length <= 200"
       }
+    },
+
+    "adminGames": {
+      ".read": true,
+      "$gameId": {
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
+      }
+    },
+
+    "hiddenGames": {
+      ".read": true,
+      "$gameKey": {
+        ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
+      }
     }
   }
 }
