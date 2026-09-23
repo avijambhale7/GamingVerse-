@@ -31,16 +31,13 @@
   background-size: cover;
 }
 
-/* FINAL ARRANGEMENT FIX — game detail trailer hero */
-.details-modal-reference .reference-game-hero-media {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  overflow: hidden !important;
-  background: var(--gv-bg) !important;
-}
-
+/* FINAL ARRANGEMENT FIX — game detail trailer hero.
+   Position/size for .reference-game-hero-media itself is set by
+   cinematic-hero.css, including its mobile override (the hero image
+   becomes a normal-flow block there instead of an absolute overlay,
+   so content can sit below it instead of overlapping it) — this used
+   to repeat position/inset/width/height with !important, which always
+   beat that mobile override regardless of screen size. */
 .details-modal-reference .reference-game-hero-thumbnail-image {
   position: absolute !important;
   inset: 0 !important;
@@ -63,8 +60,15 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35) !important;
 }
 
-.details-modal-reference .reference-game-hero-content {
-  pointer-events: none !important;
+/* Desktop only: cinematic-hero.css's own base rule already sets this
+   (letting clicks pass through empty hero space to the trailer iframe
+   underneath), and its mobile override needs to re-enable pointer
+   events once the card no longer overlaps the hero image — this
+   !important duplicate used to block that override unconditionally. */
+@media (min-width: 761px) {
+  .details-modal-reference .reference-game-hero-content {
+    pointer-events: none !important;
+  }
 }
 
 .details-modal-reference .reference-game-hero-poster-button,

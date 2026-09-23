@@ -499,6 +499,63 @@ function Games() {
         return;
       }
 
+      // A full refresh makes up to ~50 sequential RAWG requests (catalogue
+      // pages + upcoming pages), on top of the per-game poster lookups —
+      // and this ran on every mount AND every 30-minute interval tick with
+      // no caching. That volume is what was tripping RAWG's rate limit and
+      // showing up in the browser as "blocked by CORS policy" (RAWG's
+      // throttled responses drop the CORS header, same as its 401s do).
+      // Reusing a recent result cuts that to zero requests most of the time.
+      const CACHE_KEY = "gamingverse_rawg_cache_v1";
+      const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+      const cacheGameDetails = (game, { upcoming }) => {
+        automaticGameDetailsCache[game.name] = {
+          title: game.name,
+          description: upcoming
+            ? `Upcoming game in the GamingVerse release catalogue. Discover ${game.name}, its planned release date, platforms and community information.`
+            : `Automatically added to GamingVerse from the live game catalogue. Discover ${game.name}, its platforms, release information and community verdict.`,
+          genre: game.genre,
+          platforms: game.platforms,
+          releaseDate: game.releaseDate || (upcoming ? "TBA" : "—"),
+          developer: game.developer || "—",
+          publisher: game.publisher || "—",
+          trailerUrl: game.trailerUrl || "",
+        };
+        gameAgeRatings[game.name] = game.ageRating;
+      };
+
+      try {
+        const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+        if (
+          cached?.savedAt &&
+          Date.now() - cached.savedAt < CACHE_TTL_MS &&
+          Array.isArray(cached.automaticGames) &&
+          Array.isArray(cached.upcomingGames)
+        ) {
+          cached.automaticGames.forEach((game) =>
+            cacheGameDetails(game, { upcoming: false }),
+          );
+          cached.upcomingGames.forEach((game) =>
+            cacheGameDetails(game, { upcoming: true }),
+          );
+
+          if (!cancelled) {
+            setCatalogueImageMap((prev) => ({
+              ...prev,
+              ...(cached.catalogueImages || {}),
+            }));
+            setAutomaticGames(cached.automaticGames);
+            setUpcomingGames(cached.upcomingGames);
+            setAutomaticGamesLoading(false);
+            setUpcomingGamesLoading(false);
+          }
+          return;
+        }
+      } catch {
+        // Corrupt or unreadable cache entry — fall through to a live fetch.
+      }
+
       try {
         setAutomaticGamesLoading(true);
         setUpcomingGamesLoading(true);
@@ -598,19 +655,7 @@ function Games() {
           return (Number(b.rating) || 0) - (Number(a.rating) || 0);
         });
 
-        mapped.forEach((game) => {
-          automaticGameDetailsCache[game.name] = {
-            title: game.name,
-            description: `Automatically added to GamingVerse from the live game catalogue. Discover ${game.name}, its platforms, release information and community verdict.`,
-            genre: game.genre,
-            platforms: game.platforms,
-            releaseDate: game.releaseDate || "—",
-            developer: game.developer || "—",
-            publisher: game.publisher || "—",
-            trailerUrl: game.trailerUrl || "",
-          };
-          gameAgeRatings[game.name] = game.ageRating;
-        });
+        mapped.forEach((game) => cacheGameDetails(game, { upcoming: false }));
 
         if (!cancelled) {
           setCatalogueImageMap((prev) => ({
@@ -693,22 +738,27 @@ function Games() {
           ),
         );
 
-        sortedUpcoming.forEach((game) => {
-          automaticGameDetailsCache[game.name] = {
-            title: game.name,
-            description: `Upcoming game in the GamingVerse release catalogue. Discover ${game.name}, its planned release date, platforms and community information.`,
-            genre: game.genre,
-            platforms: game.platforms,
-            releaseDate: game.releaseDate || "TBA",
-            developer: game.developer || "—",
-            publisher: game.publisher || "—",
-            trailerUrl: game.trailerUrl || "",
-          };
-          gameAgeRatings[game.name] = game.ageRating;
-        });
+        sortedUpcoming.forEach((game) =>
+          cacheGameDetails(game, { upcoming: true }),
+        );
 
         if (!cancelled) {
           setUpcomingGames(sortedUpcoming);
+        }
+
+        try {
+          localStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({
+              savedAt: Date.now(),
+              automaticGames: mapped,
+              upcomingGames: sortedUpcoming,
+              catalogueImages: discoveredCatalogueImages,
+            }),
+          );
+        } catch {
+          // Storage full/unavailable — the app still works, just without
+          // the cache, so the next reload falls back to a live fetch.
         }
       } catch (error) {
         console.error("Automatic/upcoming games error:", error);
@@ -1112,6 +1162,26 @@ function Games() {
 
     let cancelled = false;
 
+    // A game's poster essentially never changes, so once RAWG has found one
+    // it is kept indefinitely — otherwise every reload re-searches RAWG for
+    // every game the local catalogue has no image for, which was adding to
+    // the request volume that kept tripping RAWG's rate limit.
+    const POSTER_CACHE_KEY = "gamingverse_poster_image_cache_v1";
+    let cachedImages = null;
+    try {
+      const parsed = JSON.parse(localStorage.getItem(POSTER_CACHE_KEY) || "null");
+      if (parsed && typeof parsed === "object") {
+        cachedImages = parsed;
+        // setCatalogueImageMap only takes effect next render, so the
+        // `missingGames` filter below also checks `cachedImages` directly —
+        // otherwise this same run would still re-search every game it just
+        // found a cached image for.
+        setCatalogueImageMap((prev) => ({ ...parsed, ...prev }));
+      }
+    } catch {
+      // Corrupt or unreadable cache entry — carry on without it.
+    }
+
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
     const getSearchCandidates = (game) => {
@@ -1198,6 +1268,7 @@ function Games() {
     const missingGames = completeGameCatalogue.filter((game) => {
       if (!game?.name) return false;
       if (getCatalogueImage(game)) return false;
+      if (cachedImages?.[normalizeCatalogueImageKey(game.name)]) return false;
       return true;
     });
 
@@ -1226,6 +1297,19 @@ function Games() {
           ...prev,
           ...foundImages,
         }));
+
+        try {
+          const existing = JSON.parse(
+            localStorage.getItem(POSTER_CACHE_KEY) || "{}",
+          );
+          localStorage.setItem(
+            POSTER_CACHE_KEY,
+            JSON.stringify({ ...existing, ...foundImages }),
+          );
+        } catch {
+          // Storage full/unavailable — the app still works, just without
+          // the cache, so the next reload searches RAWG again.
+        }
       }
     };
 

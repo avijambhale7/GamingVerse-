@@ -3,25 +3,51 @@
    Part of GamingVerse Games page styles
 ========================================================= */
 
-/* ==========================================================
-   GAME GUIDE — CINEMATIC HERO
-   Trailer fills the top like the provided movie reference.
-========================================================== */
-.details-modal-reference {
-  position: relative;
-  width: min(1260px, 96vw);
-  max-height: 96vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  background: #050507;
-  border: 1px solid rgba(166, 72, 255, 0.26);
-  border-radius: 22px;
-  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.7);
+.details-backdrop {
+  position: fixed;
+  inset: 0;
+  padding: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  background: var(--gv-bg);
+  overflow: hidden;
 }
 
+.details-modal-reference {
+  position: relative;
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  max-height: none;
+  min-height: 100vh;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: #050507;
+  box-shadow: none;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.details-close {
+  position: absolute;
+  z-index: 20;
+  top: 18px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  font-size: 20px;
+}
+
+/* ---------------------------------------------------------
+   HERO — background media + the poster/title/actions card
+--------------------------------------------------------- */
 .reference-game-hero {
   position: relative;
-  min-height: clamp(620px, 76vh, 820px);
+  min-height: 760px;
+  height: min(760px, 84vh);
+  max-height: 760px;
   overflow: hidden;
   background: #050507;
 }
@@ -42,7 +68,8 @@
   display: block;
   background: var(--gv-bg);
   object-fit: cover;
-  transform: scale(1.03);
+  z-index: 1;
+  pointer-events: auto;
 }
 
 .reference-game-hero-fallback {
@@ -61,558 +88,6 @@
   background:
     linear-gradient(
       180deg,
-      rgba(0, 0, 0, 0.06) 0%,
-      rgba(0, 0, 0, 0.04) 32%,
-      rgba(0, 0, 0, 0.5) 61%,
-      rgba(0, 0, 0, 0.97) 100%
-    ),
-    linear-gradient(
-      90deg,
-      rgba(0, 0, 0, 0.82) 0%,
-      rgba(0, 0, 0, 0.34) 48%,
-      rgba(0, 0, 0, 0.7) 100%
-    );
-}
-
-.reference-game-hero-content {
-  position: relative;
-  z-index: 3;
-  min-height: clamp(620px, 76vh, 820px);
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 30px;
-  padding: 60px 42px 42px;
-  box-sizing: border-box;
-}
-
-.reference-game-hero-left {
-  min-width: 0;
-  flex: 1 1 auto;
-  display: flex;
-  align-items: flex-end;
-  gap: 28px;
-}
-
-.reference-game-hero-poster-button {
-  flex: 0 0 225px;
-  width: 225px;
-  height: 315px;
-  padding: 0;
-  margin: 0;
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
-  cursor: zoom-in;
-  display: block;
-  overflow: hidden;
-  position: relative;
-  z-index: 6;
-}
-
-.reference-game-hero-poster-button:hover .reference-game-hero-poster {
-  transform: scale(1.015);
-}
-
-.reference-game-hero-poster {
-  flex: 0 0 225px;
-  width: 225px;
-  height: 315px;
-  object-fit: cover;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.72);
-}
-
-.reference-game-hero-copy {
-  min-width: 0;
-  max-width: 760px;
-  padding-bottom: 2px;
-}
-
-.reference-hero-eyebrow {
-  display: inline-block;
-  margin-bottom: 8px;
-  color: var(--gv-accent);
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 2.4px;
-}
-
-.reference-game-hero-copy h2 {
-  margin: 0 0 11px;
-  color: #fff;
-  font-size: clamp(42px, 5vw, 72px);
-  line-height: 0.98;
-  letter-spacing: -1.5px;
-  text-shadow: 0 8px 34px rgba(0, 0, 0, 0.65);
-}
-
-.reference-game-hero-copy p {
-  margin: 0 0 16px;
-  color: #d1d4dd;
-  font-size: 15px;
-  line-height: 1.55;
-  max-width: 760px;
-  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.7);
-}
-
-.reference-hero-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.reference-hero-meta span {
-  display: inline-flex;
-  align-items: center;
-  min-height: 31px;
-  padding: 0 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(18, 18, 22, 0.64);
-  backdrop-filter: blur(8px);
-  color: var(--gv-text);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.reference-hero-actions {
-  flex: 0 0 390px;
-  width: 390px;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 9px;
-}
-
-.reference-hero-actions .reference-watch-button {
-  width: 100%;
-  min-height: 52px;
-  border-radius: 28px;
-  box-shadow: 0 10px 30px rgba(162, 61, 255, 0.28);
-}
-
-.reference-hero-actions .reference-secondary-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 9px;
-}
-
-.reference-hero-actions .reference-utility-button {
-  width: 100%;
-  min-height: 52px;
-  border-radius: 16px;
-  background: rgba(19, 19, 22, 0.76);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-}
-
-.reference-meter-hero-button {
-  width: 100%;
-  min-height: 52px;
-  padding: 0 18px;
-  border: 1px solid rgba(170, 75, 255, 0.35);
-  border-radius: 16px;
-  background: rgba(82, 34, 126, 0.72);
-  backdrop-filter: blur(10px);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.reference-meter-hero-button:hover {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
-}
-
-.reference-content-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 310px;
-  gap: 34px;
-  padding: 34px 38px 38px;
-}
-
-@media (max-width: 1050px) {
-  .reference-game-hero {
-    min-height: 670px;
-  }
-
-  .reference-game-hero-content {
-    min-height: 670px;
-    padding: 46px 28px 28px;
-  }
-
-  .reference-game-hero-poster-button {
-    flex-basis: 190px;
-    width: 190px;
-    height: 270px;
-  }
-
-  .reference-game-hero-poster {
-    width: 190px;
-    height: 270px;
-  }
-
-  .reference-hero-actions {
-    flex-basis: 320px;
-    width: 320px;
-  }
-
-  .reference-content-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .reference-info-panel {
-    width: 100%;
-  }
-}
-
-@media (max-width: 760px) {
-  .details-modal-reference {
-    width: 96vw;
-    border-radius: 16px;
-  }
-
-  .reference-game-hero {
-    min-height: auto;
-    aspect-ratio: auto;
-  }
-
-  .reference-game-hero-media {
-    position: relative;
-    height: 58vw;
-    min-height: 270px;
-  }
-
-  .reference-game-hero-content {
-    min-height: 0;
-    margin-top: -110px;
-    padding: 0 18px 22px;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 20px;
-  }
-
-  .reference-game-hero-left {
-    align-items: flex-end;
-    gap: 16px;
-  }
-
-  .reference-game-hero-poster-button {
-    flex-basis: 125px;
-    width: 125px;
-    height: 178px;
-  }
-
-  .reference-game-hero-poster {
-    width: 125px;
-    height: 178px;
-  }
-
-  .reference-game-hero-copy h2 {
-    font-size: clamp(30px, 8vw, 46px);
-    letter-spacing: -0.8px;
-  }
-
-  .reference-game-hero-copy p {
-    font-size: 13px;
-    margin-bottom: 11px;
-  }
-
-  .reference-hero-meta span {
-    font-size: 9px;
-    min-height: 27px;
-    padding: 0 9px;
-  }
-
-  .reference-hero-actions {
-    width: 100%;
-    flex-basis: auto;
-  }
-
-  .reference-content-grid {
-    padding: 24px 18px 28px;
-  }
-}
-
-/* ==========================================================
-   CINEMATIC HERO COMPACT — closer to the requested reference
-   Smaller typography/icons, wider cinematic framing, and a
-   cleaner full-width movie-detail feel.
-========================================================== */
-.details-backdrop {
-  align-items: flex-start !important;
-  padding: 18px 0 0 !important;
-  background: rgba(0, 0, 0, 0.78) !important;
-}
-
-.details-modal-reference {
-  width: min(1420px, 97vw) !important;
-  max-height: 96vh !important;
-  border-radius: 16px !important;
-  border-color: rgba(166, 72, 255, 0.2) !important;
-  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.82) !important;
-}
-
-.details-close {
-  top: 20px !important;
-  right: 20px !important;
-  width: 38px !important;
-  height: 38px !important;
-  font-size: 22px !important;
-}
-
-.reference-game-hero,
-.reference-game-hero-content {
-  min-height: clamp(560px, 70vh, 690px) !important;
-}
-
-.reference-game-hero-content {
-  gap: 24px !important;
-  padding: 48px 34px 34px !important;
-}
-
-.reference-game-hero-left {
-  gap: 22px !important;
-}
-
-.reference-game-hero-poster {
-  flex: 0 0 190px !important;
-  width: 190px !important;
-  height: 270px !important;
-  border-radius: 11px !important;
-}
-
-.reference-game-hero-copy {
-  max-width: 690px !important;
-}
-
-.reference-hero-eyebrow {
-  margin-bottom: 6px !important;
-  font-size: 10px !important;
-  letter-spacing: 2px !important;
-}
-
-.reference-game-hero-copy h2 {
-  margin-bottom: 8px !important;
-  font-size: clamp(38px, 4vw, 54px) !important;
-  line-height: 1.02 !important;
-  letter-spacing: -1px !important;
-}
-
-.reference-game-hero-copy p {
-  margin-bottom: 13px !important;
-  font-size: 13px !important;
-  line-height: 1.48 !important;
-  max-width: 650px !important;
-}
-
-.reference-hero-meta {
-  gap: 7px !important;
-}
-
-.reference-hero-meta span {
-  min-height: 28px !important;
-  padding: 0 10px !important;
-  font-size: 10px !important;
-}
-
-.reference-hero-actions {
-  flex: 0 0 330px !important;
-  width: 330px !important;
-  gap: 8px !important;
-}
-
-.reference-hero-actions .reference-watch-button,
-.reference-hero-actions .reference-utility-button,
-.reference-meter-hero-button {
-  min-height: 46px !important;
-  font-size: 12px !important;
-}
-
-.reference-hero-actions .reference-watch-button {
-  border-radius: 24px !important;
-}
-
-.reference-hero-actions .reference-secondary-actions {
-  gap: 8px !important;
-}
-
-.reference-hero-actions .reference-utility-button,
-.reference-meter-hero-button {
-  border-radius: 13px !important;
-}
-
-.reference-meter-hero-button {
-  padding: 0 14px !important;
-}
-
-.reference-content-grid {
-  gap: 28px !important;
-  padding: 28px 34px 34px !important;
-}
-
-.reference-overview-kicker {
-  font-size: 10px !important;
-  letter-spacing: 2px !important;
-}
-
-.reference-overview h3,
-.reference-info-panel h3 {
-  font-size: 26px !important;
-}
-
-.reference-overview-text,
-.reference-text-card p,
-.reference-info-item strong {
-  font-size: 13px !important;
-}
-
-.reference-text-card h4,
-.reference-features h4 {
-  font-size: 16px !important;
-}
-
-.reference-feature-list span {
-  font-size: 10px !important;
-  min-height: 30px !important;
-  padding: 0 10px !important;
-}
-
-@media (max-width: 1050px) {
-  .reference-game-hero,
-  .reference-game-hero-content {
-    min-height: 620px !important;
-  }
-
-  .reference-game-hero-poster {
-    flex-basis: 165px !important;
-    width: 165px !important;
-    height: 235px !important;
-  }
-
-  .reference-hero-actions {
-    flex-basis: 300px !important;
-    width: 300px !important;
-  }
-}
-
-@media (max-width: 760px) {
-  .details-backdrop {
-    padding: 0 !important;
-  }
-
-  .details-modal-reference {
-    width: 100vw !important;
-    max-height: 100vh !important;
-    border-radius: 0 !important;
-  }
-
-  .reference-game-hero-content {
-    padding: 0 16px 18px !important;
-  }
-
-  .reference-game-hero-poster {
-    flex-basis: 112px !important;
-    width: 112px !important;
-    height: 158px !important;
-  }
-
-  .reference-game-hero-copy h2 {
-    font-size: clamp(26px, 7vw, 38px) !important;
-  }
-
-  .reference-game-hero-copy p {
-    font-size: 12px !important;
-  }
-
-  .reference-hero-meta span {
-    font-size: 9px !important;
-  }
-
-  .reference-hero-actions .reference-watch-button,
-  .reference-hero-actions .reference-utility-button,
-  .reference-meter-hero-button {
-    min-height: 42px !important;
-    font-size: 11px !important;
-  }
-}
-
-/* ==========================================================
-   MOCTALE-STYLE EXACT HERO
-   Match the reference proportions: smaller poster/title,
-   compact metadata/actions, and a click-through YouTube layer.
-========================================================== */
-
-/* Full-page cinematic detail surface */
-.details-backdrop {
-  position: fixed !important;
-  inset: 0 !important;
-  padding: 0 !important;
-  align-items: stretch !important;
-  justify-content: stretch !important;
-  background: var(--gv-bg) !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  overflow: hidden !important;
-}
-
-.details-modal-reference {
-  width: 100vw !important;
-  max-width: none !important;
-  height: 100vh !important;
-  max-height: none !important;
-  min-height: 100vh !important;
-  margin: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: #050507 !important;
-  box-shadow: none !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-}
-
-.details-close {
-  z-index: 20 !important;
-  top: 18px !important;
-  right: 20px !important;
-  width: 36px !important;
-  height: 36px !important;
-  font-size: 20px !important;
-}
-
-/* Hero sizing */
-.reference-game-hero {
-  min-height: 760px !important;
-  height: min(760px, 84vh) !important;
-  max-height: 760px !important;
-  overflow: hidden !important;
-}
-
-.reference-game-hero-media,
-.reference-game-hero-fallback {
-  inset: 0 !important;
-}
-
-.reference-game-hero-iframe {
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  transform: none !important;
-  object-fit: cover !important;
-  z-index: 1 !important;
-  pointer-events: auto !important;
-}
-
-/* Soft cinematic bottom fade like the reference */
-.reference-game-hero-scrim {
-  z-index: 2 !important;
-  pointer-events: none !important;
-  background:
-    linear-gradient(
-      180deg,
       rgba(0, 0, 0, 0) 0%,
       rgba(0, 0, 0, 0.03) 42%,
       rgba(0, 0, 0, 0.42) 66%,
@@ -623,227 +98,330 @@
       rgba(0, 0, 0, 0.08) 0%,
       rgba(0, 0, 0, 0.02) 62%,
       rgba(0, 0, 0, 0.22) 100%
-    ) !important;
+    );
 }
 
-/* Critical: visual overlay must NOT block the iframe play button */
 .reference-game-hero-content {
-  z-index: 3 !important;
-  min-height: 760px !important;
-  height: 100% !important;
-  padding: 0 10.5% 46px !important;
-  gap: 36px !important;
-  align-items: flex-end !important;
-  pointer-events: none !important;
+  position: relative;
+  z-index: 3;
+  min-height: 760px;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 36px;
+  padding: 0 10.5% 46px;
+  box-sizing: border-box;
+  /* Empty space here lets clicks reach the trailer iframe underneath —
+     the poster button and action buttons opt back in below. */
+  pointer-events: none;
 }
 
 .reference-game-hero-left {
-  gap: 28px !important;
-  align-items: flex-end !important;
-  pointer-events: none !important;
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: flex-end;
+  gap: 28px;
+  pointer-events: none;
+}
+
+.reference-game-hero-poster-button {
+  flex: 0 0 230px;
+  width: 230px;
+  height: 325px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  cursor: zoom-in;
+  display: block;
+  overflow: hidden;
+  position: relative;
+  z-index: 6;
+  pointer-events: auto;
+}
+
+.reference-game-hero-poster-button:hover .reference-game-hero-poster {
+  transform: scale(1.015);
 }
 
 .reference-game-hero-poster {
-  flex: 0 0 230px !important;
-  width: 230px !important;
-  height: 325px !important;
-  border-radius: 11px !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.7) !important;
-  pointer-events: none !important;
+  flex: 0 0 230px;
+  width: 230px;
+  height: 325px;
+  object-fit: cover;
+  border-radius: 11px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.7);
 }
 
 .reference-game-hero-copy {
-  max-width: 760px !important;
-  padding-bottom: 2px !important;
-  pointer-events: none !important;
+  min-width: 0;
+  max-width: 760px;
+  padding-bottom: 2px;
+  pointer-events: none;
 }
 
 .reference-hero-eyebrow {
-  margin-bottom: 7px !important;
-  color: var(--gv-accent) !important;
-  font-size: 10px !important;
-  letter-spacing: 2.2px !important;
-  line-height: 1 !important;
+  display: inline-block;
+  margin-bottom: 7px;
+  color: var(--gv-accent);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 2.2px;
+  line-height: 1;
 }
 
 .reference-game-hero-copy h2 {
-  margin: 0 0 11px !important;
-  font-size: clamp(32px, 3.05vw, 46px) !important;
-  line-height: 1.06 !important;
-  letter-spacing: -0.9px !important;
-  max-width: 760px !important;
+  margin: 0 0 11px;
+  color: #fff;
+  font-size: clamp(32px, 3.05vw, 46px);
+  line-height: 1.06;
+  letter-spacing: -0.9px;
+  max-width: 760px;
+  text-shadow: 0 8px 34px rgba(0, 0, 0, 0.65);
 }
 
 .reference-game-hero-copy p {
-  margin: 0 0 16px !important;
-  max-width: 710px !important;
-  font-size: 14px !important;
-  line-height: 1.48 !important;
-  color: rgba(255, 255, 255, 0.82) !important;
+  margin: 0 0 16px;
+  max-width: 710px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 14px;
+  line-height: 1.48;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.7);
 }
 
 .reference-hero-meta {
-  gap: 7px !important;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
 }
 
 .reference-hero-meta span {
-  min-height: 29px !important;
-  padding: 0 11px !important;
-  border-radius: 999px !important;
-  font-size: 10px !important;
-  line-height: 1 !important;
+  display: inline-flex;
+  align-items: center;
+  min-height: 29px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(18, 18, 22, 0.64);
+  backdrop-filter: blur(8px);
+  color: var(--gv-text);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
 }
 
-/* Right-side controls: reference-sized and clickable */
 .reference-hero-actions {
-  flex: 0 0 380px !important;
-  width: 380px !important;
-  gap: 9px !important;
-  padding-bottom: 1px !important;
-  pointer-events: auto !important;
+  flex: 0 0 380px;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 9px;
+  padding-bottom: 1px;
+  pointer-events: auto;
 }
 
 .reference-hero-actions .reference-watch-button,
 .reference-hero-actions .reference-utility-button,
 .reference-meter-hero-button {
-  min-height: 45px !important;
-  font-size: 12px !important;
-  line-height: 1 !important;
+  width: 100%;
+  min-height: 45px;
+  font-size: 12px;
+  line-height: 1;
 }
 
 .reference-hero-actions .reference-watch-button {
-  border-radius: 24px !important;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(162, 61, 255, 0.28);
 }
 
 .reference-hero-actions .reference-secondary-actions {
-  gap: 9px !important;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
 }
 
 .reference-hero-actions .reference-utility-button {
-  border-radius: 14px !important;
+  border-radius: 14px;
+  background: rgba(19, 19, 22, 0.76);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.13);
 }
 
 .reference-meter-hero-button {
-  border-radius: 14px !important;
-  padding: 0 14px !important;
+  padding: 0 14px;
+  border: 1px solid rgba(170, 75, 255, 0.35);
+  border-radius: 14px;
+  background: rgba(82, 34, 126, 0.72);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
 }
 
-/* Content below the hero: compact like the reference */
+.reference-meter-hero-button:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+/* ---------------------------------------------------------
+   CONTENT BELOW THE HERO — overview + info panel
+--------------------------------------------------------- */
 .reference-content-grid {
-  grid-template-columns: minmax(0, 1fr) 300px !important;
-  gap: 30px !important;
-  padding: 34px 10.5% 42px !important;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 30px;
+  padding: 34px 10.5% 42px;
 }
 
 .reference-overview-kicker {
-  font-size: 10px !important;
-  letter-spacing: 2px !important;
+  font-size: 10px;
+  letter-spacing: 2px;
 }
 
 .reference-overview h3,
 .reference-info-panel h3 {
-  font-size: 26px !important;
+  font-size: 26px;
 }
 
 .reference-overview-text,
 .reference-text-card p,
 .reference-info-item strong {
-  font-size: 13px !important;
+  font-size: 13px;
 }
 
 .reference-text-card h4,
 .reference-features h4 {
-  font-size: 16px !important;
+  font-size: 16px;
 }
 
-/* Keep trailer player fully clickable */
-.reference-game-hero-media,
-.reference-game-hero-media iframe {
-  pointer-events: auto !important;
+.reference-feature-list span {
+  font-size: 10px;
+  min-height: 30px;
+  padding: 0 10px;
 }
 
 @media (max-width: 1100px) {
   .reference-game-hero-content {
-    padding: 0 6% 36px !important;
+    padding: 0 6% 36px;
   }
 
+  .reference-game-hero-poster-button,
   .reference-game-hero-poster {
-    flex-basis: 205px !important;
-    width: 205px !important;
-    height: 292px !important;
+    flex-basis: 205px;
+    width: 205px;
+    height: 292px;
   }
 
   .reference-hero-actions {
-    flex-basis: 330px !important;
-    width: 330px !important;
+    flex-basis: 330px;
+    width: 330px;
   }
 
   .reference-content-grid {
-    padding-left: 6% !important;
-    padding-right: 6% !important;
+    grid-template-columns: 1fr;
+    padding-left: 6%;
+    padding-right: 6%;
+  }
+
+  .reference-info-panel {
+    width: 100%;
   }
 }
 
+/* ---------------------------------------------------------
+   MOBILE — image on top, then a plain info card below it.
+   Earlier versions pulled this card up over the hero image
+   (margin-top: -92px) to mimic a movie-poster overlap, but
+   several hero images have the game's logo baked into the
+   artwork itself, so the pulled-up title/description text
+   collided with it. Simplest fix: normal stacking, no overlap.
+--------------------------------------------------------- */
 @media (max-width: 760px) {
   .details-modal-reference {
-    width: 100vw !important;
-    height: 100vh !important;
+    width: 100vw;
+    height: 100vh;
   }
 
   .reference-game-hero {
-    min-height: 0 !important;
-    height: auto !important;
-    max-height: none !important;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+    overflow: visible;
   }
 
   .reference-game-hero-media {
-    position: relative !important;
-    height: 62vw !important;
-    min-height: 250px !important;
+    position: relative;
+    height: 56vw;
+    min-height: 220px;
+    overflow: hidden;
   }
 
   .reference-game-hero-content {
-    min-height: 0 !important;
-    height: auto !important;
-    margin-top: -92px !important;
-    padding: 0 16px 20px !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 17px !important;
+    position: relative;
+    min-height: 0;
+    height: auto;
+    margin-top: 0;
+    padding: 16px 16px 20px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    pointer-events: auto;
   }
 
   .reference-game-hero-left {
-    gap: 14px !important;
+    align-items: flex-start;
+    gap: 14px;
+    pointer-events: auto;
   }
 
+  .reference-game-hero-poster-button,
   .reference-game-hero-poster {
-    flex-basis: 115px !important;
-    width: 115px !important;
-    height: 162px !important;
+    flex-basis: 104px;
+    width: 104px;
+    height: 148px;
   }
 
   .reference-game-hero-copy h2 {
-    font-size: clamp(25px, 7vw, 34px) !important;
+    font-size: clamp(22px, 6.5vw, 30px);
   }
 
   .reference-game-hero-copy p {
-    font-size: 12px !important;
+    font-size: 12px;
+    margin-bottom: 10px;
+    /* The full description already appears in the Overview section
+       below — this is just a preview, so it stays short next to the
+       small poster instead of running the card tall. */
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
   }
 
   .reference-hero-meta span {
-    min-height: 26px !important;
-    padding: 0 9px !important;
-    font-size: 9px !important;
+    min-height: 26px;
+    padding: 0 9px;
+    font-size: 9px;
   }
 
   .reference-hero-actions {
-    width: 100% !important;
-    flex-basis: auto !important;
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .reference-hero-actions .reference-watch-button,
+  .reference-hero-actions .reference-utility-button,
+  .reference-meter-hero-button {
+    min-height: 42px;
+    font-size: 11px;
   }
 
   .reference-content-grid {
-    grid-template-columns: 1fr !important;
-    padding: 24px 16px 30px !important;
+    grid-template-columns: 1fr;
+    padding: 24px 16px 30px;
   }
 }
