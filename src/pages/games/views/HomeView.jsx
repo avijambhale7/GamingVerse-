@@ -224,7 +224,6 @@ export default function HomeView({
                           <h3>{game.name}</h3>
 
                           <div className="game-meta">
-                            <span>⭐ 4.8</span>
                             <span>🎮 Action</span>
                             <span>{gameAgeRatings[game.name] || "16+"}</span>
                           </div>
@@ -332,9 +331,6 @@ export default function HomeView({
                         <div className="automatic-game-info">
                           <h3>{game.name}</h3>
                           <div className="automatic-game-meta">
-                            <span>
-                              ⭐ {game.rating ? game.rating.toFixed(1) : "New"}
-                            </span>
                             <span>{game.genre}</span>
                           </div>
                           <div className="automatic-game-platforms">
@@ -479,7 +475,6 @@ export default function HomeView({
                           <h3>{game.name}</h3>
 
                           <div className="poster-meta">
-                            <span>⭐ 4.7</span>
                             <span className="genre">Action</span>
                           </div>
                         </div>

@@ -88,9 +88,6 @@ export default function UpcomingsView({
                         <div className="automatic-game-info">
                           <h3>{game.name}</h3>
                           <div className="automatic-game-meta">
-                            <span>
-                              ⭐ {game.rating ? game.rating.toFixed(1) : "New"}
-                            </span>
                             <span>{game.genre}</span>
                           </div>
                           <div className="automatic-game-platforms">
