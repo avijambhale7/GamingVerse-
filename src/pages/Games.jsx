@@ -2059,12 +2059,14 @@ function Games() {
   };
 
   const closeTrailer = () => {
+    // Only close the trailer overlay and go back to the game's details.
+    // openTrailer() hides the details modal (setShowDetails(false)) while
+    // the trailer plays, so it must be restored here — otherwise closing
+    // the trailer leaves both modals hidden and dumps the user on Home.
     trailerSessionRef.current += 1;
     showTrailerRef.current = false;
     setShowTrailer(false);
-    setShowDetails(false);
-    setSelectedGame(null);
-    setReviewMessage("");
+    setShowDetails(true);
   };
   /* Post is the one place anything is saved. Choosing a verdict only
      selects it; pressing Post records the vote, and additionally files a

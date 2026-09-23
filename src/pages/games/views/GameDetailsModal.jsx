@@ -25,10 +25,10 @@ const GAUGE_PATH = "M 12 100 A 88 88 0 0 1 188 100";
 /* Drawn in this order, worst verdict first, so the arc reads from
    the left exactly like the legend underneath it. */
 const METER_SEGMENTS = [
-  { key: "skip", tone: "skip" },
-  { key: "timepass", tone: "timepass" },
-  { key: "go-for-it", tone: "go" },
-  { key: "perfection", tone: "perfection" },
+  { key: "skip", tone: "skip", label: "Skip" },
+  { key: "timepass", tone: "timepass", label: "Timepass" },
+  { key: "go-for-it", tone: "go", label: "Go for it" },
+  { key: "perfection", tone: "perfection", label: "Perfection" },
 ];
 
 const PREFERS_REDUCED_MOTION =
@@ -73,9 +73,7 @@ export default function GameDetailsModal({
   composerVerdict,
   formatReviewAge,
   likedReviewIds,
-  meterPercent,
   openPoster,
-  positiveVotes,
   openTrailer,
   postCommunityReview,
   reviewCounts,
@@ -100,7 +98,29 @@ export default function GameDetailsModal({
   watchLaterGames,
   watchedGames,
 }) {
-  const animatedPercent = useCountUp(meterPercent);
+  // The headline number is the leading verdict's own share, not an
+  // aggregate "positive votes" score — a 50/50 Skip/Timepass split
+  // reads as 50% Skip (red), not 0%, matching the Moctale-style meter
+  // this was modelled on. Ties favour the better verdict.
+  const leadingSegment = METER_SEGMENTS.reduce((best, segment) => {
+    const count = reviewCounts[segment.key] || 0;
+    return count >= best.count ? { ...segment, count } : best;
+  }, { key: null, tone: "", count: -1 });
+
+  // Hovering (or focusing) a legend entry swaps the headline over to that
+  // verdict's own share, same as the reference meter — it reverts to the
+  // leading verdict once nothing is hovered.
+  const [hoveredKey, setHoveredKey] = useState(null);
+  const hoveredSegment = hoveredKey
+    ? METER_SEGMENTS.find((segment) => segment.key === hoveredKey)
+    : null;
+  const activeSegment = hoveredSegment
+    ? { ...hoveredSegment, count: reviewCounts[hoveredSegment.key] || 0 }
+    : leadingSegment;
+  const activePercent = totalVotes
+    ? Math.round((activeSegment.count / totalVotes) * 100)
+    : 0;
+  const animatedPercent = useCountUp(activePercent);
 
   return (
     <>
@@ -467,7 +487,9 @@ export default function GameDetailsModal({
                               role="img"
                               aria-label={
                                 totalVotes
-                                  ? `${meterPercent}% positive from ${totalVotes} votes`
+                                  ? `${activePercent}% ${
+                                      activeSegment.label || "positive"
+                                    } from ${totalVotes} votes`
                                   : "No votes yet"
                               }
                             >
@@ -501,24 +523,18 @@ export default function GameDetailsModal({
                           );
                         })()}
 
-                        {/* The score takes the colour of the band it falls in,
-                            so the headline agrees with the arc instead of
-                            always reading green. */}
+                        {/* Shows the leading verdict by default, or whichever
+                            verdict is hovered in the legend below, so the
+                            headline always agrees with the arc. */}
                         <div
                           className={`inline-gv-meter-inner ${
-                            !totalVotes
-                              ? ""
-                              : meterPercent >= 60
-                                ? "go"
-                                : meterPercent >= 35
-                                  ? "timepass"
-                                  : "skip"
+                            !totalVotes ? "" : activeSegment.tone
                           }`}
                         >
                           <strong>{animatedPercent}%</strong>
                           <span>
                             {totalVotes
-                              ? `${top100FormatVotes(positiveVotes)}/${top100FormatVotes(totalVotes)} Votes`
+                              ? `${top100FormatVotes(activeSegment.count)}/${top100FormatVotes(totalVotes)} Votes`
                               : "No votes yet"}
                           </span>
                         </div>
@@ -526,52 +542,29 @@ export default function GameDetailsModal({
                     </div>
 
                     <div className="inline-gv-meter-breakdown">
-                      <div className="inline-gv-meter-legend skip">
-                        <span className="inline-gv-meter-dot" />
-                        <span>Skip</span>
-                        <strong>
-                          {totalVotes
-                            ? Math.round((reviewCounts.skip / totalVotes) * 100)
-                            : 0}
-                          %
-                        </strong>
-                      </div>
-                      <div className="inline-gv-meter-legend timepass">
-                        <span className="inline-gv-meter-dot" />
-                        <span>Timepass</span>
-                        <strong>
-                          {totalVotes
-                            ? Math.round(
-                                (reviewCounts.timepass / totalVotes) * 100,
-                              )
-                            : 0}
-                          %
-                        </strong>
-                      </div>
-                      <div className="inline-gv-meter-legend go">
-                        <span className="inline-gv-meter-dot" />
-                        <span>Go for it</span>
-                        <strong>
-                          {totalVotes
-                            ? Math.round(
-                                (reviewCounts["go-for-it"] / totalVotes) * 100,
-                              )
-                            : 0}
-                          %
-                        </strong>
-                      </div>
-                      <div className="inline-gv-meter-legend perfection">
-                        <span className="inline-gv-meter-dot" />
-                        <span>Perfection</span>
-                        <strong>
-                          {totalVotes
-                            ? Math.round(
-                                (reviewCounts.perfection / totalVotes) * 100,
-                              )
-                            : 0}
-                          %
-                        </strong>
-                      </div>
+                      {METER_SEGMENTS.map((segment) => {
+                        const count = reviewCounts[segment.key] || 0;
+                        const percent = totalVotes
+                          ? Math.round((count / totalVotes) * 100)
+                          : 0;
+                        return (
+                          <div
+                            key={segment.key}
+                            className={`inline-gv-meter-legend ${segment.tone}`}
+                            tabIndex={0}
+                            role="button"
+                            aria-label={`${segment.label}: ${percent}%`}
+                            onMouseEnter={() => setHoveredKey(segment.key)}
+                            onMouseLeave={() => setHoveredKey(null)}
+                            onFocus={() => setHoveredKey(segment.key)}
+                            onBlur={() => setHoveredKey(null)}
+                          >
+                            <span className="inline-gv-meter-dot" />
+                            <span>{segment.label}</span>
+                            <strong>{percent}%</strong>
+                          </div>
+                        );
+                      })}
                     </div>
 
                     <div className="inline-gv-meter-divider" />

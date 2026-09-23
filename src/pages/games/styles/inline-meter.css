@@ -184,6 +184,14 @@
   font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
+  cursor: pointer;
+  border-radius: var(--gv-s-2);
+}
+
+.inline-gv-meter-legend:hover,
+.inline-gv-meter-legend:focus-visible {
+  color: var(--gv-text);
+  outline: none;
 }
 
 .inline-gv-meter-legend strong {
