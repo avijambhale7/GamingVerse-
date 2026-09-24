@@ -368,8 +368,8 @@ export default function GameDetailsModal({
                             >
                               ◷{" "}
                               {watchLaterGames.includes(selectedGame.name)
-                                ? "Saved for Later"
-                                : "Watch Later"}
+                                ? "Added to Play Later"
+                                : "Play Later"}
                             </button>
                           </div>
                         )}

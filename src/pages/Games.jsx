@@ -11,7 +11,7 @@
   What stays here is the Games component itself: state, effects,
   Firebase wiring, and the props it hands to each view.
 */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   limitToLast,
@@ -30,15 +30,12 @@ import "./Games.css";
 import Marketplace from "./Marketplace";
 import Cafe from "./Cafe";
 
-import DiscoverView from "./games/views/DiscoverView.jsx";
-import FollowingView from "./games/views/FollowingView.jsx";
 import GameDetailsModal from "./games/views/GameDetailsModal.jsx";
 import GamesFooter from "./games/views/GamesFooter.jsx";
 import GamesNavbar from "./games/views/GamesNavbar.jsx";
 import HomeView from "./games/views/HomeView.jsx";
 import PosterModal from "./games/views/PosterModal.jsx";
 import SpacesView from "./games/views/SpacesView.jsx";
-import Top100View from "./games/views/Top100View.jsx";
 import TrailerModal from "./games/views/TrailerModal.jsx";
 import UpcomingsView from "./games/views/UpcomingsView.jsx";
 
@@ -62,7 +59,6 @@ import {
 } from "./games/utils/catalogue.js";
 import {
   automaticGameDetailsCache,
-  getGameCategory,
   getGameDetails,
   matchesHomeCategory,
 } from "./games/utils/gameInfo.js";
@@ -80,6 +76,10 @@ import {
   rawgGameHasAllowedPlatform,
   rawgGameIsSafe,
 } from "./games/utils/rawg.js";
+import {
+  lookupMissingPosters,
+  readPosterImageCache,
+} from "./games/utils/posterLookup.js";
 import {
   containsBlockedGameTerm,
   createGameId,
@@ -103,17 +103,6 @@ function Games() {
   const [showAllAutomaticGames, setShowAllAutomaticGames] = useState(false);
   const [showAllFeaturedGames, setShowAllFeaturedGames] = useState(false);
   const [showAllCatalogueGames, setShowAllCatalogueGames] = useState(false);
-  const [activityFilter, setActivityFilter] = useState("All");
-  const [activitySort, setActivitySort] = useState("Recent");
-  const [activityReviews, setActivityReviews] = useState([]);
-  const [top100Filter, setTop100Filter] = useState("All");
-  const [top100Sort, setTop100Sort] = useState("Game");
-  const [gamingVerseRatings, setGamingVerseRatings] = useState({});
-  const [discoverSort, setDiscoverSort] = useState("Newest Releases");
-  const [discoverPlatform, setDiscoverPlatform] = useState("All Platforms");
-  const [discoverGenre, setDiscoverGenre] = useState("All Genres");
-  const [discoverRelease, setDiscoverRelease] = useState("All Releases");
-  const [discoverPreset, setDiscoverPreset] = useState("");
   const [spacesSection, setSpacesSection] = useState("feed");
 
   useEffect(() => {
@@ -123,8 +112,6 @@ function Games() {
     // in-page nav buttons being able to reach it.
     const viewToActiveView = {
       collections: "home",
-      following: "following",
-      top100: "top100",
       spaces: "trailers",
       clubs: "clubs",
       upcomings: "upcomings",
@@ -142,15 +129,6 @@ function Games() {
       setSpacesSection("clubs");
     } else if (view === "spaces") {
       setSpacesSection("feed");
-    }
-  }, [searchParams]);
-
-  // Discover has its own game-focused landing/filter page.
-  useEffect(() => {
-    if (searchParams.get("view") === "discover") {
-      setActiveView("discover");
-      setSearch("");
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [searchParams]);
 
@@ -429,52 +407,6 @@ function Games() {
 
     return () => unsubscribe();
   }, [auth.currentUser?.uid]);
-
-  /* =======================================================
-       FOLLOWING ACTIVITY
-       Every written review across every game, newest first.
-       Reads the same gameReviews node the meter does, so the
-       feed shows what the community actually posted rather
-       than whatever happened to be in this browser.
-  ======================================================= */
-  useEffect(() => {
-    if (activeView !== "following") return undefined;
-
-    return onValue(
-      ref(db, "gameReviews"),
-      (snapshot) => {
-        const data = snapshot.val() || {};
-        const reviews = [];
-
-        Object.entries(data).forEach(([gameId, gameEntries]) => {
-          Object.entries(gameEntries || {}).forEach(([userId, review]) => {
-            const text = String(review?.text || "").trim();
-            if (!text || !review?.review) return;
-
-            reviews.push({
-              id: `${gameId}-${userId}`,
-              gameId,
-              gameName: review.gameName || gameId,
-              gameImage: "",
-              userName: review.userName || "Gamer",
-              initials: review.initials || "G",
-              verdict: review.review,
-              text,
-              createdAt: Number(review.updatedAt || review.createdAt) || 0,
-              likes: Object.keys(review.likes || {}).length,
-            });
-          });
-        });
-
-        reviews.sort((a, b) => b.createdAt - a.createdAt);
-        setActivityReviews(reviews);
-      },
-      (error) => {
-        console.error("Following activity listener error:", error);
-        setActivityReviews([]);
-      },
-    );
-  }, [activeView]);
 
   /* =======================================================
        AUTOMATIC GAME CATALOGUE + UPCOMING GAMES
@@ -1141,6 +1073,23 @@ function Games() {
     );
   }, [adminGames, hiddenGames]);
 
+  // Same override-by-name as fullGameCatalogue above, but for the
+  // automatic/upcoming RAWG grids — those aren't local data, so this only
+  // ever replaces fields on a name match, never injects a brand-new game.
+  const applyAdminGameOverrides = useCallback(
+    (list) => {
+      if (!adminGames.length) return list;
+      const adminByKey = new Map(
+        adminGames.map((game) => [normalizeGameSearchText(game.name), game]),
+      );
+      return list.map((game) => {
+        const override = adminByKey.get(normalizeGameSearchText(game.name));
+        return override ? { ...game, ...override, id: game.id } : game;
+      });
+    },
+    [adminGames],
+  );
+
   const filteredPosters = useMemo(() => {
     const query = search.trim().toLowerCase();
     return fullGameCatalogue
@@ -1156,7 +1105,10 @@ function Games() {
   }, [search, activeCategory, catalogueImageMap, fullGameCatalogue]);
 
   // Resolve missing poster images from RAWG.
-  // This runs only for games that still have no local image.
+  // This runs only for games that still have no local image. The search
+  // itself lives in utils/posterLookup.js, shared with the Admin panel's
+  // own game browser, so a poster only ever needs to be found once and
+  // both pages read/write the same localStorage cache.
   useEffect(() => {
     if (automaticGamesLoading || !RAWG_API_KEY) return undefined;
 
@@ -1166,154 +1118,23 @@ function Games() {
     // it is kept indefinitely — otherwise every reload re-searches RAWG for
     // every game the local catalogue has no image for, which was adding to
     // the request volume that kept tripping RAWG's rate limit.
-    const POSTER_CACHE_KEY = "gamingverse_poster_image_cache_v1";
-    let cachedImages = null;
-    try {
-      const parsed = JSON.parse(localStorage.getItem(POSTER_CACHE_KEY) || "null");
-      if (parsed && typeof parsed === "object") {
-        cachedImages = parsed;
-        // setCatalogueImageMap only takes effect next render, so the
-        // `missingGames` filter below also checks `cachedImages` directly —
-        // otherwise this same run would still re-search every game it just
-        // found a cached image for.
-        setCatalogueImageMap((prev) => ({ ...parsed, ...prev }));
-      }
-    } catch {
-      // Corrupt or unreadable cache entry — carry on without it.
+    const cachedImages = readPosterImageCache();
+    if (Object.keys(cachedImages).length) {
+      setCatalogueImageMap((prev) => ({ ...cachedImages, ...prev }));
     }
 
-    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const missingGames = completeGameCatalogue.filter(
+      (game) => game?.name && !getCatalogueImage(game),
+    );
 
-    const getSearchCandidates = (game) => {
-      const raw = [game?.name, game?.databaseKey, game?.title]
-        .map((value) => String(value || "").trim())
-        .filter(Boolean);
-
-      const expanded = [...raw];
-      raw.forEach((value) => {
-        expanded.push(
-          value
-            .replace(/^Marvel's\s+/i, "")
-            .replace(/^Tom Clancy's\s+/i, "")
-            .replace(/^EA Sports\s+/i, "")
-            .replace(/^Grand Theft Auto\s+/i, "GTA ")
-            .replace(/^Counter-Strike\s+/i, "Counter Strike "),
-        );
+    if (missingGames.length) {
+      lookupMissingPosters(missingGames, cachedImages, {
+        isCancelled: () => cancelled,
+        onBatchFound: (batchFound) => {
+          setCatalogueImageMap((prev) => ({ ...prev, ...batchFound }));
+        },
       });
-
-      if (/spider.?man/i.test(game?.name || "")) {
-        expanded.push("Spider-Man", "Marvel Spider-Man");
-      }
-      if (/star wars jedi/i.test(game?.name || "")) {
-        expanded.push(game.name.replace(/:/g, ""));
-      }
-
-      return [...new Set(expanded.map((x) => x.trim()).filter(Boolean))];
-    };
-
-    const chooseBestRawgResult = (results, game) => {
-      const wanted = normalizeCatalogueImageKey(game?.name || "");
-      const safe = results.filter(
-        (item) =>
-          item?.name &&
-          item?.background_image &&
-          !containsBlockedGameTerm(item.name),
-      );
-
-      safe.sort((a, b) => {
-        const aScore = localImageSimilarity(wanted, a.name);
-        const bScore = localImageSimilarity(wanted, b.name);
-        if (bScore !== aScore) return bScore - aScore;
-        return (Number(b?.rating) || 0) - (Number(a?.rating) || 0);
-      });
-
-      return safe[0] || null;
-    };
-
-    const lookupGameImage = async (game) => {
-      for (const candidate of getSearchCandidates(game)) {
-        try {
-          const endpoint =
-            `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_API_KEY)}` +
-            `&search=${encodeURIComponent(candidate)}` +
-            `&page_size=10` +
-            `&search_precise=true`;
-
-          const response = await fetch(endpoint, { cache: "no-store" });
-          if (!response.ok) {
-            if (response.status === 429) await sleep(1200);
-            continue;
-          }
-
-          const data = await response.json();
-          const result = chooseBestRawgResult(
-            Array.isArray(data?.results) ? data.results : [],
-            game,
-          );
-
-          if (result?.background_image) {
-            return {
-              gameKey: normalizeCatalogueImageKey(game.name),
-              image: result.background_image,
-            };
-          }
-        } catch (error) {
-          console.warn(`Poster lookup failed for ${candidate}:`, error);
-        }
-      }
-
-      return null;
-    };
-
-    const missingGames = completeGameCatalogue.filter((game) => {
-      if (!game?.name) return false;
-      if (getCatalogueImage(game)) return false;
-      if (cachedImages?.[normalizeCatalogueImageKey(game.name)]) return false;
-      return true;
-    });
-
-    const runLookups = async () => {
-      const foundImages = {};
-      const batchSize = 3;
-
-      for (let index = 0; index < missingGames.length; index += batchSize) {
-        const batch = missingGames.slice(index, index + batchSize);
-        const results = await Promise.all(
-          batch.map((game) => lookupGameImage(game)),
-        );
-
-        results.forEach((result) => {
-          if (result?.gameKey && result?.image) {
-            foundImages[result.gameKey] = result.image;
-          }
-        });
-
-        if (cancelled) return;
-        await sleep(180);
-      }
-
-      if (!cancelled && Object.keys(foundImages).length) {
-        setCatalogueImageMap((prev) => ({
-          ...prev,
-          ...foundImages,
-        }));
-
-        try {
-          const existing = JSON.parse(
-            localStorage.getItem(POSTER_CACHE_KEY) || "{}",
-          );
-          localStorage.setItem(
-            POSTER_CACHE_KEY,
-            JSON.stringify({ ...existing, ...foundImages }),
-          );
-        } catch {
-          // Storage full/unavailable — the app still works, just without
-          // the cache, so the next reload searches RAWG again.
-        }
-      }
-    };
-
-    if (missingGames.length) runLookups();
+    }
 
     return () => {
       cancelled = true;
@@ -1520,14 +1341,20 @@ function Games() {
 
   const filteredAutomaticGames = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return automaticGames.filter(
+    return applyAdminGameOverrides(automaticGames).filter(
       (game) =>
         game.name.toLowerCase().includes(query) &&
         matchesHomeCategory(game, activeCategory) &&
         !containsBlockedGameTerm(game.name) &&
         !hiddenGames[normalizeGameSearchText(game.name)],
     );
-  }, [automaticGames, search, activeCategory, hiddenGames]);
+  }, [
+    automaticGames,
+    applyAdminGameOverrides,
+    search,
+    activeCategory,
+    hiddenGames,
+  ]);
 
   const visibleAutomaticGames = useMemo(() => {
     return showAllAutomaticGames
@@ -1537,7 +1364,7 @@ function Games() {
 
   const filteredUpcomingGames = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return upcomingGames.filter(
+    return applyAdminGameOverrides(upcomingGames).filter(
       (game) =>
         game.name.toLowerCase().includes(query) &&
         matchesHomeCategory(game, activeCategory) &&
@@ -1546,7 +1373,13 @@ function Games() {
         game.releaseDate &&
         game.releaseDate > new Date().toISOString().slice(0, 10),
     );
-  }, [upcomingGames, search, activeCategory, hiddenGames]);
+  }, [
+    upcomingGames,
+    applyAdminGameOverrides,
+    search,
+    activeCategory,
+    hiddenGames,
+  ]);
 
   const searchResults = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -1555,7 +1388,10 @@ function Games() {
       return [];
     }
 
-    const combined = [...automaticGames, ...fullGameCatalogue];
+    const combined = [
+      ...applyAdminGameOverrides(automaticGames),
+      ...fullGameCatalogue,
+    ];
     const seen = new Set();
 
     return combined.filter((game) => {
@@ -1572,7 +1408,13 @@ function Games() {
       seen.add(key);
       return true;
     });
-  }, [search, automaticGames, fullGameCatalogue, hiddenGames]);
+  }, [
+    search,
+    automaticGames,
+    fullGameCatalogue,
+    applyAdminGameOverrides,
+    hiddenGames,
+  ]);
 
   const heroGames = useMemo(() => {
     const preferred = [
@@ -2357,272 +2199,6 @@ function Games() {
     searchInputRef.current?.focus();
   };
 
-  /* =======================================================
-       TOP 100 GAMES
-       Ranked by the GamingVerse Meter, not RAWG rating.
-       A game gets its score from real GamingVerse verdicts saved
-       in Firebase: Perfection + Go For It = positive votes.
-  ======================================================= */
-  useEffect(() => {
-    const reviewsRef = ref(db, "gameReviews");
-    const unsubscribe = onValue(reviewsRef, (snapshot) => {
-      const data = snapshot.val() || {};
-      const nextRatings = {};
-
-      Object.entries(data).forEach(([gameId, gameReviews]) => {
-        const counts = {
-          perfection: 0,
-          "go-for-it": 0,
-          timepass: 0,
-          skip: 0,
-        };
-
-        Object.values(gameReviews || {}).forEach((userReview) => {
-          const verdict = userReview?.review;
-          if (counts[verdict] !== undefined) {
-            counts[verdict] += 1;
-          }
-        });
-
-        const total = Object.values(counts).reduce(
-          (sum, value) => sum + value,
-          0,
-        );
-        const positive = counts.perfection + counts["go-for-it"];
-
-        nextRatings[gameId] = {
-          ...counts,
-          total,
-          positive,
-          percent: total ? Math.round((positive / total) * 100) : 0,
-        };
-      });
-
-      setGamingVerseRatings(nextRatings);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  const discoverGames = useMemo(() => {
-    const source = [...automaticGames, ...horizontalGames, ...posterGames];
-    const seen = new Set();
-    const unique = source.filter((game) => {
-      const key = String(game?.name || "")
-        .trim()
-        .toLowerCase();
-      if (!key || seen.has(key) || isBlockedGame(game)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    const awardWinnerNames = new Set([
-      "Portal",
-      "BioShock",
-      "BioShock: The Collection",
-      "The Witcher 3: Wild Hunt",
-      "Elden Ring",
-      "God of War",
-      "God of War Ragnarök",
-      "Red Dead Redemption 2",
-      "The Last of Us",
-      "Baldur's Gate 3",
-    ]);
-
-    const familyFriendly = (game) => getRequiredGameAge(game?.name || "") <= 12;
-
-    // Discover must work for both live RAWG games and GamingVerse's local games.
-    // Local games often keep their platform/release/genre data inside gameDetails,
-    // so the filter reads from both places instead of returning false too early.
-    const getDiscoverData = (game) => {
-      const details = getGameDetails(game?.name || "");
-      const name = String(game?.name || "");
-      const genre = String(game?.genre || details?.genre || "");
-      const platforms = String(game?.platforms || details?.platforms || "");
-      const releaseDate = String(
-        game?.releaseDate || details?.releaseDate || "",
-      );
-      const text = `${name} ${genre} ${platforms}`.toLowerCase();
-      const category = getGameCategory({ ...game, genre: `${genre} ${name}` });
-
-      return { details, name, genre, platforms, releaseDate, text, category };
-    };
-
-    const isPc = (game) => /\bpc\b/i.test(getDiscoverData(game).platforms);
-    const isConsole = (game) =>
-      /(playstation|xbox|nintendo|switch)/i.test(
-        getDiscoverData(game).platforms,
-      );
-
-    const matchesDiscoverGenre = (game, selectedGenre) => {
-      if (selectedGenre === "All Genres") return true;
-      const { name, genre, text, category } = getDiscoverData(game);
-      const wanted = selectedGenre.toLowerCase();
-
-      if (genre.toLowerCase().includes(wanted)) return true;
-      if (category.toLowerCase() === wanted) return true;
-
-      const genreAliases = {
-        strategy:
-          /strategy|tactics|turn-based|civilization|age of empires|total war|xcom|starcraft|warcraft|company of heroes|command & conquer|dota|league of legends/i,
-        shooter:
-          /shooter|fps|first-person|third-person shooter|call of duty|counter-strike|valorant|apex legends|fortnite|overwatch|rainbow six|pubg/i,
-        racing: /racing|forza|need for speed|f1|gran turismo|the crew/i,
-        sports:
-          /sports|football|soccer|basketball|nba|fifa|fc 2|madden|nhl|mlb/i,
-        adventure:
-          /adventure|tomb raider|uncharted|last of us|god of war|ghost of tsushima|assassin/i,
-        rpg: /rpg|role-playing|elden ring|witcher|cyberpunk|hogwarts|diablo|baldur|persona|dragon age|fallout/i,
-        action:
-          /action|resident evil|silent hill|dead space|alan wake|phasmophobia|outlast/i,
-      };
-
-      return Boolean(genreAliases[wanted]?.test(`${text} ${name}`));
-    };
-
-    let filtered = unique.filter((game) => {
-      const { name, text, releaseDate } = getDiscoverData(game);
-      const today = new Date().toISOString().slice(0, 10);
-
-      if (discoverPlatform === "PC" && !isPc(game)) return false;
-      if (discoverPlatform === "Console" && !isConsole(game)) return false;
-      if (!matchesDiscoverGenre(game, discoverGenre)) return false;
-      if (
-        discoverRelease === "Released" &&
-        (!releaseDate || releaseDate > today)
-      )
-        return false;
-      if (
-        discoverRelease === "Upcoming" &&
-        (!releaseDate || releaseDate <= today)
-      )
-        return false;
-
-      if (
-        discoverPreset === "Popular RPGs" &&
-        !matchesDiscoverGenre(game, "RPG")
-      )
-        return false;
-      if (
-        discoverPreset === "Top Rated Action" &&
-        !matchesDiscoverGenre(game, "Action")
-      )
-        return false;
-      if (discoverPreset === "Family Friendly" && !familyFriendly(game))
-        return false;
-      if (discoverPreset === "Award Winners" && !awardWinnerNames.has(name))
-        return false;
-      if (
-        discoverPreset === "Multiplayer" &&
-        !/(multiplayer|online|co-op|coop)/i.test(text)
-      )
-        return false;
-      if (
-        discoverPreset === "Open World" &&
-        !/(open world|open-world)/i.test(text)
-      )
-        return false;
-
-      return true;
-    });
-
-    filtered = [...filtered].sort((a, b) => {
-      if (discoverSort === "Highest Rated") {
-        const aMeter = gamingVerseRatings[createGameId(a?.name || "")];
-        const bMeter = gamingVerseRatings[createGameId(b?.name || "")];
-        const meterDifference =
-          (Number(bMeter?.percent) || 0) - (Number(aMeter?.percent) || 0);
-        if (meterDifference !== 0) return meterDifference;
-        return (Number(bMeter?.total) || 0) - (Number(aMeter?.total) || 0);
-      }
-      if (discoverSort === "Most GamingVerse Voted") {
-        const av =
-          Number(gamingVerseRatings[createGameId(a?.name || "")]?.total) || 0;
-        const bv =
-          Number(gamingVerseRatings[createGameId(b?.name || "")]?.total) || 0;
-        return bv - av;
-      }
-      return String(b?.releaseDate || "").localeCompare(
-        String(a?.releaseDate || ""),
-      );
-    });
-
-    return filtered.slice(0, 24);
-  }, [
-    automaticGames,
-    horizontalGames,
-    posterGames,
-    discoverSort,
-    discoverPlatform,
-    discoverGenre,
-    discoverRelease,
-    discoverPreset,
-    gamingVerseRatings,
-  ]);
-
-  const discoverHasSelection =
-    Boolean(discoverPreset) ||
-    discoverPlatform !== "All Platforms" ||
-    discoverGenre !== "All Genres" ||
-    discoverRelease !== "All Releases";
-
-  const top100Games = useMemo(() => {
-    const source = [...automaticGames, ...horizontalGames, ...posterGames];
-    const seen = new Set();
-
-    const unique = source.filter((game) => {
-      const key = String(game?.name || "")
-        .trim()
-        .toLowerCase();
-      if (!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    const filtered = unique.filter((game) => {
-      const gameId = createGameId(game?.name || "");
-      const meter = gamingVerseRatings[gameId];
-      const platforms = String(game?.platforms || "").toLowerCase();
-
-      if (top100Sort === "PC" && !platforms.includes("pc")) return false;
-      if (top100Sort === "Console" && !/(playstation|xbox)/i.test(platforms))
-        return false;
-
-      // GamingVerse filters only use real GamingVerse votes.
-      if (!meter || meter.total === 0) return top100Filter === "All";
-      if (top100Filter === "Perfection") return meter.percent >= 90;
-      if (top100Filter === "Go For It")
-        return meter.percent >= 70 && meter.percent < 90;
-      if (top100Filter === "Timepass")
-        return meter.percent >= 40 && meter.percent < 70;
-      if (top100Filter === "Skip") return meter.percent < 40;
-      return true;
-    });
-
-    return [...filtered]
-      .sort((a, b) => {
-        const aMeter = gamingVerseRatings[createGameId(a?.name || "")];
-        const bMeter = gamingVerseRatings[createGameId(b?.name || "")];
-        const ratingDifference =
-          (Number(bMeter?.percent) || 0) - (Number(aMeter?.percent) || 0);
-        if (ratingDifference !== 0) return ratingDifference;
-
-        const voteDifference =
-          (Number(bMeter?.total) || 0) - (Number(aMeter?.total) || 0);
-        if (voteDifference !== 0) return voteDifference;
-
-        return String(a?.name || "").localeCompare(String(b?.name || ""));
-      })
-      .slice(0, 100);
-  }, [
-    automaticGames,
-    horizontalGames,
-    posterGames,
-    gamingVerseRatings,
-    top100Filter,
-    top100Sort,
-  ]);
-
   const top100FormatVotes = (count) => {
     const value = Number(count) || 0;
     if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -2630,10 +2206,6 @@ function Games() {
     return String(value);
   };
 
-  const top100Year = (releaseDate) => {
-    const match = String(releaseDate || "").match(/(\d{4})/);
-    return match ? match[1] : "—";
-  };
   const directOpenGameName = searchParams.get("openGame");
 
   if (directOpenGameName && !selectedGame) {
@@ -2691,56 +2263,6 @@ function Games() {
         upcomingGamesError={upcomingGamesError}
         upcomingGamesLoading={upcomingGamesLoading}
         userAge={userAge}
-      />
-
-      {/* ===================================================
-            DISCOVER
-        =================================================== */}
-      <DiscoverView
-        activeView={activeView}
-        discoverGames={discoverGames}
-        discoverGenre={discoverGenre}
-        discoverHasSelection={discoverHasSelection}
-        discoverPlatform={discoverPlatform}
-        discoverPreset={discoverPreset}
-        discoverRelease={discoverRelease}
-        discoverSort={discoverSort}
-        gamingVerseRatings={gamingVerseRatings}
-        openDetails={openDetails}
-        setDiscoverGenre={setDiscoverGenre}
-        setDiscoverPlatform={setDiscoverPlatform}
-        setDiscoverPreset={setDiscoverPreset}
-        setDiscoverRelease={setDiscoverRelease}
-        setDiscoverSort={setDiscoverSort}
-        userAge={userAge}
-      />
-
-      {/* ===================================================
-            TOP 100 GAMES
-        =================================================== */}
-      <Top100View
-        activeView={activeView}
-        gamingVerseRatings={gamingVerseRatings}
-        openDetails={openDetails}
-        setTop100Filter={setTop100Filter}
-        setTop100Sort={setTop100Sort}
-        top100Filter={top100Filter}
-        top100FormatVotes={top100FormatVotes}
-        top100Games={top100Games}
-        top100Sort={top100Sort}
-        top100Year={top100Year}
-      />
-
-      {/* ===================================================
-            FOLLOWING ACTIVITY
-        =================================================== */}
-      <FollowingView
-        activeView={activeView}
-        activityFilter={activityFilter}
-        activityReviews={activityReviews}
-        activitySort={activitySort}
-        setActivityFilter={setActivityFilter}
-        setActivitySort={setActivitySort}
       />
 
       {/* ===================================================

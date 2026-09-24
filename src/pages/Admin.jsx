@@ -7,7 +7,12 @@ import { auth, db } from "../firebase";
 import PageSkeleton from "../components/PageSkeleton.jsx";
 import { normalizeCafe } from "./cafe/utils/cafeModel.js";
 import ImageUploadButton from "../components/ImageUploadButton.jsx";
-import { normalizeGameSearchText } from "./games/utils/text.js";
+import {
+  normalizeCatalogueImageKey,
+  normalizeGameSearchText,
+} from "./games/utils/text.js";
+import { completeGameCatalogue } from "./games/utils/catalogue.js";
+import { lookupMissingPosters } from "./games/utils/posterLookup.js";
 import AdminActivityChart from "./admin/AdminActivityChart.jsx";
 
 // Module scope, evaluated once at page load — not a render-time call, so
@@ -51,6 +56,50 @@ export default function Admin() {
   const [editingGameId, setEditingGameId] = useState(null);
   const [gameImageError, setGameImageError] = useState("");
   const [hideGameName, setHideGameName] = useState("");
+  const [gameBrowseSearch, setGameBrowseSearch] = useState("");
+  // The RAWG-sourced "Latest PC & Console Games" / "Upcoming Games" grids
+  // aren't stored anywhere — Games.jsx fetches them live and caches the
+  // result in this browser's localStorage (gamingverse_rawg_cache_v1) to
+  // cut down on repeat RAWG requests. Reusing that same cache here lets
+  // this admin's game browser include them too, so Hide/Edit isn't limited
+  // to the local curated catalogue. Read once at mount, since it's just a
+  // convenience list — if this browser hasn't loaded the Games page
+  // recently the cache is empty and the list is simply shorter; the
+  // Hide/Edit actions themselves write to Firebase by name and apply for
+  // every visitor regardless of this admin's own cache state.
+  const [automaticCatalogueGames] = useState(() => {
+    try {
+      const cached = JSON.parse(
+        localStorage.getItem("gamingverse_rawg_cache_v1") || "null",
+      );
+      return [
+        ...(Array.isArray(cached?.automaticGames) ? cached.automaticGames : []),
+        ...(Array.isArray(cached?.upcomingGames) ? cached.upcomingGames : []),
+      ];
+    } catch {
+      return [];
+    }
+  });
+
+  // A curated game with no local art file (no file under assets/horizontal
+  // or assets/Posters) shows no poster here for the same reason — on the
+  // Games page, the poster-search effect fills those in from RAWG and
+  // caches the result under this same key. Reusing it here backfills the
+  // thumbnail in this list too, purely cosmetic (Edit/Hide don't need it).
+  const [posterImageCache] = useState(() => {
+    try {
+      const cached = JSON.parse(
+        localStorage.getItem("gamingverse_poster_image_cache_v1") || "null",
+      );
+      return cached && typeof cached === "object" ? cached : {};
+    } catch {
+      return {};
+    }
+  });
+  // Posters this admin session finds itself (see the lookup effect further
+  // down), merged on top of the cache read at mount so the browse list's
+  // placeholders fill in live instead of only on the next page load.
+  const [resolvedPosterImages, setResolvedPosterImages] = useState({});
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -266,6 +315,103 @@ export default function Admin() {
 
   const bannedCount = users.filter((u) => u.isBanned).length;
 
+  // Every game the Games page can show — curated catalogue entries plus
+  // this browser's cached RAWG results — with any admin edit already
+  // merged in (same override-by-name logic Games.jsx uses), so Edit always
+  // opens with the game's current effective data and saving again updates
+  // that same override instead of creating a duplicate.
+  const browsableGames = useMemo(() => {
+    const adminByKey = new Map(
+      games.map((game) => [normalizeGameSearchText(game.name), game]),
+    );
+    const hiddenKeys = new Set(hiddenGames.map((entry) => entry.key));
+    const seen = new Set();
+
+    const withOverride = (game, fallbackId) => {
+      const key = normalizeGameSearchText(game.name);
+      const override = adminByKey.get(key);
+      const image =
+        override?.image ||
+        game.image ||
+        resolvedPosterImages[normalizeCatalogueImageKey(game.name)] ||
+        posterImageCache[normalizeCatalogueImageKey(game.name)] ||
+        "";
+      return {
+        ...game,
+        ...override,
+        image,
+        id: override?.id || fallbackId,
+        isHidden: hiddenKeys.has(key),
+      };
+    };
+
+    const curated = completeGameCatalogue.map((game) => {
+      const key = normalizeGameSearchText(game.name);
+      seen.add(key);
+      return withOverride(game, `curated-${key}`);
+    });
+
+    const automatic = automaticCatalogueGames
+      .filter((game) => {
+        const key = normalizeGameSearchText(game.name);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .map((game) =>
+        withOverride(
+          { ...game, genre: game.genre || "Game (AUTO)" },
+          `auto-${normalizeGameSearchText(game.name)}`,
+        ),
+      );
+
+    return [...curated, ...automatic];
+  }, [
+    games,
+    hiddenGames,
+    automaticCatalogueGames,
+    posterImageCache,
+    resolvedPosterImages,
+  ]);
+
+  const filteredBrowsableGames = useMemo(() => {
+    const q = gameBrowseSearch.trim().toLowerCase();
+    if (!q) return browsableGames;
+    return browsableGames.filter((game) =>
+      game.name.toLowerCase().includes(q),
+    );
+  }, [browsableGames, gameBrowseSearch]);
+
+  // Resolve posters for whatever's missing one, same search Games.jsx
+  // uses (utils/posterLookup.js) — this used to only ever happen on the
+  // Games page itself, so a curated game with no local art stayed a blank
+  // placeholder here until someone loaded that page first. Runs only while
+  // the Games section is open, and only for names not already in the
+  // localStorage cache, since a poster only needs finding once, ever.
+  useEffect(() => {
+    if (section !== "games") return undefined;
+
+    let cancelled = false;
+    const missing = filteredBrowsableGames.filter((game) => !game.image);
+    if (missing.length) {
+      lookupMissingPosters(missing, posterImageCache, {
+        isCancelled: () => cancelled,
+        onBatchFound: (batchFound) => {
+          if (!cancelled) {
+            setResolvedPosterImages((prev) => ({ ...prev, ...batchFound }));
+          }
+        },
+      });
+    }
+
+    return () => {
+      cancelled = true;
+    };
+    // Only re-run when the search changes the missing set, not on every
+    // resolvedPosterImages update (that would re-trigger this same effect).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section, gameBrowseSearch]);
+
   // Daily counts for the last 14 days, for the Overview activity chart.
   const activityDays = useMemo(() => {
     const DAY_MS = 24 * 60 * 60 * 1000;
@@ -413,21 +559,25 @@ export default function Admin() {
     }
   };
 
-  const hideGame = async (event) => {
-    event.preventDefault();
-    const name = hideGameName.trim();
-    if (!name) return;
+  const hideGameByName = async (name) => {
     try {
       await set(ref(db, `hiddenGames/${normalizeGameSearchText(name)}`), {
         name,
         hiddenAt: Date.now(),
       });
       setMessage(`"${name}" is now hidden from the site.`);
-      setHideGameName("");
     } catch (error) {
       console.error("Hide game error:", error);
       setMessage("Could not hide that game.");
     }
+  };
+
+  const hideGame = async (event) => {
+    event.preventDefault();
+    const name = hideGameName.trim();
+    if (!name) return;
+    await hideGameByName(name);
+    setHideGameName("");
   };
 
   const unhideGame = async (key, name) => {
@@ -489,7 +639,7 @@ export default function Admin() {
                               ? ` (${cafes.filter((c) => c.status === "pending").length})`
                               : ""
                           }`
-                        : `🎮 Games (${games.length})`}
+                        : "🎮 Games"}
             </button>
           ),
         )}
@@ -1006,6 +1156,93 @@ export default function Admin() {
                       >
                         Delete
                       </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="admin-section-head">
+            <div>
+              <span className="admin-kicker">CATALOGUE</span>
+              <h2>Browse all games</h2>
+              <p>
+                Every game currently shown on the Games page — click Edit to
+                change its details or Hide to remove it from the site.
+              </p>
+            </div>
+            <div className="admin-mini-stat">
+              <strong>{browsableGames.length}</strong>
+              <span>Games</span>
+            </div>
+          </section>
+
+          <section className="admin-filters-row">
+            <input
+              value={gameBrowseSearch}
+              onChange={(e) => setGameBrowseSearch(e.target.value)}
+              placeholder="Search a game..."
+            />
+          </section>
+
+          <section className="admin-table-card">
+            {filteredBrowsableGames.length === 0 ? (
+              <div className="admin-empty">
+                <span>🎮</span>
+                <strong>No games match that search</strong>
+              </div>
+            ) : (
+              <div className="admin-user-list">
+                {filteredBrowsableGames.map((game) => (
+                  <article key={game.id} className="admin-listing-row">
+                    <div className="admin-listing-thumb">
+                      {game.image ? (
+                        <img src={game.image} alt="" />
+                      ) : (
+                        <span>🎮</span>
+                      )}
+                    </div>
+                    <div className="admin-review-info">
+                      <strong>
+                        {game.name}
+                        {game.source === "RAWG" ? " · AUTO" : ""}
+                      </strong>
+                      <span>
+                        {game.genre || "Game"}
+                        {game.releaseDate ? ` • ${game.releaseDate}` : ""}
+                        {game.isHidden ? " • Hidden" : ""}
+                      </span>
+                    </div>
+                    <div className="admin-row-actions">
+                      <button
+                        type="button"
+                        onClick={() => startEditGame(game)}
+                      >
+                        ✎ Edit
+                      </button>
+                      {game.isHidden ? (
+                        <button
+                          type="button"
+                          className="admin-unban-btn"
+                          onClick={() =>
+                            unhideGame(
+                              normalizeGameSearchText(game.name),
+                              game.name,
+                            )
+                          }
+                        >
+                          ✓ Unhide
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          className="danger"
+                          onClick={() => hideGameByName(game.name)}
+                        >
+                          Hide
+                        </button>
+                      )}
                     </div>
                   </article>
                 ))}

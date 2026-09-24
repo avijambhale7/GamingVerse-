@@ -35,17 +35,36 @@ export function getGameName(path) {
     .split("/")
     .pop()
     .replace(/\.(jpg|jpeg|png|webp)$/i, "");
-  return fileName
-    .replace(/_Horizontal$/i, "")
-    .replace(/_Poster$/i, "")
-    .replace(/_/g, " ")
-    .replace(/RDR2/i, "Red Dead Redemption 2")
-    .replace(/RDR/i, "Red Dead Redemption")
-    .replace(/GOT/i, "Ghost of Tsushima")
-    .replace(/GOW/i, "God of War")
-    .replace(/^ACS$/i, "Assassin's Creed Shadows")
-    .replace(/^CS2$/i, "Counter Strike 2")
-    .replace(/^Wukong$/i, "Black Myth Wukong");
+  return (
+    fileName
+      // A second crop of the same game (e.g. Hogwarts_Legacy_Horizontal1)
+      // still ends in a digit, so the plain "_Horizontal$" below missed it
+      // and left it as its own oddly-named catalogue entry.
+      .replace(/_Horizontal\d*$/i, "")
+      .replace(/_Poster$/i, "")
+      .replace(/_/g, " ")
+      .replace(/^RDR2$/i, "Red Dead Redemption 2")
+      .replace(/^RDR$/i, "Red Dead Redemption")
+      .replace(/^GOT$/i, "Ghost of Tsushima")
+      // Anchored, unlike the old un-anchored /GOW/i, which turned
+      // "GoWR" (God of War Ragnarök) into the substring-replaced
+      // nonsense "God of WarR" instead of matching it here.
+      .replace(/^GOWR$/i, "God of War Ragnarök")
+      .replace(/^GOW$/i, "God of War")
+      .replace(/^ACS$/i, "Assassin's Creed Shadows")
+      .replace(/^AU$/i, "Among Us")
+      .replace(/^CS2$/i, "Counter Strike 2")
+      .replace(/^Wukong$/i, "Black Myth Wukong")
+      .replace(/^Witcher ?3$/i, "The Witcher 3: Wild Hunt")
+      .replace(/^Cyberpunk$/i, "Cyberpunk 2077")
+      .replace(/^TR$/i, "Tomb Raider")
+      .replace(/^Uncharted ?4$/i, "Uncharted 4: A Thief's End")
+      .replace(/^The ?Last ?of ?Us ?2$/i, "The Last of Us Part II")
+      .replace(/^The ?Last ?of ?Us$/i, "The Last of Us Part I")
+      .replace(/^Spiderman ?2$/i, "Marvel's Spider-Man 2")
+      .replace(/^Spiderman ?MM$/i, "Marvel's Spider-Man: Miles Morales")
+      .replace(/^Spiderman ?R$/i, "Marvel's Spider-Man Remastered")
+  );
 }
 
 export const horizontalGames = Object.entries(horizontalImages)

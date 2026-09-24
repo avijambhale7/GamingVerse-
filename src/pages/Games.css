@@ -28,9 +28,6 @@
 @import "./games/styles/news-pill.css"; /* CLICKABLE LIVE NEWS PILL */
 @import "./games/styles/auto-catalogue.css"; /* AUTOMATIC GAME CATALOGUE */
 @import "./games/styles/clubs.css"; /* GAMING CLUBS */
-@import "./games/styles/following.css"; /* FOLLOWING ACTIVITY PAGE */
-@import "./games/styles/top100.css"; /* TOP 100 GAMES */
-@import "./games/styles/discover.css"; /* DISCOVER GRID + DISCOVERY PAGE */
 @import "./games/styles/clubs-directory.css"; /* GAMING CLUBS DIRECTORY + OPEN CLUB MODAL */
 @import "./games/styles/notifications.css"; /* NOTIFICATIONS POPOVER */
 @import "./games/styles/database-cards.css"; /* BRAND HOME TARGET + DATABASE GAME CARDS */
