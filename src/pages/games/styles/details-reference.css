@@ -188,19 +188,38 @@
 }
 
 .reference-feature-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  /* A fixed column count instead of flex-wrap — flex-wrap left however
+     many items didn't fit the last row stranded at the left edge (e.g.
+     5 across a wide row, then 1 alone on its own line), which read as
+     unarranged. A grid keeps every row's cells the same width regardless
+     of how many features a game has. */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
 }
 
 .reference-feature-list span {
+  display: flex;
+  align-items: center;
   padding: 7px 10px;
-  border-radius: 999px;
+  border-radius: 10px;
   background: rgba(180, 92, 255, 0.07);
   border: 1px solid rgba(180, 92, 255, 0.22);
   color: #d2b2ff;
   font-size: 10px;
   font-weight: 700;
+}
+
+@media (max-width: 700px) {
+  .reference-feature-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .reference-feature-list {
+    grid-template-columns: 1fr;
+  }
 }
 
 .reference-info-panel {

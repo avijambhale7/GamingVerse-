@@ -1,14 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   GoogleAuthProvider,
   signInWithPopup,
+  signOut,
   updateProfile,
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
+import {
+  BANNED_MESSAGE,
+  consumeBannedNotice,
+  hasBannedNotice,
+  isUserBanned,
+} from "../utils/ban.js";
+import { isValidPhone, normalizePhone } from "../utils/purchaseRequests.js";
 import "./Login.css";
 
 /* Load all game images from src/assets/horizontal */
@@ -41,12 +49,14 @@ function Login() {
 
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
+  const [signupPhone, setSignupPhone] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
   const [signupDob, setSignupDob] = useState("");
 
   const [ownerSignupName, setOwnerSignupName] = useState("");
   const [ownerSignupEmail, setOwnerSignupEmail] = useState("");
+  const [ownerSignupPhone, setOwnerSignupPhone] = useState("");
   const [ownerSignupPassword, setOwnerSignupPassword] = useState("");
   const [ownerSignupConfirmPassword, setOwnerSignupConfirmPassword] =
     useState("");
@@ -55,7 +65,9 @@ function Login() {
 
   const [resetEmail, setResetEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [notice, setNotice] = useState(null);
+  const [notice, setNotice] = useState(() =>
+    hasBannedNotice() ? { text: BANNED_MESSAGE, type: "error" } : null,
+  );
 
   const notify = (text, type = "info") => {
     setNotice({ text, type });
@@ -65,6 +77,14 @@ function Login() {
       4000,
     );
   };
+
+  // Clear App's forced-sign-out flag once the ban notice has been shown,
+  // and let that notice fade like any other.
+  useEffect(() => {
+    if (!consumeBannedNotice()) return undefined;
+    const timer = window.setTimeout(() => setNotice(null), 6000);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -78,6 +98,13 @@ function Login() {
 
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
+
+      if (await isUserBanned(cred.user.uid)) {
+        await signOut(auth);
+        consumeBannedNotice(); // App may have flagged it too
+        notify(BANNED_MESSAGE, "error");
+        return;
+      }
 
       if (rememberMe) {
         localStorage.setItem("gamingVerseEmail", email);
@@ -109,7 +136,9 @@ function Login() {
     } catch (error) {
       console.error(error);
 
-      if (error.code === "auth/invalid-credential") {
+      if (consumeBannedNotice()) {
+        notify(BANNED_MESSAGE, "error");
+      } else if (error.code === "auth/invalid-credential") {
         notify("Invalid email or password.", "error");
       } else if (error.code === "auth/invalid-email") {
         notify("Invalid email address.", "error");
@@ -148,10 +177,16 @@ function Login() {
     if (
       !signupName.trim() ||
       !signupEmail.trim() ||
+      !signupPhone.trim() ||
       !signupPassword ||
       !signupConfirmPassword
     ) {
       notify("Please fill all fields.", "error");
+      return;
+    }
+
+    if (!isValidPhone(signupPhone)) {
+      notify("Enter a valid 10-digit mobile number.", "error");
       return;
     }
 
@@ -198,6 +233,8 @@ function Login() {
         firstName: signupName.trim().split(" ")[0] || signupName.trim(),
         lastName: signupName.trim().split(" ").slice(1).join(" "),
         username: signupName.trim(),
+        email: signupEmail.trim(),
+        phone: normalizePhone(signupPhone),
         dob: signupDob,
         age: signupAge,
         createdAt: Date.now(),
@@ -209,6 +246,7 @@ function Login() {
       setSignupEmail("");
       setSignupPassword("");
       setSignupConfirmPassword("");
+      setSignupPhone("");
       setSignupDob("");
       setModal(null);
 
@@ -236,10 +274,16 @@ function Login() {
     if (
       !ownerSignupName.trim() ||
       !ownerSignupEmail.trim() ||
+      !ownerSignupPhone.trim() ||
       !ownerSignupPassword ||
       !ownerSignupConfirmPassword
     ) {
       notify("Please fill all fields.", "error");
+      return;
+    }
+
+    if (!isValidPhone(ownerSignupPhone)) {
+      notify("Enter a valid 10-digit mobile number.", "error");
       return;
     }
 
@@ -279,6 +323,7 @@ function Login() {
         lastName: ownerSignupName.trim().split(" ").slice(1).join(" "),
         username: ownerSignupName.trim(),
         email: ownerSignupEmail.trim(),
+        phone: normalizePhone(ownerSignupPhone),
         role: ownerSignupRole,
         businessName:
           ownerSignupRole === "shop_owner"
@@ -296,6 +341,7 @@ function Login() {
 
       setOwnerSignupName("");
       setOwnerSignupEmail("");
+      setOwnerSignupPhone("");
       setOwnerSignupPassword("");
       setOwnerSignupConfirmPassword("");
       setOwnerSignupBusinessName("");
@@ -360,14 +406,23 @@ function Login() {
     try {
       const provider = new GoogleAuthProvider();
 
-      await signInWithPopup(auth, provider);
+      const cred = await signInWithPopup(auth, provider);
+
+      if (await isUserBanned(cred.user.uid)) {
+        await signOut(auth);
+        consumeBannedNotice(); // App may have flagged it too
+        notify(BANNED_MESSAGE, "error");
+        return;
+      }
 
       notify("Google login successful!", "success");
       setTimeout(() => navigate("/games"), 600);
     } catch (error) {
       console.error(error);
 
-      if (error.code !== "auth/popup-closed-by-user") {
+      if (consumeBannedNotice()) {
+        notify(BANNED_MESSAGE, "error");
+      } else if (error.code !== "auth/popup-closed-by-user") {
         notify("Google login failed: " + error.message, "error");
       }
     } finally {
@@ -574,6 +629,17 @@ function Login() {
               />
 
               <input
+                type="tel"
+                inputMode="numeric"
+                placeholder="Mobile number (10 digits)"
+                value={signupPhone}
+                onChange={(e) => setSignupPhone(e.target.value)}
+                autoComplete="tel-national"
+                maxLength={14}
+                required
+              />
+
+              <input
                 type="password"
                 placeholder="Password"
                 value={signupPassword}
@@ -665,6 +731,17 @@ function Login() {
                 value={ownerSignupEmail}
                 onChange={(e) => setOwnerSignupEmail(e.target.value)}
                 autoComplete="email"
+                required
+              />
+
+              <input
+                type="tel"
+                inputMode="numeric"
+                placeholder="Mobile number (10 digits)"
+                value={ownerSignupPhone}
+                onChange={(e) => setOwnerSignupPhone(e.target.value)}
+                autoComplete="tel-national"
+                maxLength={14}
                 required
               />
 

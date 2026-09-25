@@ -39,14 +39,25 @@ export default function CafeQrModal({ booking, uid, onClose }) {
         <p>
           {booking.date} • {booking.time}
         </p>
-        <div className="cafe-qr-image">
+        <div
+          className={`cafe-qr-image${
+            booking.status === "Completed" ? " is-used" : ""
+          }`}
+        >
           {dataUrl ? (
             <img src={dataUrl} alt="Booking QR ticket" />
           ) : (
             <span>Generating...</span>
           )}
+          {booking.status === "Completed" && (
+            <em className="cafe-qr-used">✓ Checked in</em>
+          )}
         </div>
-        <small>Show this to the café owner at check-in.</small>
+        <small>
+          {booking.status === "Completed"
+            ? "This session is complete — the ticket has been used."
+            : "Show this to the café owner at check-in."}
+        </small>
       </div>
     </div>
   );

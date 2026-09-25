@@ -23,22 +23,33 @@ export function formatTime(totalMinutes) {
   return `${h12}:${pad(minute)} ${suffix}`;
 }
 
-export function getTimeSlots(opening, closing) {
+// `afterMinutes` (minutes since today's midnight) drops every slot that
+// has already started — pass it for today so the list begins at the next
+// hour. Overnight slots past midnight count as > 24*60, so they stay.
+export function getTimeSlots(opening, closing, afterMinutes = -1) {
   if (/online appointment/i.test(opening)) return [];
   if (/24\s*hours/i.test(opening))
-    return Array.from({ length: 24 }, (_, i) => formatTime(i * 60));
+    return Array.from({ length: 24 }, (_, i) => i * 60)
+      .filter((t) => t > afterMinutes)
+      .map(formatTime);
   const start = parseTime(opening);
   const endRaw = parseTime(closing);
   if (start == null || endRaw == null) return [];
   let end = endRaw;
   if (end <= start) end += 24 * 60;
   const slots = [];
-  for (let t = start; t < end; t += 60) slots.push(formatTime(t % (24 * 60)));
+  for (let t = start; t < end; t += 60) {
+    if (t > afterMinutes) slots.push(formatTime(t % (24 * 60)));
+  }
   return slots;
 }
 
 export function todayISO() {
-  const d = new Date();
+  return localISO(new Date());
+}
+
+// YYYY-MM-DD in the user's local timezone.
+export function localISO(d) {
   const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
   return local.toISOString().slice(0, 10);
 }

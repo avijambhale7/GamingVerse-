@@ -1,16 +1,18 @@
 /* =========================================================
    MARKETPLACE HEADER
-   Standalone-page header with brand, nav and cart counters.
+   Standalone-page header with brand, nav and notifications.
    Rendered by ../../Marketplace.jsx.
 ========================================================= */
 
+import NotificationBell from "../../../components/NotificationBell.jsx";
+
 export default function MarketHeader({
-  cartCount,
   embedded,
   navigate,
   navigateToCafe,
   navigateToGames,
   page,
+  user,
   wishlist,
 }) {
   const renderHeader = () => (
@@ -51,18 +53,10 @@ export default function MarketHeader({
         </button>
 
         <button
-          className={page === "cart" ? "active" : ""}
-          onClick={() => navigate("cart")}
+          className={page === "requests" ? "active" : ""}
+          onClick={() => navigate("requests")}
         >
-          🛒 Cart
-          {cartCount > 0 && <span className="count">{cartCount}</span>}
-        </button>
-
-        <button
-          className={page === "orders" ? "active" : ""}
-          onClick={() => navigate("orders")}
-        >
-          📦 Orders
+          📨 My Requests
         </button>
 
         <button
@@ -71,6 +65,8 @@ export default function MarketHeader({
         >
           🏪 Sell
         </button>
+
+        {user && <NotificationBell path={`notifications/${user.uid}`} />}
 
         {!embedded && (
           <button

@@ -1,8 +1,11 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "./firebase";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onValue, ref } from "firebase/database";
+import { auth, db } from "./firebase";
+import { BANNED_NOTICE_KEY } from "./utils/ban.js";
 import ErrorBoundary from "./ErrorBoundary.jsx";
+import PhoneGate from "./components/PhoneGate.jsx";
 
 // Only Login is needed for the very first paint. Everything else loads
 // on demand, so a fresh visit doesn't pay for the marketplace, café,
@@ -48,16 +51,58 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let stopBanWatch = () => {};
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
+      stopBanWatch();
+      stopBanWatch = () => {};
+
+      if (!currentUser) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
+      // Watch the ban flag live: a user banned at login time or while
+      // already signed in is signed out immediately, and Login shows why.
+      let firstCheck = true;
+      stopBanWatch = onValue(
+        ref(db, `users/${currentUser.uid}/isBanned`),
+        (snap) => {
+          if (snap.val() === true) {
+            try {
+              sessionStorage.setItem(BANNED_NOTICE_KEY, "1");
+            } catch {
+              /* storage unavailable — Login just won't show the reason */
+            }
+            setUser(null);
+            setLoading(false);
+            signOut(auth);
+            return;
+          }
+          if (firstCheck) {
+            firstCheck = false;
+            setUser(currentUser);
+            setLoading(false);
+          }
+        },
+        () => {
+          // Unreadable flag (e.g. offline) — don't lock the user out.
+          setUser(currentUser);
+          setLoading(false);
+        },
+      );
     });
 
-    return () => unsubscribe();
+    return () => {
+      stopBanWatch();
+      unsubscribe();
+    };
   }, []);
 
   return (
     <ErrorBoundary>
+      {user && <PhoneGate user={user} />}
       <BrowserRouter>
         <Routes>
           {/* =================================================

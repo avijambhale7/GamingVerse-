@@ -15,3 +15,5 @@
 @import "./owner/styles/cafe-editor.css"; /* OWNER-EDITABLE CAFÉ DETAILS + REVENUE */
 @import "./cafe/styles/qr.css"; /* QR TICKET MODAL + OWNER SCANNER (shared with Cafe.jsx) */
 @import "./owner/styles/touch-polish.css"; /* TOUCH-DEVICE CARD GLOW + PRESS FEEDBACK */
+@import "../styles/dashboard-polish.css"; /* SHARED DASHBOARD VISUAL POLISH (also used by Admin) */
+@import "../styles/dashboard-colors.css"; /* SHARED DASHBOARD COLOUR BOOST (also used by Admin) */

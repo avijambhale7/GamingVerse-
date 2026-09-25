@@ -18,7 +18,7 @@
     grid-template-columns: 1fr 1fr 1fr;
   }
 
-  .market-filters input {
+  .market-filters .market-search {
     grid-column: 1 / -1;
   }
 
@@ -66,14 +66,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .cart-layout,
-  .checkout-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .summary-card {
-    position: static;
-  }
 }
 
 @media (max-width: 600px) {
@@ -103,7 +95,7 @@
     grid-template-columns: 1fr;
   }
 
-  .market-filters input {
+  .market-filters .market-search {
     grid-column: auto;
   }
 
@@ -147,38 +139,11 @@
     width: 100%;
   }
 
-  .cart-item {
-    grid-template-columns: 62px minmax(0, 1fr);
-  }
-
-  .cart-image {
-    width: 62px;
-    height: 62px;
-  }
-
-  .quantity,
-  .cart-item > strong,
-  .cart-item .danger-link {
-    grid-column: 2;
-    justify-self: start;
-  }
-
-  .tracker {
-    overflow-x: auto;
-    padding-bottom: 8px;
-  }
-
-  .tracker-step {
-    min-width: 70px;
-  }
-
-  .seller-row,
-  .seller-order {
+  .seller-row {
     grid-template-columns: 1fr;
   }
 
-  .seller-row button,
-  .seller-order button {
+  .seller-row button {
     justify-self: start;
   }
 }

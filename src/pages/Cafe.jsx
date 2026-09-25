@@ -18,7 +18,7 @@ import {
   localSlotCount,
   saveLocalBookings,
 } from "./cafe/utils/localBookings.js";
-import { getTimeSlots, todayISO } from "./cafe/utils/time.js";
+import { getTimeSlots, localISO, todayISO } from "./cafe/utils/time.js";
 import { isDateBlocked, normalizeCafe } from "./cafe/utils/cafeModel.js";
 import CafeQrModal from "./cafe/views/CafeQrModal.jsx";
 
@@ -38,6 +38,13 @@ export default function Cafe() {
   const [message, setMessage] = useState("");
   const [showBookings, setShowBookings] = useState(false);
   const [qrBooking, setQrBooking] = useState(null);
+  // Ticks every minute so today's slot list drops slots as they start.
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowMs(Date.now()), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   // Cafés are entirely owner-created and live here. Reading from the same
   // subscription every café card and the booking view render from means a
@@ -147,8 +154,15 @@ export default function Cafe() {
     setShowBookings(false);
   };
 
+  const now = new Date(nowMs);
+  const isTodaySelected = selectedDate === localISO(now);
   const timeSlots = selectedCafe
-    ? getTimeSlots(selectedCafe.opening, selectedCafe.closing)
+    ? getTimeSlots(
+        selectedCafe.opening,
+        selectedCafe.closing,
+        // Today: only slots that start after the current time.
+        isTodaySelected ? now.getHours() * 60 + now.getMinutes() : -1,
+      )
     : [];
 
   const totalSeats = selectedCafe?.totalSeats || 0;
@@ -227,6 +241,12 @@ export default function Cafe() {
 
     if (selectedDate < todayISO()) {
       notify("Please choose today or a future date.");
+      return;
+    }
+
+    if (!timeSlots.includes(selectedTime)) {
+      setSelectedTime("");
+      notify("That slot has already started. Please pick a later one.");
       return;
     }
 
@@ -459,12 +479,26 @@ export default function Cafe() {
     }
   };
 
+  const cafeStats = {
+    stations: cafes.reduce(
+      (sum, cafe) => sum + (cafe.specs.length || cafe.totalSeats || 0),
+      0,
+    ),
+    fromPrice: cafes.length
+      ? Math.min(...cafes.map((cafe) => Number(cafe.pricePerHour) || 0))
+      : 0,
+  };
+
   if (loading)
     return <PageSkeleton variant="grid" />;
 
   return (
     <div className="cafe-page">
       <header className="cafe-header">
+        <div className="cafe-header-title">
+          <span>GAMINGVERSE CAFÉS</span>
+          <strong>Book gaming sessions near you</strong>
+        </div>
         <div className="cafe-header-actions">
           <button
             type="button"
@@ -487,19 +521,51 @@ export default function Cafe() {
               Discover gaming cafés listed by their owners, choose your date
               and hourly slot, then send a booking request.
             </p>
+            <div className="cafe-hero-perks">
+              <em>⏱️ Hourly slots</em>
+              <em>✅ Owner-confirmed</em>
+              <em>🎟️ QR ticket check-in</em>
+            </div>
           </div>
-          <div className="cafe-hero-stat">
-            <strong>{cafes.length}</strong>
-            <small>cafés listed</small>
+          <div className="cafe-hero-side">
+            <div className="cafe-hero-stats">
+              <div>
+                <strong>{cafes.length}</strong>
+                <small>Cafés</small>
+              </div>
+              <div>
+                <strong>{cafeStats.stations}</strong>
+                <small>Stations</small>
+              </div>
+              <div>
+                <strong>
+                  {cafeStats.fromPrice ? `₹${cafeStats.fromPrice}` : "—"}
+                </strong>
+                <small>From / hr</small>
+              </div>
+            </div>
           </div>
         </section>
 
         <section className="cafe-search-bar">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search café name or address..."
-          />
+          <label className="cafe-search">
+            <span aria-hidden="true">🔍</span>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search café name or address..."
+              aria-label="Search cafés"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+              >
+                ×
+              </button>
+            )}
+          </label>
         </section>
 
         {message && <div className="cafe-message">{message}</div>}
@@ -560,16 +626,21 @@ export default function Cafe() {
                             Open Map ↗
                           </a>
                         )}
-                        {status === "Confirmed" &&
+                        {(status === "Confirmed" || status === "Completed") &&
                           !String(b.id || "").startsWith("local-") && (
                             <button
                               type="button"
-                              className="show-ticket"
+                              className={`show-ticket${status === "Completed" ? " is-used" : ""}`}
                               onClick={() => setQrBooking(b)}
                             >
-                              🎫 Ticket
+                              🎫 {status === "Completed" ? "View Ticket" : "View QR Ticket"}
                             </button>
                           )}
+                        {status === "Pending" && (
+                          <span className="ticket-pending">
+                            🎫 QR ticket unlocks once the café confirms
+                          </span>
+                        )}
                         {canCancel && (
                           <button
                             type="button"
@@ -695,7 +766,11 @@ export default function Cafe() {
                           setSelectedTime("");
                         }}
                       >
-                        <strong>{d.toLocaleDateString("en-US", { weekday: "short" })}</strong>
+                        <strong>
+                          {i === 0
+                            ? "Today"
+                            : d.toLocaleDateString("en-US", { weekday: "short" })}
+                        </strong>
                         <span>{d.getDate()}</span>
                       </button>
                     );
@@ -711,6 +786,20 @@ export default function Cafe() {
                           : `${totalSeats} stations per slot`}
                       </small>
                     </div>
+                    {timeSlots.length === 0 && (
+                      <div className="slots-empty">
+                        <strong>
+                          {isTodaySelected
+                            ? "No more slots today"
+                            : "No slots on this day"}
+                        </strong>
+                        <small>
+                          {isTodaySelected
+                            ? "Today's sessions have all started — pick another date above."
+                            : "Please pick another date above."}
+                        </small>
+                      </div>
+                    )}
                     <div className="slots-grid">
                       {timeSlots.map((slot) => {
                         const booked = Number(slotAvailability[slot] || 0);
@@ -774,36 +863,68 @@ export default function Cafe() {
               <div>
                 <span>DISCOVER</span>
                 <h2>Gaming Cafés</h2>
-                <p>{filteredCafes.length} café(s) found</p>
+                <p>
+                  <b>{filteredCafes.length}</b> café
+                  {filteredCafes.length === 1 ? "" : "s"} found
+                </p>
               </div>
             </div>
             <div className="cafe-grid">
               {filteredCafes.map((cafe) => (
-                <article className="cafe-card" key={cafe.id}>
+                <article
+                  className="cafe-card"
+                  key={cafe.id}
+                  onClick={() => selectCafe(cafe)}
+                >
                   <div className="cafe-card-image">
                     {cafe.photos[0] ? (
                       <img src={cafe.photos[0]} alt={cafe.name} />
                     ) : (
                       <div>🎮</div>
                     )}
+                    <span className="cafe-card-price">
+                      ₹{cafe.pricePerHour}
+                      <small>/hr</small>
+                    </span>
+                    {cafe.photos.length > 1 && (
+                      <span className="cafe-card-photos">
+                        📷 {cafe.photos.length}
+                      </span>
+                    )}
                   </div>
                   <div className="cafe-card-content">
                     <small>GAMING CAFÉ</small>
                     <h3>{cafe.name}</h3>
-                    <p>📍 {cafe.address}</p>
+                    <p>📍 {cafe.address || "Address coming soon"}</p>
                     <div className="cafe-card-meta">
                       <span>
                         🕘 {cafe.opening} – {cafe.closing}
                       </span>
-                      <span>₹{cafe.pricePerHour}/hr</span>
+                      <span>
+                        🎮{" "}
+                        {cafe.specs.length
+                          ? `${cafe.specs.length} station types`
+                          : `${cafe.totalSeats} seats`}
+                      </span>
                     </div>
                     <div className="cafe-card-actions">
-                      <button type="button" onClick={() => selectCafe(cafe)}>
-                        Book Slot
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          selectCafe(cafe);
+                        }}
+                      >
+                        📅 Book a Slot
                       </button>
                       {cafe.mapUrl && (
-                        <a href={cafe.mapUrl} target="_blank" rel="noreferrer">
-                          Map ↗
+                        <a
+                          href={cafe.mapUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          🗺️ Map
                         </a>
                       )}
                     </div>

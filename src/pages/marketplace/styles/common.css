@@ -1,0 +1,43 @@
+/* =========================================================
+   SHARED EMPTY STATE + FORM CARD
+   Kept from the old cart/checkout styles; used by the wishlist,
+   requests and seller views.
+========================================================= */
+
+.empty-state {
+  min-height: 330px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 1px dashed rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  text-align: center;
+}
+
+.empty-state > div {
+  margin-bottom: 10px;
+  font-size: 48px;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+.empty-state p {
+  margin: 0 0 18px;
+  color: var(--gv-text-dim);
+}
+
+.form-card {
+  padding: 21px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 17px;
+  background: var(--gv-surface-2);
+}
+
+.form-card h3 {
+  margin: 0 0 18px;
+}

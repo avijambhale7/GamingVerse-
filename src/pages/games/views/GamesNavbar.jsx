@@ -21,6 +21,9 @@ function getNotificationMeta(title) {
   if (title === "GamingVerse Review") {
     return { icon: "✎", label: "Review", tone: "review" };
   }
+  if (title === "GamingVerse Market") {
+    return { icon: "🛒", label: "Marketplace", tone: "market" };
+  }
   return { icon: "♡", label: "Collection", tone: "collection" };
 }
 

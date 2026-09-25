@@ -1,6 +1,6 @@
 /* =========================================================
    MARKETPLACE OPTIONS
-   Tabs, categories, order steps and the empty seller form.
+   Tabs, categories and the empty seller form.
 ========================================================= */
 
 export const MARKET_TABS = [
@@ -30,7 +30,6 @@ export const ACCESSORY_CATEGORIES = [
   "Monitor",
 ];
 
-export const ORDER_STEPS = ["Placed", "Confirmed", "Packed", "Shipped", "Delivered"];
 
 export const EMPTY_PRODUCT = {
   name: "",

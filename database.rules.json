@@ -4,12 +4,17 @@
       ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid && data.child('isBanned').val() !== true",
+        ".validate": "newData.child('isBanned').val() === data.child('isBanned').val() || root.child('users').child(auth.uid).child('role').val() === 'admin'",
         "isBanned": {
-          ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+          ".validate": "newData.isBoolean()"
         },
         "role": {
           ".validate": "auth.uid !== $uid || newData.val() === 'cafe_owner' || newData.val() === 'shop_owner' || newData.val() === 'accessory_owner' || !newData.exists()"
+        },
+        "phone": {
+          ".validate": "newData.isString() && newData.val().matches(/^[6-9][0-9]{9}$/)"
         }
       }
     },
@@ -61,13 +66,6 @@
       }
     },
 
-    "cart": {
-      "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid"
-      }
-    },
-
     "wishlists": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
@@ -82,11 +80,32 @@
       }
     },
 
-    "orders": {
-      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'cafe_owner' || root.child('users').child(auth.uid).child('role').val() === 'shop_owner' || root.child('users').child(auth.uid).child('role').val() === 'accessory_owner' || root.child('users').child(auth.uid).child('role').val() === 'admin')",
-      "$orderId": {
-        ".read": "auth != null && (data.child('buyerId').val() === auth.uid || data.child('sellerId').val() === auth.uid)",
-        ".write": "auth != null && (data.child('sellerId').val() === auth.uid || data.child('buyerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'owner' || root.child('users').child(auth.uid).child('role').val() === 'cafe_owner' || root.child('users').child(auth.uid).child('role').val() === 'shop_owner' || root.child('users').child(auth.uid).child('role').val() === 'accessory_owner')"
+    "purchaseRequests": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || ((query.orderByChild === 'buyerId' || query.orderByChild === 'sellerId') && query.equalTo === auth.uid))",
+      ".indexOn": ["buyerId", "sellerId"],
+      "$requestId": {
+        ".read": "auth != null && (data.child('buyerId').val() === auth.uid || data.child('sellerId').val() === auth.uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && ((!data.exists() && newData.child('buyerId').val() === auth.uid && newData.child('status').val() === 'pending_admin' && root.child('users').child(auth.uid).child('isBanned').val() !== true) || (data.child('buyerId').val() === auth.uid && (data.child('status').val() === 'pending_admin' || data.child('status').val() === 'pending_seller') && newData.child('status').val() === 'cancelled') || (data.child('sellerId').val() === auth.uid && data.child('status').val() === 'pending_seller' && (newData.child('status').val() === 'accepted' || newData.child('status').val() === 'seller_rejected')) || (root.child('users').child(auth.uid).child('role').val() === 'admin' && (!newData.exists() || (data.child('status').val() === 'pending_admin' && (newData.child('status').val() === 'pending_seller' || newData.child('status').val() === 'admin_rejected')))))",
+        ".validate": "newData.hasChildren(['productId', 'buyerId', 'sellerId', 'status', 'quantity', 'createdAt']) && (data.exists() ? (newData.child('buyerId').val() === data.child('buyerId').val() && newData.child('sellerId').val() === data.child('sellerId').val() && newData.child('productId').val() === data.child('productId').val() && newData.child('quantity').val() === data.child('quantity').val()) : (newData.child('sellerId').val() !== auth.uid && root.child('products').child(newData.child('productId').val()).child('sellerId').val() === newData.child('sellerId').val()))",
+        "quantity": { ".validate": "newData.isNumber() && newData.val() >= 1" },
+        "note": { ".validate": "newData.isString() && newData.val().length <= 300" },
+        "status": {
+          ".validate": "newData.isString() && newData.val().matches(/^(pending_admin|admin_rejected|pending_seller|seller_rejected|accepted|cancelled)$/)"
+        }
+      }
+    },
+
+    "purchaseRequestContacts": {
+      "$requestId": {
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || (root.child('purchaseRequests').child($requestId).child('status').val() === 'accepted' && (root.child('purchaseRequests').child($requestId).child('buyerId').val() === auth.uid || root.child('purchaseRequests').child($requestId).child('sellerId').val() === auth.uid)))",
+        "buyerPhone": {
+          ".write": "auth != null && !data.exists() && root.child('purchaseRequests').child($requestId).child('buyerId').val() === auth.uid",
+          ".validate": "newData.isString() && newData.val() === root.child('users').child(auth.uid).child('phone').val()"
+        },
+        "sellerPhone": {
+          ".write": "auth != null && root.child('purchaseRequests').child($requestId).child('sellerId').val() === auth.uid && root.child('purchaseRequests').child($requestId).child('status').val() === 'pending_seller'",
+          ".validate": "newData.isString() && newData.val() === root.child('users').child(auth.uid).child('phone').val()"
+        }
       }
     },
 
@@ -166,7 +185,20 @@
     "notifications": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && auth.uid === $uid"
+        ".write": "auth != null && auth.uid === $uid",
+        "$notificationId": {
+          ".write": "auth != null && !data.exists() && newData.child('fromUid').val() === auth.uid && root.child('users').child(auth.uid).child('isBanned').val() !== true",
+          ".validate": "newData.child('message').isString() && newData.child('message').val().length <= 500"
+        }
+      }
+    },
+
+    "adminNotifications": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      "$notificationId": {
+        ".write": "auth != null && !data.exists() && newData.child('fromUid').val() === auth.uid && root.child('users').child(auth.uid).child('isBanned').val() !== true",
+        ".validate": "newData.child('message').isString() && newData.child('message').val().length <= 500"
       }
     }
   }

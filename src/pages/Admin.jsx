@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "./Admin.css";
+import "../styles/dashboard-polish.css";
+import "../styles/dashboard-colors.css";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { get, onValue, push, ref, remove, set } from "firebase/database";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +16,10 @@ import {
 import { completeGameCatalogue } from "./games/utils/catalogue.js";
 import { lookupMissingPosters } from "./games/utils/posterLookup.js";
 import AdminActivityChart from "./admin/AdminActivityChart.jsx";
+import NotificationBell from "../components/NotificationBell.jsx";
+import PurchaseRequestList from "../components/PurchaseRequestList.jsx";
+import usePurchaseRequests from "../utils/usePurchaseRequests.js";
+import { REQUEST_STATUS } from "../utils/purchaseRequests.js";
 
 // Module scope, evaluated once at page load — not a render-time call, so
 // the activity chart's "last 14 days" window doesn't need Date.now() (an
@@ -45,7 +51,6 @@ export default function Admin() {
   const [cafes, setCafes] = useState([]);
   const [bookingCount, setBookingCount] = useState(0);
   const [bookings, setBookings] = useState([]);
-  const [orders, setOrders] = useState([]);
   const [games, setGames] = useState([]);
   const [hiddenGames, setHiddenGames] = useState([]);
 
@@ -285,20 +290,13 @@ export default function Admin() {
     return () => unsubscribe();
   }, [authorized]);
 
-  useEffect(() => {
-    if (!authorized) return undefined;
-    const unsubscribe = onValue(
-      ref(db, "orders"),
-      (snapshot) => {
-        const data = snapshot.val() || {};
-        setOrders(Object.values(data));
-      },
-      (error) => {
-        console.error("Admin orders listener error:", error);
-      },
-    );
-    return () => unsubscribe();
-  }, [authorized]);
+  const { requests: purchaseRequests } = usePurchaseRequests(
+    "admin",
+    authorized ? user?.uid : "",
+  );
+  const pendingRequestCount = purchaseRequests.filter(
+    (request) => request.status === REQUEST_STATUS.PENDING_ADMIN,
+  ).length;
 
   const filteredUsers = useMemo(() => {
     const q = userSearch.trim().toLowerCase();
@@ -425,7 +423,7 @@ export default function Admin() {
         }),
         signups: 0,
         bookings: 0,
-        orders: 0,
+        requests: 0,
       };
     });
     const byKey = new Map(days.map((day) => [day.key, day]));
@@ -437,9 +435,9 @@ export default function Admin() {
     };
     users.forEach((u) => bump(u.createdAt, "signups"));
     bookings.forEach((b) => bump(b.createdAt, "bookings"));
-    orders.forEach((o) => bump(o.createdAt, "orders"));
+    purchaseRequests.forEach((r) => bump(r.createdAt, "requests"));
     return days;
-  }, [users, bookings, orders]);
+  }, [users, bookings, purchaseRequests]);
 
   const setBanned = async (uid, banned) => {
     try {
@@ -601,12 +599,18 @@ export default function Admin() {
   return (
     <div className="admin-page">
       <header className="admin-header">
-        <div>
-          <span className="admin-kicker">GAMINGVERSE ADMIN</span>
-          <h1>Admin Panel</h1>
-          <p>Site-wide moderation and oversight.</p>
+        <div className="dp-hero-identity">
+          <span className="dp-hero-avatar" aria-hidden="true">
+            🛡
+          </span>
+          <div>
+            <span className="admin-kicker">GAMINGVERSE ADMIN</span>
+            <h1>Admin Panel</h1>
+            <p>Site-wide moderation and oversight.</p>
+          </div>
         </div>
         <div className="admin-header-actions">
+          <NotificationBell path="adminNotifications" />
           <button type="button" onClick={() => navigate("/games")}>
             GamingVerse
           </button>
@@ -617,7 +621,15 @@ export default function Admin() {
       </header>
 
       <nav className="admin-tabs">
-        {["overview", "users", "reviews", "listings", "cafes", "games"].map(
+        {[
+          "overview",
+          "requests",
+          "users",
+          "reviews",
+          "listings",
+          "cafes",
+          "games",
+        ].map(
           (item) => (
             <button
               key={item}
@@ -627,6 +639,10 @@ export default function Admin() {
             >
               {item === "overview"
                 ? "Overview"
+                : item === "requests"
+                  ? `📨 Requests${
+                      pendingRequestCount ? ` (${pendingRequestCount})` : ""
+                    }`
                 : item === "users"
                   ? "👥 Users"
                   : item === "reviews"
@@ -658,26 +674,31 @@ export default function Admin() {
         <main className="admin-main gv-page-enter">
           <section className="admin-stat-grid">
             <article>
+              <i className="dp-stat-icon" aria-hidden="true">👥</i>
               <span>Total Users</span>
               <strong>{users.length}</strong>
               <small>{bannedCount} banned</small>
             </article>
             <article>
+              <i className="dp-stat-icon" aria-hidden="true">💬</i>
               <span>Reviews</span>
               <strong>{reviews.length}</strong>
               <small>across all games</small>
             </article>
             <article>
+              <i className="dp-stat-icon" aria-hidden="true">🛒</i>
               <span>Marketplace Listings</span>
               <strong>{products.length}</strong>
               <small>live products &amp; CDs</small>
             </article>
             <article>
+              <i className="dp-stat-icon" aria-hidden="true">📅</i>
               <span>Café Bookings</span>
               <strong>{bookingCount}</strong>
               <small>all-time</small>
             </article>
             <article>
+              <i className="dp-stat-icon" aria-hidden="true">☕</i>
               <span>Cafés</span>
               <strong>{cafes.length}</strong>
               <small>
@@ -691,10 +712,36 @@ export default function Admin() {
             <div>
               <span className="admin-kicker">TRENDS</span>
               <h2>Activity, last 14 days</h2>
-              <p>Signups, café bookings and marketplace orders, by day.</p>
+              <p>Signups, café bookings and marketplace requests, by day.</p>
             </div>
           </section>
           <AdminActivityChart days={activityDays} />
+        </main>
+      )}
+
+      {section === "requests" && (
+        <main className="admin-main gv-page-enter">
+          <section className="admin-section-head">
+            <div>
+              <span className="admin-kicker">MARKETPLACE</span>
+              <h2>Purchase Requests</h2>
+              <p>
+                Approve a buyer&apos;s request to forward it to the seller, or
+                reject it.
+              </p>
+            </div>
+            <div className="admin-mini-stat">
+              <strong>{pendingRequestCount}</strong>
+              <span>Awaiting approval</span>
+            </div>
+          </section>
+          <section className="admin-table-card">
+            <PurchaseRequestList
+              role="admin"
+              uid={user.uid}
+              onMessage={setMessage}
+            />
+          </section>
         </main>
       )}
 
@@ -751,6 +798,9 @@ export default function Admin() {
                       key={u.uid}
                       className={`admin-user-row${u.isBanned ? " is-banned" : ""}`}
                     >
+                      <span className="dp-customer-avatar" aria-hidden="true">
+                        {name.trim().charAt(0).toUpperCase()}
+                      </span>
                       <div className="admin-user-info">
                         <strong>{name}</strong>
                         <span>{u.email || "No email on file"}</span>

@@ -5,6 +5,10 @@ import { get, onValue, push, ref, remove, set, update } from "firebase/database"
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
 import PageSkeleton from "../components/PageSkeleton.jsx";
+import NotificationBell from "../components/NotificationBell.jsx";
+import PurchaseRequestList from "../components/PurchaseRequestList.jsx";
+import usePurchaseRequests from "../utils/usePurchaseRequests.js";
+import { REQUEST_STATUS } from "../utils/purchaseRequests.js";
 import ImageUploadButton from "../components/ImageUploadButton.jsx";
 import {
   DEFAULT_PRICE_PER_HOUR,
@@ -35,14 +39,6 @@ const ACCESSORY_CATEGORIES = [
   "Gamepad",
   "USB Hub",
   "Other",
-];
-const ORDER_STATUSES = [
-  "Placed",
-  "Confirmed",
-  "Packed",
-  "Shipped",
-  "Delivered",
-  "Cancelled",
 ];
 const EMPTY_PRODUCT = {
   name: "",
@@ -94,6 +90,16 @@ function ownerRoleLabel(role) {
   return "Business Owner";
 }
 
+// Status filter for the café booking queue. "Cancelled" also covers
+// rejected requests since both are closed-out bookings.
+function matchesBookingFilter(booking, filter) {
+  const status = String(booking.status || "Pending");
+  if (filter === "All") return true;
+  if (filter === "Cancelled")
+    return status === "Cancelled" || status === "Rejected";
+  return status === filter;
+}
+
 export default function OwnerDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -103,12 +109,12 @@ export default function OwnerDashboard() {
   const [section, setSection] = useState("overview");
   const [bookings, setBookings] = useState([]);
   const [products, setProducts] = useState([]);
-  const [orders, setOrders] = useState([]);
   const [ownedCafeIds, setOwnedCafeIds] = useState([]);
   const [savingProduct, setSavingProduct] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [productForm, setProductForm] = useState(EMPTY_PRODUCT);
   const [message, setMessage] = useState("");
+  const [bookingFilter, setBookingFilter] = useState("All");
 
   const [cafeSection, setCafeSection] = useState("bookings");
   const [allCafes, setAllCafes] = useState([]);
@@ -201,26 +207,6 @@ export default function OwnerDashboard() {
     return () => unsubscribe();
   }, [canAccessories]);
 
-  useEffect(() => {
-    if (!canAccessories) return undefined;
-    const ordersRef = ref(db, "orders");
-    const unsubscribe = onValue(
-      ordersRef,
-      (snapshot) => {
-        const data = snapshot.val() || {};
-        const next = Object.entries(data)
-          .map(([id, order]) => ({ id, ...order }))
-          .filter((order) => order.sellerId === auth.currentUser?.uid)
-          .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
-        setOrders(next);
-      },
-      (error) => {
-        console.error("Owner orders listener error:", error);
-        setMessage("Could not load your orders.");
-      },
-    );
-    return () => unsubscribe();
-  }, [canAccessories]);
 
   useEffect(() => {
     if (!canCafe) return undefined;
@@ -597,13 +583,16 @@ export default function OwnerDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cafeSection, scanResult]);
 
-  const totalAccessorySales = useMemo(
-    () =>
-      orders
-        .filter((order) => order.orderStatus !== "Cancelled")
-        .reduce((sum, order) => sum + Number(order.total || 0), 0),
-    [orders],
+  const { requests: buyerRequests } = usePurchaseRequests(
+    "seller",
+    canAccessories ? user?.uid : "",
   );
+  const newRequestCount = buyerRequests.filter(
+    (request) => request.status === REQUEST_STATUS.PENDING_SELLER,
+  ).length;
+  const acceptedRequestCount = buyerRequests.filter(
+    (request) => request.status === REQUEST_STATUS.ACCEPTED,
+  ).length;
 
   const pendingBookings = bookings.filter(
     (booking) =>
@@ -762,20 +751,6 @@ export default function OwnerDashboard() {
     }
   };
 
-  const updateOrderStatus = async (order, status) => {
-    try {
-      await update(ref(db, `orders/${order.id}`), {
-        orderStatus: status,
-        updatedAt: Date.now(),
-      });
-      setMessage(
-        `Order #${order.orderNumber || order.id.slice(-6)} marked ${status}.`,
-      );
-    } catch (error) {
-      console.error("Order status error:", error);
-      setMessage("Could not update order.");
-    }
-  };
 
   const logout = async () => {
     await signOut(auth);
@@ -792,14 +767,25 @@ export default function OwnerDashboard() {
   return (
     <div className="owner-dashboard-page">
       <header className="owner-dashboard-header">
-        <div>
-          <span className="owner-dashboard-kicker">GAMINGVERSE BUSINESS</span>
-          <h1>Owner Dashboard</h1>
-          <p>
-            {profile.businessName || profile.shopName || ownerRoleLabel(role)}
-          </p>
+        <div className="dp-hero-identity">
+          <span className="dp-hero-avatar" aria-hidden="true">
+            {String(
+              profile.businessName || profile.shopName || ownerRoleLabel(role),
+            )
+              .trim()
+              .charAt(0)
+              .toUpperCase()}
+          </span>
+          <div>
+            <span className="owner-dashboard-kicker">GAMINGVERSE BUSINESS</span>
+            <h1>Owner Dashboard</h1>
+            <p>
+              {profile.businessName || profile.shopName || ownerRoleLabel(role)}
+            </p>
+          </div>
         </div>
         <div className="owner-dashboard-header-actions">
+          <NotificationBell path={`notifications/${user.uid}`} />
           <span className="owner-role-pill">{ownerRoleLabel(role)}</span>
           <button type="button" onClick={() => navigate("/games")}>
             GamingVerse
@@ -847,27 +833,28 @@ export default function OwnerDashboard() {
         <main className="owner-dashboard-main gv-page-enter">
           <section className="owner-stat-grid">
             <article>
+              <i className="dp-stat-icon" aria-hidden="true">☕</i>
               <span>Café Bookings</span>
               <strong>{bookings.length}</strong>
               <small>{pendingBookings.length} active</small>
             </article>
             <article>
+              <i className="dp-stat-icon" aria-hidden="true">🖱</i>
               <span>Accessories</span>
               <strong>{products.length}</strong>
               <small>live products</small>
             </article>
             <article>
-              <span>Accessory Orders</span>
-              <strong>{orders.length}</strong>
-              <small>
-                {orders.filter((x) => x.orderStatus === "Placed").length}{" "}
-                awaiting action
-              </small>
+              <i className="dp-stat-icon" aria-hidden="true">📨</i>
+              <span>Buyer Requests</span>
+              <strong>{buyerRequests.length}</strong>
+              <small>{newRequestCount} awaiting your reply</small>
             </article>
             <article>
-              <span>Sales</span>
-              <strong>{money(totalAccessorySales)}</strong>
-              <small>non-cancelled orders</small>
+              <i className="dp-stat-icon" aria-hidden="true">🤝</i>
+              <span>Accepted Deals</span>
+              <strong>{acceptedRequestCount}</strong>
+              <small>contacts shared</small>
             </article>
           </section>
 
@@ -894,7 +881,7 @@ export default function OwnerDashboard() {
               <h2>Manage Accessories</h2>
               <p>
                 Add computer and gaming accessories, update stock, remove
-                products and process orders.
+                products and respond to buyer requests.
               </p>
               <strong>Open Accessories Manager →</strong>
             </button>
@@ -958,6 +945,30 @@ export default function OwnerDashboard() {
                 </div>
               </section>
 
+              <nav className="dp-status-filter" aria-label="Filter bookings">
+                {["All", "Pending", "Confirmed", "Completed", "Cancelled"].map(
+                  (item) => {
+                    const count = bookings.filter((b) =>
+                      matchesBookingFilter(b, item),
+                    ).length;
+                    return (
+                      <button
+                        key={item}
+                        type="button"
+                        className={`dp-status-chip is-${item.toLowerCase()}${
+                          bookingFilter === item ? " active" : ""
+                        }`}
+                        onClick={() => setBookingFilter(item)}
+                      >
+                        <i aria-hidden="true" />
+                        {item}
+                        <b>{count}</b>
+                      </button>
+                    );
+                  },
+                )}
+              </nav>
+
               <section className="owner-table-card">
             {bookings.length === 0 ? (
               <div className="owner-empty">
@@ -970,46 +981,81 @@ export default function OwnerDashboard() {
               </div>
             ) : (
               <div className="owner-booking-list">
-                {bookings.map((booking) => {
+                {bookings
+                  .filter((b) => matchesBookingFilter(b, bookingFilter))
+                  .map((booking) => {
                   const status = String(booking.status || "Pending");
+                  const bookingDate = booking.date
+                    ? new Date(`${booking.date}T00:00:00`)
+                    : null;
+                  const validDate =
+                    bookingDate && !Number.isNaN(bookingDate.getTime());
+                  const customerName = String(
+                    booking.customerName || "GamingVerse User",
+                  );
                   const pending = status === "Pending";
                   const confirmed = status === "Confirmed";
                   return (
                     <article
                       key={`${booking.customerId}-${booking.id}`}
-                      className={`owner-booking-row owner-booking-${status.toLowerCase()}`}
+                      className={`owner-booking-row dp-booking-card owner-booking-${status.toLowerCase()}`}
                     >
-                      <div className="owner-booking-details">
-                        <span className="owner-small-label">{status}</span>
-                        <h3>{booking.cafeName || "Gaming Café"}</h3>
-                        <p>
-                          📅 {booking.date} &nbsp; • &nbsp; 🕐 {booking.time}{" "}
-                          &nbsp; • &nbsp; 🎮{" "}
-                          {booking.station || "Gaming station"}
-                        </p>
+                      <div className="dp-date-tile" aria-hidden="true">
                         <small>
-                          {booking.address || "Address unavailable"}
+                          {validDate
+                            ? bookingDate.toLocaleDateString("en-IN", {
+                                month: "short",
+                              })
+                            : "—"}
                         </small>
-                        <small className="owner-customer-info">
-                          Customer:{" "}
-                          <strong>
-                            {booking.customerName || "GamingVerse User"}
-                          </strong>
-                          {booking.customerEmail
-                            ? ` • ${booking.customerEmail}`
-                            : ""}
-                          {booking.customerPhone
-                            ? ` • ${booking.customerPhone}`
+                        <strong>{validDate ? bookingDate.getDate() : "?"}</strong>
+                        <small>
+                          {validDate
+                            ? bookingDate.toLocaleDateString("en-IN", {
+                                weekday: "short",
+                              })
                             : ""}
                         </small>
-                        {booking.createdAt && (
-                          <small className="owner-request-time">
-                            Requested{" "}
-                            {new Date(booking.createdAt).toLocaleString(
-                              "en-IN",
-                            )}
-                          </small>
-                        )}
+                      </div>
+                      <div className="owner-booking-details">
+                        <div className="dp-row-title">
+                          <h3>{booking.cafeName || "Gaming Café"}</h3>
+                          <span className="owner-small-label">{status}</span>
+                        </div>
+                        <div className="dp-meta-chips">
+                          <span>🕐 {booking.time}</span>
+                          <span>🎮 {booking.station || "Gaming station"}</span>
+                          <span>
+                            📍 {booking.address || "Address unavailable"}
+                          </span>
+                        </div>
+                        <div className="dp-customer">
+                          <span className="dp-customer-avatar" aria-hidden="true">
+                            {customerName.trim().charAt(0).toUpperCase()}
+                          </span>
+                          <div>
+                            <strong>{customerName}</strong>
+                            <small>
+                              {[booking.customerEmail, booking.customerPhone]
+                                .filter(Boolean)
+                                .join(" • ") || "No contact details"}
+                            </small>
+                          </div>
+                          {booking.createdAt && (
+                            <small className="owner-request-time">
+                              Requested{" "}
+                              {new Date(booking.createdAt).toLocaleString(
+                                "en-IN",
+                                {
+                                  day: "numeric",
+                                  month: "short",
+                                  hour: "numeric",
+                                  minute: "2-digit",
+                                },
+                              )}
+                            </small>
+                          )}
+                        </div>
                       </div>
                       <div className="owner-row-actions owner-booking-actions">
                         {pending && (
@@ -1059,6 +1105,15 @@ export default function OwnerDashboard() {
                     </article>
                   );
                 })}
+                {!bookings.some((b) =>
+                  matchesBookingFilter(b, bookingFilter),
+                ) && (
+                  <div className="owner-empty small">
+                    <span>🔍</span>
+                    <strong>No {bookingFilter.toLowerCase()} bookings</strong>
+                    <p>Try another status filter.</p>
+                  </div>
+                )}
               </div>
             )}
               </section>
@@ -1580,22 +1635,28 @@ export default function OwnerDashboard() {
               </span>
               <h2>Accessories Shop Manager</h2>
               <p>
-                Add products, manage inventory and process accessory orders from
-                one place.
+                Add products, manage inventory and respond to buyer requests
+                from one place.
               </p>
             </div>
             <div className="owner-sales-stats">
               <div>
                 <strong>{products.length}</strong>
-                <span>Products</span>
+                <span>
+                  <i aria-hidden="true">🖱</i> Products
+                </span>
               </div>
               <div>
-                <strong>{orders.length}</strong>
-                <span>Orders</span>
+                <strong>{newRequestCount}</strong>
+                <span>
+                  <i aria-hidden="true">📨</i> New Requests
+                </span>
               </div>
               <div>
-                <strong>{money(totalAccessorySales)}</strong>
-                <span>Sales</span>
+                <strong>{acceptedRequestCount}</strong>
+                <span>
+                  <i aria-hidden="true">🤝</i> Accepted
+                </span>
               </div>
             </div>
           </section>
@@ -1618,6 +1679,32 @@ export default function OwnerDashboard() {
                     Cancel edit
                   </button>
                 )}
+              </div>
+
+              <div className="dp-listing-preview" aria-label="Listing preview">
+                <div className="dp-listing-preview-media">
+                  {productForm.image ? (
+                    <img src={productForm.image} alt="" />
+                  ) : (
+                    <span aria-hidden="true">🖱</span>
+                  )}
+                  <em>Live preview</em>
+                </div>
+                <div className="dp-listing-preview-body">
+                  <small>{productForm.category}</small>
+                  <strong>{productForm.name || "Your product name"}</strong>
+                  <div>
+                    <b>
+                      {productForm.price ? money(productForm.price) : "₹ —"}
+                    </b>
+                    <span>
+                      {productForm.stock === "" ||
+                      productForm.stock === undefined
+                        ? "Stock —"
+                        : `${productForm.stock} in stock`}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <label>
@@ -1736,21 +1823,35 @@ export default function OwnerDashboard() {
                   <p>Add your first computer or gaming accessory.</p>
                 </div>
               ) : (
-                <div className="owner-product-list">
-                  {products.map((product) => (
-                    <article key={product.id} className="owner-product-row">
-                      <div className="owner-product-thumb">
+                <div className="dp-product-grid">
+                  {products.map((product) => {
+                    const stock = Number(product.stock) || 0;
+                    const stockState =
+                      stock === 0 ? "out" : stock <= 5 ? "low" : "ok";
+                    return (
+                    <article
+                      key={product.id}
+                      className={`dp-product-card${
+                        editingId === product.id ? " is-editing" : ""
+                      }`}
+                    >
+                      <div className="dp-product-media">
                         {product.image ? (
                           <img src={product.image} alt="" />
                         ) : (
-                          <span>🖱</span>
+                          <span aria-hidden="true">🖱</span>
                         )}
+                        <em className={`dp-stock-badge is-${stockState}`}>
+                          {stockState === "out"
+                            ? "Out of stock"
+                            : stockState === "low"
+                              ? `Only ${stock} left`
+                              : `${stock} in stock`}
+                        </em>
                       </div>
-                      <div className="owner-product-info">
-                        <strong>{product.name}</strong>
-                        <span>
-                          {product.category} • Stock {product.stock}
-                        </span>
+                      <div className="dp-product-body">
+                        <small>{product.category}</small>
+                        <strong title={product.name}>{product.name}</strong>
                         <b>{money(product.price)}</b>
                       </div>
                       <div className="owner-row-actions">
@@ -1758,7 +1859,7 @@ export default function OwnerDashboard() {
                           type="button"
                           onClick={() => editAccessory(product)}
                         >
-                          Edit
+                          ✎ Edit
                         </button>
                         <button
                           type="button"
@@ -1769,7 +1870,8 @@ export default function OwnerDashboard() {
                         </button>
                       </div>
                     </article>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1778,50 +1880,20 @@ export default function OwnerDashboard() {
           <section className="owner-table-card owner-orders-card">
             <div className="owner-card-title">
               <div>
-                <span className="owner-dashboard-kicker">ORDERS</span>
-                <h3>Accessory Orders</h3>
+                <span className="owner-dashboard-kicker">BUYER REQUESTS</span>
+                <h3>Purchase Requests</h3>
               </div>
-              <span>{orders.length}</span>
+              <span>{newRequestCount} new</span>
             </div>
-            {orders.length === 0 ? (
-              <div className="owner-empty small">
-                <span>📦</span>
-                <strong>No accessory orders yet</strong>
-              </div>
-            ) : (
-              <div className="owner-booking-list">
-                {orders.map((order) => (
-                  <article key={order.id} className="owner-booking-row">
-                    <div>
-                      <span className="owner-small-label">
-                        Order #{order.orderNumber || order.id.slice(-6)}
-                      </span>
-                      <h3>{money(order.total)}</h3>
-                      <p>
-                        {(order.items || [])
-                          .map((item) => `${item.name} × ${item.quantity}`)
-                          .join(" • ")}
-                      </p>
-                      <small>
-                        Payment: {order.paymentMethod || "Not specified"}
-                      </small>
-                    </div>
-                    <div className="owner-row-actions">
-                      <select
-                        value={order.orderStatus || "Placed"}
-                        onChange={(event) =>
-                          updateOrderStatus(order, event.target.value)
-                        }
-                      >
-                        {ORDER_STATUSES.map((status) => (
-                          <option key={status}>{status}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
+            <p className="owner-cafe-intro">
+              Requests reach you after the admin approves them. Accept one to
+              share mobile numbers with the buyer.
+            </p>
+            <PurchaseRequestList
+              role="seller"
+              uid={user.uid}
+              onMessage={setMessage}
+            />
           </section>
         </main>
       )}

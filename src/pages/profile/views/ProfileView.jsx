@@ -64,6 +64,7 @@ export default function ProfileView({
 
       <main className="profile-content gv-page-enter">
         <section className="profile-left-card">
+          <div className="profile-cover" aria-hidden="true" />
           <div className="profile-avatar">
             {profile.photoURL ? (
               <img src={profile.photoURL} alt="Profile" />
@@ -101,42 +102,35 @@ export default function ProfileView({
             </div>
           </div>
 
-          <div className="profile-details">
-            <div className="profile-detail-line">
-              <span>♟</span>
-              <strong>0 Followers</strong>
-              <b>•</b>
-              <strong>0 Following</strong>
-
-              <button
-                type="button"
-                className="social-count-button social-followers-button"
-                onClick={() => openSocialModal("followers")}
-              >
-                {socialLists.followers.length} Followers
-              </button>
-              <button
-                type="button"
-                className="social-count-button social-following-button"
-                onClick={() => openSocialModal("following")}
-              >
-                {socialLists.following.length} Following
-              </button>
-            </div>
-
-            <div className="profile-detail-line">
-              <span>▣</span>
-              <strong>
-                Joined{" "}
-                {user.metadata?.creationTime
-                  ? new Date(user.metadata.creationTime).toLocaleDateString(
-                      "en-US",
-                      { month: "short", year: "numeric" },
-                    )
-                  : "GamingVerse"}
-              </strong>
-            </div>
+          <div className="profile-social">
+            <button
+              type="button"
+              className="profile-social-tile"
+              onClick={() => openSocialModal("followers")}
+            >
+              <strong>{socialLists.followers.length}</strong>
+              <span>Followers</span>
+            </button>
+            <button
+              type="button"
+              className="profile-social-tile"
+              onClick={() => openSocialModal("following")}
+            >
+              <strong>{socialLists.following.length}</strong>
+              <span>Following</span>
+            </button>
           </div>
+
+          <p className="profile-joined">
+            <span aria-hidden="true">📅</span>
+            Joined{" "}
+            {user.metadata?.creationTime
+              ? new Date(user.metadata.creationTime).toLocaleDateString(
+                  "en-US",
+                  { month: "short", year: "numeric" },
+                )
+              : "GamingVerse"}
+          </p>
 
           <button
             className="edit-profile-button"
@@ -192,13 +186,18 @@ export default function ProfileView({
                 ].map(([value, label]) => (
                   <button
                     key={value}
-                    className={
-                      filter === value ? "filter-btn active" : "filter-btn"
-                    }
+                    className={`filter-btn is-${value}${
+                      filter === value ? " active" : ""
+                    }`}
                     type="button"
                     onClick={() => setFilter(value)}
                   >
                     {label}
+                    <b>
+                      {value === "all"
+                        ? myReviews.length
+                        : myReviews.filter((r) => r.verdict === value).length}
+                    </b>
                   </button>
                 ))}
 
@@ -291,7 +290,9 @@ export default function ProfileView({
                 >
                   {filteredReviews.map((review) => (
                     <article
-                      className="my-review-card my-review-card-clickable"
+                      className={`my-review-card my-review-card-clickable verdict-${
+                        review.verdict || "timepass"
+                      }`}
                       key={review.id}
                       role="button"
                       tabIndex={0}

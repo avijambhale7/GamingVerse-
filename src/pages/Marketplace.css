@@ -10,12 +10,12 @@
 @import "./marketplace/styles/filters.css"; /* FILTERS + SECTION HEADINGS */
 @import "./marketplace/styles/products.css"; /* PRODUCT GRID + CARDS */
 @import "./marketplace/styles/details.css"; /* PRODUCT DETAILS */
-@import "./marketplace/styles/cart.css"; /* CART + EMPTY STATE */
-@import "./marketplace/styles/checkout.css"; /* CHECKOUT */
-@import "./marketplace/styles/orders.css"; /* ORDERS */
+@import "./marketplace/styles/common.css"; /* EMPTY STATE + FORM CARD */
+@import "./marketplace/styles/requests.css"; /* REQUEST MODAL + MY REQUESTS */
 @import "./marketplace/styles/seller.css"; /* SELLER */
 @import "./marketplace/styles/feedback.css"; /* TOAST + LOADING */
 @import "./marketplace/styles/responsive.css"; /* RESPONSIVE BREAKPOINTS */
 @import "./marketplace/styles/accessory-images.css"; /* ACCESSORY IMAGE FALLBACK */
 @import "./marketplace/styles/embedded.css"; /* EMBEDDED MARKETPLACE TOOLBAR */
 @import "./marketplace/styles/touch-polish.css"; /* TOUCH-DEVICE CARD GLOW + PRESS FEEDBACK */
+@import "./marketplace/styles/market-polish.css"; /* COLOURFUL HERO, TOOLBAR, FILTERS + CARDS */

@@ -8,41 +8,6 @@
    Matches the compact dark GamingVerse pop-up shown in the
    profile reference design.
 ========================================================= */
-.profile-details > .profile-detail-line:first-child {
-  position: relative;
-  min-height: 18px;
-}
-
-.profile-details > .profile-detail-line:first-child > strong {
-  visibility: hidden;
-}
-
-.social-count-button {
-  position: absolute;
-  top: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #ddd;
-  font: inherit;
-  font-weight: 600;
-  line-height: 18px;
-  cursor: pointer;
-  transition: color 0.18s ease;
-}
-
-.social-followers-button {
-  left: 26px;
-}
-
-.social-following-button {
-  left: 130px;
-}
-
-.social-count-button:hover {
-  color: var(--gv-accent);
-}
-
 .social-modal-backdrop {
   position: fixed;
   inset: 0;

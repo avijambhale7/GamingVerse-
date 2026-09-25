@@ -9,7 +9,7 @@ import { ACCESSORY_CATEGORIES, MARKET_TABS } from "../data/catalog.js";
 import { money } from "../utils/format.js";
 
 export default function ProductCatalogue({
-  addToCart,
+  openRequest,
   category,
   condition,
   filteredProducts,
@@ -32,6 +32,30 @@ export default function ProductCatalogue({
   toggleWishlist,
   wishlist,
 }) {
+  const typeProducts = products.filter((product) =>
+    marketType === "accessories"
+      ? product.productType === "accessory"
+      : product.productType !== "accessory",
+  );
+  const catalogueStats = {
+    listings: typeProducts.length,
+    inStock: typeProducts.filter((p) => Number(p.stock) > 0).length,
+    sellers: new Set(typeProducts.map((p) => p.sellerId).filter(Boolean)).size,
+  };
+  const filtersActive =
+    Boolean(search) ||
+    platform !== "All" ||
+    category !== "All" ||
+    condition !== "All" ||
+    sortBy !== "featured";
+  const clearFilters = () => {
+    setSearch("");
+    setPlatform("All");
+    setCategory("All");
+    setCondition("All");
+    setSortBy("featured");
+  };
+
   const renderMarketTabs = () => (
     <div className="market-type-tabs">
       {MARKET_TABS.map((tab) => (
@@ -62,15 +86,28 @@ export default function ProductCatalogue({
 
   const renderFilters = () => (
     <div className="market-filters">
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder={
-          marketType === "accessories"
-            ? "Search mouse, keyboard, headset..."
-            : "Search gaming CDs..."
-        }
-      />
+      <label className="market-search">
+        <span aria-hidden="true">🔍</span>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={
+            marketType === "accessories"
+              ? "Search mouse, keyboard, headset..."
+              : "Search gaming CDs..."
+          }
+          aria-label="Search products"
+        />
+        {search && (
+          <button
+            type="button"
+            onClick={() => setSearch("")}
+            aria-label="Clear search"
+          >
+            ×
+          </button>
+        )}
+      </label>
 
       <select value={platform} onChange={(e) => setPlatform(e.target.value)}>
         {marketType === "accessories" ? (
@@ -185,8 +222,15 @@ export default function ProductCatalogue({
       );
     }
 
+    const stock = Number(product.stock) || 0;
+    const stockState = stock === 0 ? "out" : stock <= 5 ? "low" : "ok";
+
     return (
-      <div className="product-card" key={product.id}>
+      <div
+        className="product-card"
+        key={product.id}
+        onClick={() => openProduct(product)}
+      >
         <div className="product-image">
           {product.image ? (
             <img
@@ -204,13 +248,24 @@ export default function ProductCatalogue({
           )}
 
           <button
-            className="wishlist-button"
-            onClick={() => toggleWishlist(product)}
+            className={`wishlist-button${wished ? " is-wished" : ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleWishlist(product);
+            }}
+            aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
           >
             {wished ? "♥" : "♡"}
           </button>
 
           <span className="condition-badge">{product.condition}</span>
+          <span className={`stock-badge is-${stockState}`}>
+            {stockState === "out"
+              ? "Out of stock"
+              : stockState === "low"
+                ? `Only ${stock} left`
+                : "In stock"}
+          </span>
         </div>
 
         <div className="product-content">
@@ -226,22 +281,28 @@ export default function ProductCatalogue({
 
           <p>{product.description || "Gaming CD available on GamingVerse."}</p>
 
+          <div className="product-seller">
+            <span aria-hidden="true">
+              {String(product.sellerName || "S").trim().charAt(0).toUpperCase()}
+            </span>
+            {product.sellerName || "GamingVerse Seller"}
+          </div>
+
           <div className="product-bottom">
             <div>
               <strong>{money(product.price)}</strong>
-
-              <small>
-                {Number(product.stock) > 0
-                  ? `${product.stock} available`
-                  : "Out of stock"}
-              </small>
+              <small>{stock > 0 ? `${stock} available` : "Out of stock"}</small>
             </div>
 
             <button
               className="primary-btn"
-              onClick={() => openProduct(product)}
+              disabled={stock === 0}
+              onClick={(e) => {
+                e.stopPropagation();
+                openRequest(product);
+              }}
             >
-              View Details
+              📨 Request
             </button>
           </div>
         </div>
@@ -273,14 +334,37 @@ export default function ProductCatalogue({
               ? "Find gaming and computer accessories for a complete gaming setup."
               : "Discover original and pre-owned gaming CDs at GamingVerse."}
           </p>
+
+          <div className="hero-perks">
+            <span>🛡️ Admin-verified requests</span>
+            <span>📞 Direct seller contact</span>
+            <span>🤝 No online payment needed</span>
+          </div>
         </div>
 
-        <div className="hero-stat">
-          <strong>{filteredProducts.length}</strong>
-
-          <span>
-            {marketType === "accessories" ? "Accessories" : "Products"}
-          </span>
+        <div className="hero-side">
+          <div className="hero-floaters" aria-hidden="true">
+            {(marketType === "accessories"
+              ? ["🖱️", "⌨️", "🎧", "🕹️"]
+              : ["🎮", "💿", "🏆", "👾"]
+            ).map((icon) => (
+              <span key={icon}>{icon}</span>
+            ))}
+          </div>
+          <div className="hero-stats">
+            <div>
+              <strong>{catalogueStats.listings}</strong>
+              <span>Listings</span>
+            </div>
+            <div>
+              <strong>{catalogueStats.inStock}</strong>
+              <span>In stock</span>
+            </div>
+            <div>
+              <strong>{catalogueStats.sellers}</strong>
+              <span>Sellers</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -289,13 +373,17 @@ export default function ProductCatalogue({
 
       <div className="results-heading">
         <div>
-          <h2>
-            {marketType === "accessories"
-              ? "Computer & Gaming Accessories"
-              : "Gaming CDs"}
-          </h2>
-          <p>{filteredProducts.length} result(s)</p>
+          <h2>Items</h2>
+          <p>
+            <b>{filteredProducts.length}</b> result
+            {filteredProducts.length === 1 ? "" : "s"}
+          </p>
         </div>
+        {filtersActive && (
+          <button type="button" className="clear-filters" onClick={clearFilters}>
+            ✕ Clear filters
+          </button>
+        )}
       </div>
 
       {filteredProducts.length === 0 ? (
@@ -303,6 +391,11 @@ export default function ProductCatalogue({
           <div>{marketType === "accessories" ? "🖱️" : "🎮"}</div>
           <h3>No products found</h3>
           <p>Try another search or filter.</p>
+          {filtersActive && (
+            <button type="button" className="primary-btn" onClick={clearFilters}>
+              Clear filters
+            </button>
+          )}
         </div>
       ) : (
         <div className="products-grid">
@@ -367,6 +460,19 @@ export default function ProductCatalogue({
               </div>
             </div>
 
+            <div className="detail-seller">
+              <span aria-hidden="true">🏪</span>
+              <div>
+                <small>Sold by</small>
+                <strong>{selectedProduct.sellerName || "GamingVerse Seller"}</strong>
+              </div>
+            </div>
+
+            <p className="detail-request-hint">
+              Send a request → the admin approves it → the seller accepts →
+              you both get each other&apos;s mobile number to finish the deal.
+            </p>
+
             <h3>Description</h3>
 
             <p className="detail-description">
@@ -383,21 +489,13 @@ export default function ProductCatalogue({
               </button>
 
               <button
-                className="secondary-btn"
-                onClick={() => addToCart(selectedProduct)}
-              >
-                🛒 Add to Cart
-              </button>
-
-              <button
                 className="primary-btn large"
                 disabled={Number(selectedProduct.stock || 0) <= 0}
-                onClick={() => {
-                  addToCart(selectedProduct);
-                  navigate("checkout");
-                }}
+                onClick={() => openRequest(selectedProduct)}
               >
-                Buy Now
+                {Number(selectedProduct.stock || 0) <= 0
+                  ? "Out of stock"
+                  : "📨 Request to Buy"}
               </button>
             </div>
           </div>

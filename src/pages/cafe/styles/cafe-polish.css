@@ -1,0 +1,462 @@
+/* =========================================================
+   CAFÉ POLISH
+   Colourful header, hero, search and café cards — matches
+   the Marketplace polish. Imported last so it wins.
+========================================================= */
+
+.cafe-page {
+  --cf-pink: 236, 72, 153;
+  --cf-violet: 168, 85, 247;
+  --cf-cyan: 34, 211, 238;
+  --cf-green: 16, 185, 129;
+  --cf-amber: 245, 179, 1;
+  --cf-orange: 251, 146, 60;
+}
+
+/* ---------- header ---------- */
+
+.cafe-header {
+  justify-content: space-between;
+}
+.cafe-header-title {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.cafe-header-title span {
+  background: linear-gradient(90deg, #fb923c, #f472b6, #c084fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+}
+.cafe-header-title strong {
+  color: #f5f3ff;
+  font-size: 18px;
+  font-weight: 850;
+}
+.cafe-header-actions .cafe-bookings-btn {
+  padding: 11px 18px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #fb923c, #ec4899 50%, #a855f7);
+  box-shadow: 0 8px 24px rgba(var(--cf-pink), 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.cafe-header-actions .cafe-bookings-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(var(--cf-pink), 0.5);
+}
+
+/* ---------- hero ---------- */
+
+.cafe-hero {
+  min-height: 0;
+  padding: 40px 44px;
+  border: 1px solid transparent;
+  background:
+    radial-gradient(520px 300px at 0% 0%, rgba(var(--cf-orange), 0.2), transparent 70%) padding-box,
+    radial-gradient(480px 300px at 30% 100%, rgba(var(--cf-violet), 0.25), transparent 70%) padding-box,
+    radial-gradient(420px 260px at 100% 0%, rgba(var(--cf-pink), 0.18), transparent 70%) padding-box,
+    linear-gradient(#0f0f15, #0f0f15) padding-box,
+    linear-gradient(120deg, rgba(var(--cf-orange), 0.6), rgba(var(--cf-pink), 0.55), rgba(var(--cf-violet), 0.6)) border-box;
+}
+.cafe-hero:after {
+  display: none;
+}
+.cafe-hero > div:first-child > span {
+  background: linear-gradient(90deg, #fb923c, #f472b6, #c084fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.cafe-hero h1 {
+  font-size: clamp(38px, 4.6vw, 62px);
+  letter-spacing: -0.03em;
+}
+.cafe-hero h1 b {
+  background: linear-gradient(100deg, #fb923c, #f472b6 45%, #c084fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.cafe-hero p {
+  color: #a9a6b5;
+}
+
+.cafe-hero-perks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+}
+.cafe-hero-perks em {
+  padding: 7px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e4e4ea;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.cafe-hero-side {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  flex-shrink: 0;
+}
+.cafe-hero-stats {
+  display: flex;
+  gap: 8px;
+}
+.cafe-hero-stats div {
+  --k: var(--cf-orange);
+  min-width: 80px;
+  display: grid;
+  gap: 1px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(var(--k), 0.35);
+  background: linear-gradient(160deg, rgba(var(--k), 0.22), rgba(var(--k), 0.04));
+  text-align: center;
+}
+.cafe-hero-stats div:nth-child(2) {
+  --k: var(--cf-violet);
+}
+.cafe-hero-stats div:nth-child(3) {
+  --k: var(--cf-green);
+}
+.cafe-hero-stats strong {
+  color: #fff;
+  font-size: 22px;
+  line-height: 1.1;
+}
+.cafe-hero-stats small {
+  color: rgb(var(--k));
+  filter: brightness(1.3);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* ---------- search ---------- */
+
+.cafe-search-bar {
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.cafe-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.cafe-search > span {
+  position: absolute;
+  left: 15px;
+  font-size: 15px;
+  opacity: 0.75;
+  pointer-events: none;
+}
+.cafe-search-bar .cafe-search input {
+  width: 100%;
+  height: 50px;
+  padding: 0 42px 0 44px;
+  border-radius: 14px;
+  border-color: rgba(255, 255, 255, 0.09);
+  background: rgba(0, 0, 0, 0.4);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.cafe-search-bar .cafe-search input:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.cafe-search-bar .cafe-search input:focus {
+  border-color: #ec4899;
+  box-shadow: 0 0 0 4px rgba(var(--cf-pink), 0.14);
+}
+.cafe-search button {
+  position: absolute;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* ---------- section title ---------- */
+
+.cafe-section-title > div > span {
+  background: linear-gradient(90deg, #fb923c, #f472b6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.cafe-section-title h2 {
+  letter-spacing: -0.02em;
+}
+.cafe-section-title p {
+  color: #8d8a99;
+  font-size: 13px;
+}
+.cafe-section-title p b {
+  color: #fdba74;
+}
+
+/* ---------- café cards ---------- */
+
+.cafe-grid {
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 18px;
+}
+.cafe-card {
+  --p: var(--cf-orange);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  border-color: rgba(var(--p), 0.22);
+  border-radius: 22px;
+  background:
+    linear-gradient(180deg, rgba(var(--p), 0.06), transparent 40%),
+    var(--gv-surface-2);
+}
+.cafe-card:nth-child(4n + 2) {
+  --p: var(--cf-pink);
+}
+.cafe-card:nth-child(4n + 3) {
+  --p: var(--cf-violet);
+}
+.cafe-card:nth-child(4n + 4) {
+  --p: var(--cf-cyan);
+}
+.cafe-card:hover {
+  border-color: rgba(var(--p), 0.6);
+  box-shadow:
+    0 20px 44px rgba(0, 0, 0, 0.45),
+    0 0 30px rgba(var(--p), 0.2);
+}
+.cafe-card-image {
+  height: 190px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 45%, rgba(var(--p), 0.38), transparent 62%),
+    var(--gv-surface-3);
+}
+.cafe-card-image > img {
+  transition: transform 0.4s ease;
+}
+.cafe-card:hover .cafe-card-image > img {
+  transform: scale(1.05);
+}
+.cafe-card-image > div {
+  filter: drop-shadow(0 10px 24px rgba(var(--p), 0.45));
+}
+.cafe-card-price {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgb(var(--p)), #a855f7);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 900;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+.cafe-card-price small {
+  margin-left: 1px;
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.85;
+}
+.cafe-card-photos {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(8, 8, 11, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.cafe-card-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 18px;
+}
+.cafe-card-content > small {
+  color: rgb(var(--p));
+  filter: brightness(1.3);
+  font-size: 10px;
+  font-weight: 900;
+}
+.cafe-card-content h3 {
+  font-size: 20px;
+  text-transform: capitalize;
+}
+.cafe-card-content > p {
+  min-height: 0;
+  margin: 0 0 12px;
+  color: #a9a6b5;
+  font-size: 13px;
+  text-transform: capitalize;
+}
+.cafe-card-meta {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #d4d4dc;
+  font-size: 12px;
+}
+.cafe-card-meta span {
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  font-weight: 600;
+}
+.cafe-card-actions {
+  margin-top: auto;
+  padding-top: 16px;
+}
+.cafe-card-actions button,
+.cafe-card-actions a {
+  padding: 12px 14px;
+  border-radius: 999px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.cafe-card-actions button {
+  flex: 2;
+  background: linear-gradient(120deg, #fb923c, #ec4899 50%, #a855f7);
+  box-shadow: 0 8px 22px rgba(var(--cf-pink), 0.3);
+}
+.cafe-card-actions button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(var(--cf-pink), 0.45);
+}
+.cafe-card-actions a:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ---------- empty state ---------- */
+
+.cafe-empty {
+  border-radius: 22px;
+  border: 1px dashed rgba(var(--cf-orange), 0.3);
+  background: radial-gradient(360px 180px at 50% 0%, rgba(var(--cf-orange), 0.08), transparent 70%);
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 760px) {
+  .cafe-header {
+    flex-wrap: wrap;
+  }
+  .cafe-hero {
+    padding: 28px 22px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .cafe-hero-side {
+    justify-items: start;
+    width: 100%;
+  }
+  .cafe-hero-stats {
+    width: 100%;
+  }
+  .cafe-hero-stats div {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* ---------- my bookings: QR ticket ---------- */
+
+.cafe-booking-card .show-ticket {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #fb923c, #ec4899 50%, #a855f7);
+  color: #fff;
+  font-size: 13px;
+  box-shadow: 0 8px 22px rgba(var(--cf-pink), 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.cafe-booking-card .show-ticket:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(var(--cf-pink), 0.5);
+}
+.cafe-booking-card .show-ticket.is-used {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: #d4d4dc;
+  box-shadow: none;
+}
+.ticket-pending {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px dashed rgba(var(--cf-amber), 0.45);
+  background: rgba(var(--cf-amber), 0.08);
+  color: #fcd34d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.cafe-qr-image {
+  position: relative;
+}
+.cafe-qr-image.is-used img {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+.cafe-qr-used {
+  position: absolute;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: #10b981;
+  color: #fff;
+  font-size: 15px;
+  font-style: normal;
+  font-weight: 900;
+  transform: rotate(-8deg);
+  box-shadow: 0 10px 24px rgba(16, 185, 129, 0.45);
+}
+
+/* ---------- booking view: no slots left ---------- */
+
+.slots-empty {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px dashed rgba(var(--cf-orange), 0.4);
+  background: rgba(var(--cf-orange), 0.07);
+  text-align: center;
+}
+.slots-empty strong {
+  color: #fdba74;
+  font-size: 15px;
+}
+.slots-empty small {
+  color: #a9a6b5;
+  font-size: 12px;
+}

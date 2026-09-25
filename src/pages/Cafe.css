@@ -14,3 +14,4 @@
 @import "./cafe/styles/booking-status.css"; /* HOURLY BOOKING REQUEST / OWNER APPROVAL STATUS */
 @import "./cafe/styles/qr.css"; /* QR TICKET MODAL + OWNER SCANNER */
 @import "./cafe/styles/touch-polish.css"; /* TOUCH-DEVICE CARD GLOW + PRESS FEEDBACK */
+@import "./cafe/styles/cafe-polish.css"; /* COLOURFUL HEADER, HERO, SEARCH + CAFÉ CARDS */

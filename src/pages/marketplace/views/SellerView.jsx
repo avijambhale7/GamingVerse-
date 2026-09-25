@@ -5,24 +5,30 @@
 ========================================================= */
 
 import { useState } from "react";
-import { EMPTY_PRODUCT, ORDER_STEPS } from "../data/catalog.js";
+import { EMPTY_PRODUCT } from "../data/catalog.js";
 import { money } from "../utils/format.js";
 import ImageUploadButton from "../../../components/ImageUploadButton.jsx";
+import PurchaseRequestList from "../../../components/PurchaseRequestList.jsx";
+import usePurchaseRequests from "../../../utils/usePurchaseRequests.js";
+import { REQUEST_STATUS } from "../../../utils/purchaseRequests.js";
 
 export default function SellerView({
   deleteProduct,
   editProduct,
   editingId,
-  orders,
+  notify,
   products,
   saveProduct,
   sellerForm,
   setEditingId,
   setSellerForm,
-  updateOrderStatus,
   user,
 }) {
   const [imageUploadError, setImageUploadError] = useState("");
+  const { requests } = usePurchaseRequests("seller", user?.uid);
+  const pendingRequests = requests.filter(
+    (request) => request.status === REQUEST_STATUS.PENDING_SELLER,
+  ).length;
 
   const renderSeller = () => {
     if (!user) {
@@ -38,7 +44,6 @@ export default function SellerView({
       (product) => product.sellerId === user.uid && !product.demo,
     );
 
-    const sellerOrders = orders.filter((order) => order.sellerId === user.uid);
 
     return (
       <section className="section-page">
@@ -48,7 +53,7 @@ export default function SellerView({
 
             <h2>Seller Dashboard</h2>
 
-            <p>Add CDs, manage stock and process customer orders.</p>
+            <p>Add CDs, manage stock and respond to buyer requests.</p>
           </div>
 
           <div className="seller-stats">
@@ -58,8 +63,8 @@ export default function SellerView({
             </div>
 
             <div>
-              <strong>{sellerOrders.length}</strong>
-              <span>Orders</span>
+              <strong>{pendingRequests}</strong>
+              <span>New Requests</span>
             </div>
           </div>
         </div>
@@ -279,45 +284,12 @@ export default function SellerView({
         </div>
 
         <div className="form-card seller-orders">
-          <h3>Customer Orders</h3>
-
-          {sellerOrders.length === 0 ? (
-            <div className="seller-empty">No customer orders yet.</div>
-          ) : (
-            <div className="seller-orders-list">
-              {sellerOrders.map((order) => {
-                const currentIndex = ORDER_STEPS.indexOf(order.orderStatus);
-
-                const nextStatus =
-                  currentIndex >= 0 && currentIndex < ORDER_STEPS.length - 1
-                    ? ORDER_STEPS[currentIndex + 1]
-                    : null;
-
-                return (
-                  <div className="seller-order" key={order.id}>
-                    <div>
-                      <strong>#{order.orderNumber}</strong>
-
-                      <span>{order.buyerName}</span>
-
-                      <small>{money(order.total)}</small>
-                    </div>
-
-                    <span className="status">{order.orderStatus}</span>
-
-                    {nextStatus && (
-                      <button
-                        className="primary-btn"
-                        onClick={() => updateOrderStatus(order, nextStatus)}
-                      >
-                        Mark as {nextStatus}
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          <h3>Buyer Requests</h3>
+          <p className="requests-intro">
+            Requests reach you after the admin approves them. Accept one to
+            see the buyer&apos;s mobile number.
+          </p>
+          <PurchaseRequestList role="seller" uid={user.uid} onMessage={notify} />
         </div>
       </section>
     );

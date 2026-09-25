@@ -1,0 +1,385 @@
+/* =========================================================
+   DASHBOARD COLOUR BOOST — Owner Dashboard + Admin Panel
+   Adds pink / cyan / orange / green accents alongside the
+   brand purple so the dashboards feel vibrant, not mono.
+   Loaded after dashboard-polish.css so it wins.
+========================================================= */
+
+.owner-dashboard-page,
+.admin-page {
+  --dp-pink: 236, 72, 153;
+  --dp-cyan: 34, 211, 238;
+  --dp-orange: 251, 146, 60;
+  --dp-green: 16, 185, 129;
+  --dp-violet: 168, 85, 247;
+  --dp-blue: 59, 130, 246;
+  --dp-rainbow: linear-gradient(
+    120deg,
+    #a855f7,
+    #ec4899,
+    #fb923c,
+    #22d3ee,
+    #6366f1,
+    #a855f7
+  );
+  background:
+    radial-gradient(760px 420px at 4% -6%, rgba(var(--dp-violet), 0.28), transparent 62%),
+    radial-gradient(620px 380px at 55% -12%, rgba(var(--dp-pink), 0.16), transparent 62%),
+    radial-gradient(640px 400px at 100% 6%, rgba(var(--dp-cyan), 0.14), transparent 62%),
+    radial-gradient(700px 480px at 0% 75%, rgba(var(--dp-blue), 0.08), transparent 60%),
+    radial-gradient(700px 480px at 100% 100%, rgba(var(--dp-orange), 0.07), transparent 60%),
+    var(--gv-surface-1);
+}
+
+/* ---------- rainbow hero border ---------- */
+
+.owner-dashboard-header,
+.admin-header {
+  border: 1px solid transparent;
+  background:
+    radial-gradient(420px 220px at 0% 0%, rgba(var(--dp-violet), 0.26), transparent 70%) padding-box,
+    radial-gradient(420px 220px at 100% 100%, rgba(var(--dp-pink), 0.14), transparent 70%) padding-box,
+    linear-gradient(rgba(14, 14, 20, 0.92), rgba(14, 14, 20, 0.92)) padding-box,
+    var(--dp-rainbow) border-box;
+  background-size: auto, auto, auto, 300% 300%;
+  animation: dp-rainbow-shift 10s linear infinite;
+}
+.owner-dashboard-header::after,
+.admin-header::after {
+  background: var(--dp-rainbow);
+  height: 2px;
+  opacity: 0.9;
+}
+@keyframes dp-rainbow-shift {
+  to {
+    background-position: 0 0, 0 0, 0 0, 300% 0;
+  }
+}
+
+.owner-dashboard-header h1,
+.admin-header h1 {
+  background: linear-gradient(100deg, #fff 20%, #f0abfc 50%, #93c5fd 80%, #67e8f9);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.owner-section-head h2,
+.admin-section-head h2 {
+  background: linear-gradient(100deg, #fff 35%, #f9a8d4 70%, #c4b5fd);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.owner-dashboard-kicker,
+.admin-kicker {
+  background: linear-gradient(90deg, #c084fc, #f472b6, #fb923c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.owner-section-head .owner-dashboard-kicker::before,
+.admin-section-head .admin-kicker::before,
+.owner-form-title .owner-dashboard-kicker::before,
+.owner-card-title .owner-dashboard-kicker::before {
+  background: linear-gradient(90deg, #a855f7, #ec4899, #fb923c);
+}
+
+.dp-hero-avatar {
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.4), transparent 45%),
+    linear-gradient(135deg, #ec4899, #a855f7 45%, #3b82f6 80%, #22d3ee);
+  box-shadow:
+    0 14px 36px rgba(var(--dp-pink), 0.35),
+    0 6px 26px rgba(var(--dp-cyan), 0.2),
+    inset 0 -4px 0 rgba(0, 0, 0, 0.18);
+}
+.dp-hero-avatar::after {
+  border-color: rgba(var(--dp-pink), 0.4);
+}
+
+/* ---------- per-tab colours ---------- */
+
+.owner-dashboard-tabs button,
+.admin-tabs button {
+  --t: var(--dp-violet);
+  --t2: 99, 102, 241;
+}
+.owner-dashboard-tabs button:nth-child(6n + 2),
+.admin-tabs button:nth-child(6n + 2) {
+  --t: var(--dp-pink);
+  --t2: var(--dp-orange);
+}
+.owner-dashboard-tabs button:nth-child(6n + 3),
+.admin-tabs button:nth-child(6n + 3) {
+  --t: var(--dp-cyan);
+  --t2: var(--dp-blue);
+}
+.admin-tabs button:nth-child(6n + 4) {
+  --t: var(--dp-green);
+  --t2: var(--dp-cyan);
+}
+.admin-tabs button:nth-child(6n + 5) {
+  --t: var(--dp-orange);
+  --t2: var(--dp-pink);
+}
+.admin-tabs button:nth-child(6n + 6) {
+  --t: var(--dp-blue);
+  --t2: var(--dp-violet);
+}
+.owner-dashboard-tabs button:hover,
+.admin-tabs button:hover {
+  color: rgb(var(--t));
+  background: rgba(var(--t), 0.1);
+}
+.owner-dashboard-tabs button.active,
+.admin-tabs button.active {
+  color: #fff;
+  background: linear-gradient(135deg, rgb(var(--t)), rgb(var(--t2)));
+  box-shadow:
+    0 8px 24px rgba(var(--t), 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.owner-cafe-subtabs button {
+  --t: var(--dp-orange);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.owner-cafe-subtabs button:nth-child(2) {
+  --t: var(--dp-cyan);
+}
+.owner-cafe-subtabs button:nth-child(3) {
+  --t: var(--dp-green);
+}
+.owner-cafe-subtabs button:nth-child(4) {
+  --t: var(--dp-pink);
+}
+.owner-cafe-subtabs button::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(var(--t));
+  box-shadow: 0 0 10px rgb(var(--t));
+}
+.owner-cafe-subtabs button:hover {
+  color: rgb(var(--t));
+  border-color: rgba(var(--t), 0.5);
+}
+.owner-cafe-subtabs button.active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(var(--t), 0.32), rgba(var(--t), 0.12));
+  border-color: rgba(var(--t), 0.7);
+  box-shadow:
+    0 0 0 3px rgba(var(--t), 0.14),
+    0 8px 22px rgba(var(--t), 0.25);
+}
+.owner-cafe-subtabs button.active::before {
+  background: #fff;
+}
+
+/* ---------- stat cards: richer fills ---------- */
+
+.admin-stat-grid article,
+.owner-stat-grid article {
+  border-color: rgba(var(--c), 0.28);
+  background:
+    radial-gradient(280px 160px at 100% 0%, rgba(var(--c), 0.32), transparent 70%),
+    linear-gradient(160deg, rgba(var(--c), 0.14), rgba(var(--c), 0.02) 60%),
+    var(--gv-surface-2);
+}
+.admin-stat-grid article::before,
+.owner-stat-grid article::before {
+  height: 4px;
+  background: linear-gradient(90deg, rgb(var(--c)), rgba(var(--c), 0.2));
+}
+.dp-stat-icon {
+  background: linear-gradient(135deg, rgba(var(--c), 0.45), rgba(var(--c), 0.15));
+  border-color: rgba(var(--c), 0.5);
+}
+
+/* mini + sales stats get their own colours */
+.owner-mini-stat,
+.admin-mini-stat {
+  border-color: rgba(var(--dp-pink), 0.3);
+  background:
+    radial-gradient(160px 90px at 100% 0%, rgba(var(--dp-pink), 0.25), transparent 70%),
+    var(--gv-surface-2);
+}
+.owner-mini-stat::before,
+.admin-mini-stat::before {
+  background: linear-gradient(90deg, #ec4899, #a855f7);
+}
+.owner-mini-stat strong,
+.admin-mini-stat strong {
+  background: linear-gradient(135deg, #fff, #f9a8d4);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.owner-sales-stats div {
+  --k: var(--dp-violet);
+  border-color: rgba(var(--k), 0.3);
+  background:
+    radial-gradient(140px 80px at 100% 0%, rgba(var(--k), 0.28), transparent 70%),
+    var(--gv-surface-2);
+}
+.owner-sales-stats div:nth-child(2) {
+  --k: var(--dp-cyan);
+}
+.owner-sales-stats div:nth-child(3) {
+  --k: var(--dp-green);
+}
+
+/* ---------- panels: coloured top edge ---------- */
+
+.owner-table-card,
+.owner-form-card,
+.owner-inventory-card,
+.admin-table-card,
+.owner-scanner-card,
+.admin-page .admin-activity-chart {
+  position: relative;
+  overflow: hidden;
+}
+.owner-table-card::before,
+.owner-form-card::before,
+.owner-inventory-card::before,
+.admin-table-card::before,
+.owner-scanner-card::before,
+.admin-page .admin-activity-chart::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, #a855f7, #ec4899, #22d3ee);
+  opacity: 0.85;
+}
+.owner-form-card {
+  background:
+    radial-gradient(360px 200px at 0% 0%, rgba(var(--dp-pink), 0.1), transparent 70%),
+    var(--dp-glass),
+    var(--gv-surface-2);
+}
+.owner-form-card::before {
+  background: linear-gradient(90deg, #ec4899, #fb923c);
+}
+.owner-inventory-card {
+  background:
+    radial-gradient(420px 220px at 100% 0%, rgba(var(--dp-cyan), 0.1), transparent 70%),
+    var(--dp-glass),
+    var(--gv-surface-2);
+}
+.owner-inventory-card::before {
+  background: linear-gradient(90deg, #22d3ee, #3b82f6, #a855f7);
+}
+
+/* ---------- booking cards: stronger tint ---------- */
+
+.owner-booking-row.dp-booking-card {
+  background:
+    radial-gradient(420px 180px at 0% 50%, rgba(var(--s), 0.16), transparent 70%),
+    var(--gv-surface-1);
+}
+.dp-meta-chips span:nth-child(3n + 1) {
+  border-color: rgba(var(--dp-orange), 0.28);
+  background: rgba(var(--dp-orange), 0.08);
+}
+.dp-meta-chips span:nth-child(3n + 2) {
+  border-color: rgba(var(--dp-cyan), 0.28);
+  background: rgba(var(--dp-cyan), 0.08);
+}
+.dp-meta-chips span:nth-child(3n + 3) {
+  border-color: rgba(var(--dp-pink), 0.28);
+  background: rgba(var(--dp-pink), 0.08);
+}
+
+/* ---------- product cards: rotating colours ---------- */
+
+.dp-product-card {
+  --p: var(--dp-violet);
+  border-color: rgba(var(--p), 0.22);
+}
+.dp-product-card:nth-child(5n + 2) {
+  --p: var(--dp-pink);
+}
+.dp-product-card:nth-child(5n + 3) {
+  --p: var(--dp-cyan);
+}
+.dp-product-card:nth-child(5n + 4) {
+  --p: var(--dp-orange);
+}
+.dp-product-card:nth-child(5n + 5) {
+  --p: var(--dp-green);
+}
+.dp-product-card:hover {
+  border-color: rgba(var(--p), 0.6);
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.45),
+    0 0 30px rgba(var(--p), 0.22);
+}
+.dp-product-media {
+  background:
+    radial-gradient(circle at 50% 40%, rgba(var(--p), 0.4), transparent 70%),
+    linear-gradient(160deg, rgba(var(--p), 0.18), var(--gv-surface-3));
+}
+.dp-product-body small {
+  color: rgb(var(--p));
+  filter: brightness(1.3);
+}
+
+/* ---------- buttons: vivid gradients ---------- */
+
+.owner-primary-btn,
+.admin-game-form-actions button {
+  background: linear-gradient(120deg, #ec4899, #a855f7 45%, #6366f1 75%, #22d3ee);
+  background-size: 200% 100%;
+  background-position: 0 0;
+  transition:
+    transform var(--gv-t) var(--gv-ease),
+    box-shadow var(--gv-t) var(--gv-ease),
+    background-position 0.6s var(--gv-ease);
+  box-shadow:
+    0 10px 28px rgba(var(--dp-pink), 0.3),
+    0 6px 20px rgba(var(--dp-violet), 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.owner-primary-btn:hover:not(:disabled),
+.admin-game-form-actions button:hover {
+  background-position: 100% 0;
+}
+
+.dp-customer-avatar {
+  background: linear-gradient(135deg, rgb(var(--s)), #ec4899 120%);
+}
+
+/* ---------- empty state ---------- */
+
+.owner-empty span,
+.admin-empty span {
+  border: 2px solid transparent;
+  background:
+    radial-gradient(circle, rgba(var(--dp-pink), 0.22), rgba(14, 14, 20, 0.95) 70%) padding-box,
+    conic-gradient(from 0deg, #a855f7, #ec4899, #fb923c, #22d3ee, #a855f7) border-box;
+}
+
+/* ---------- inputs: colourful focus ---------- */
+
+.owner-form-card input:focus,
+.owner-form-card select:focus,
+.owner-form-card textarea:focus,
+.owner-cafe-details-form input:focus,
+.owner-cafe-details-form textarea:focus,
+.admin-filters-row input:focus {
+  border-color: #ec4899;
+  background-color: rgba(var(--dp-pink), 0.05);
+  box-shadow:
+    0 0 0 4px rgba(var(--dp-pink), 0.14),
+    0 0 24px rgba(var(--dp-violet), 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .owner-dashboard-header,
+  .admin-header {
+    animation: none;
+  }
+}

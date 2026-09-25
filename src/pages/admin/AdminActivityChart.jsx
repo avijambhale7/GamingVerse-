@@ -3,7 +3,7 @@ import "./AdminActivityChart.css";
 
 /* =========================================================
    ADMIN ACTIVITY CHART
-   Signups / bookings / orders over the last 14 days. Plain
+   Signups / bookings / purchase requests over the last 14 days. Plain
    SVG line chart — no charting library, consistent with the
    rest of the app. Colors are the dataviz skill's validated
    3-slot categorical palette (blue/orange/aqua), checked
@@ -13,7 +13,7 @@ import "./AdminActivityChart.css";
 const SERIES = [
   { key: "signups", label: "Signups", color: "#3987e5" },
   { key: "bookings", label: "Café bookings", color: "#d95926" },
-  { key: "orders", label: "Marketplace orders", color: "#199e70" },
+  { key: "requests", label: "Marketplace requests", color: "#199e70" },
 ];
 
 const WIDTH = 720;
@@ -40,7 +40,7 @@ export default function AdminActivityChart({ days }) {
   const maxValue = useMemo(() => {
     const peak = days.reduce(
       (max, day) =>
-        Math.max(max, day.signups, day.bookings, day.orders),
+        Math.max(max, day.signups, day.bookings, day.requests),
       0,
     );
     return niceMax(peak);
@@ -96,7 +96,7 @@ export default function AdminActivityChart({ days }) {
           viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
           className="admin-activity-svg"
           role="img"
-          aria-label="Signups, café bookings and marketplace orders over the last 14 days"
+          aria-label="Signups, café bookings and marketplace requests over the last 14 days"
           onMouseMove={handleMove}
           onMouseLeave={() => setHoverIndex(null)}
         >
