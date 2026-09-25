@@ -1,3 +1,5 @@
+import { parseTime } from "./time.js";
+
 /* =========================================================
    CAFE MODEL
    Cafés are entirely owner-created and live at cafes/{id} in
@@ -58,4 +60,26 @@ export function weekdayAbbrev(date) {
 export function isDateBlocked(cafe, dateObj, dateISO) {
   if (cafe.closedDays.includes(weekdayAbbrev(dateObj))) return true;
   return cafe.blockedDates.includes(dateISO);
+}
+
+// Live "open right now?" for a café. Returns true / false, or null when
+// the hours can't be judged (online-appointment cafés, unparseable
+// times) so the UI can simply show no badge. Handles closed weekdays,
+// blocked dates, 24-hour cafés and hours that run past midnight.
+export function isCafeOpenNow(cafe, now = new Date()) {
+  if (!cafe || /online appointment/i.test(cafe.opening)) return null;
+
+  const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  if (isDateBlocked(cafe, now, iso)) return false;
+  if (/24\s*hours/i.test(cafe.opening)) return true;
+
+  const open = parseTime(cafe.opening);
+  const close = parseTime(cafe.closing);
+  if (open == null || close == null) return null;
+
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  // Same-day hours (10 AM–10 PM) vs overnight hours (6 PM–2 AM).
+  return close > open
+    ? minutes >= open && minutes < close
+    : minutes >= open || minutes < close;
 }

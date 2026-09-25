@@ -22,6 +22,13 @@ import EditProfileView from "./profile/views/EditProfileView.jsx";
 import OwnerEditView from "./profile/views/OwnerEditView.jsx";
 import OwnerProfileView from "./profile/views/OwnerProfileView.jsx";
 import ProfileView from "./profile/views/ProfileView.jsx";
+import {
+  USERNAME_RULE_TEXT,
+  claimUsername,
+  isValidUsername,
+  normalizeUsername,
+  releaseUsername,
+} from "../utils/usernames.js";
 
 function Profile() {
   const navigate = useNavigate();
@@ -493,6 +500,33 @@ function Profile() {
     setSaving(true);
     setMessage("");
 
+    // Username changes must be unique. An unchanged (possibly older,
+    // pre-registry) username is left alone so old accounts can still save.
+    let finalUsername = cleanUsername;
+    let previousUsername;
+    try {
+      const oldSnap = await get(ref(db, `users/${user.uid}/username`));
+      previousUsername = String(oldSnap.val() || "");
+      if (cleanUsername !== previousUsername) {
+        finalUsername = normalizeUsername(cleanUsername);
+        if (!isValidUsername(finalUsername)) {
+          setMessage(`Username must be ${USERNAME_RULE_TEXT}`);
+          setSaving(false);
+          return;
+        }
+        if (!(await claimUsername(finalUsername, user.uid))) {
+          setMessage("This username is already taken. Please choose another.");
+          setSaving(false);
+          return;
+        }
+      }
+    } catch (error) {
+      console.error("Username check failed:", error);
+      setMessage("Could not check that username. Please try again.");
+      setSaving(false);
+      return;
+    }
+
     try {
       let savedPhotoURL = profile.photoURL.trim();
 
@@ -511,7 +545,7 @@ function Profile() {
       const updatedData = {
         firstName: profile.firstName.trim(),
         lastName: profile.lastName.trim(),
-        username: cleanUsername,
+        username: finalUsername,
         dob: profile.dob,
         age,
         bio: profile.bio.trim(),
@@ -522,11 +556,17 @@ function Profile() {
       };
 
       await updateProfile(user, {
-        displayName: cleanUsername,
+        displayName: finalUsername,
         ...(savedPhotoURL ? { photoURL: savedPhotoURL } : {}),
       });
 
       await update(ref(db, `users/${user.uid}`), updatedData);
+
+      if (previousUsername && previousUsername !== finalUsername) {
+        releaseUsername(previousUsername, user.uid).catch((error) =>
+          console.error("Release old username failed:", error),
+        );
+      }
 
       setProfile(updatedData);
       setPhotoFile(null);

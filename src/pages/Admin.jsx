@@ -16,6 +16,7 @@ import {
 import { completeGameCatalogue } from "./games/utils/catalogue.js";
 import { lookupMissingPosters } from "./games/utils/posterLookup.js";
 import AdminActivityChart from "./admin/AdminActivityChart.jsx";
+import AdminPostsView from "./admin/AdminPostsView.jsx";
 import NotificationBell from "../components/NotificationBell.jsx";
 import PurchaseRequestList from "../components/PurchaseRequestList.jsx";
 import usePurchaseRequests from "../utils/usePurchaseRequests.js";
@@ -627,6 +628,7 @@ export default function Admin() {
           "users",
           "reviews",
           "listings",
+          "posts",
           "cafes",
           "games",
         ].map(
@@ -649,6 +651,8 @@ export default function Admin() {
                     ? "💬 Reviews"
                     : item === "listings"
                       ? "🛒 Listings"
+                      : item === "posts"
+                        ? "💬 Posts"
                       : item === "cafes"
                         ? `☕ Cafés${
                             cafes.filter((c) => c.status === "pending").length
@@ -950,6 +954,14 @@ export default function Admin() {
             )}
           </section>
         </main>
+      )}
+
+      {section === "posts" && (
+        <AdminPostsView
+          bannedUids={new Set(users.filter((u) => u.isBanned).map((u) => u.uid))}
+          onBan={(uid) => setBanned(uid, true)}
+          onMessage={setMessage}
+        />
       )}
 
       {section === "cafes" && (

@@ -383,3 +383,98 @@
     animation: none;
   }
 }
+
+/* ---------- walk-in bookings (owner) ---------- */
+
+.owner-head-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.owner-walkin-btn {
+  padding: 0 18px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #fb923c, #ec4899 55%, #a855f7);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(var(--dp-pink), 0.3);
+  transition: transform var(--gv-t) var(--gv-ease);
+}
+.owner-walkin-btn:hover {
+  transform: translateY(-2px);
+}
+.walkin-form {
+  margin-bottom: 18px;
+}
+.walkin-form::before {
+  background: linear-gradient(90deg, #fb923c, #ec4899);
+}
+.walkin-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.walkin-slots button {
+  padding: 8px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #d4d4dc;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.walkin-slots button:hover {
+  border-color: rgba(var(--dp-pink), 0.5);
+  color: #fff;
+}
+.walkin-slots button.active {
+  border-color: transparent;
+  background: linear-gradient(135deg, #ec4899, #a855f7);
+  color: #fff;
+}
+.walkin-empty {
+  color: #a1a1ab;
+  font-weight: 600;
+}
+.walkin-error {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  background: rgba(244, 63, 94, 0.1);
+  color: #ffb1bc;
+  font-size: 13px;
+}
+.dp-meta-chips .dp-walkin-chip {
+  border-color: rgba(var(--dp-orange), 0.5);
+  background: rgba(var(--dp-orange), 0.16);
+  color: #fdba74;
+  font-weight: 800;
+}
+
+/* ---------- admin: community post moderation ---------- */
+
+.admin-post-source,
+.admin-post-banned {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+}
+.admin-post-source {
+  border: 1px solid rgba(var(--dp-cyan), 0.35);
+  background: rgba(var(--dp-cyan), 0.1);
+  color: #67e8f9;
+}
+.admin-post-banned {
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  background: rgba(244, 63, 94, 0.12);
+  color: #fda4af;
+}

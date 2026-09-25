@@ -17,6 +17,12 @@ import {
 } from "./cafe/utils/cafeModel.js";
 import { decodeTicket } from "./cafe/utils/ticket.js";
 import { todayISO } from "./cafe/utils/time.js";
+import {
+  bookingSeats,
+  releaseSeats,
+  reserveSeats,
+} from "./cafe/utils/slots.js";
+import WalkInBookingForm from "./owner/views/WalkInBookingForm.jsx";
 import jsQR from "jsqr";
 
 const OWNER_ROLES = new Set([
@@ -115,6 +121,7 @@ export default function OwnerDashboard() {
   const [productForm, setProductForm] = useState(EMPTY_PRODUCT);
   const [message, setMessage] = useState("");
   const [bookingFilter, setBookingFilter] = useState("All");
+  const [showWalkIn, setShowWalkIn] = useState(false);
 
   const [cafeSection, setCafeSection] = useState("bookings");
   const [allCafes, setAllCafes] = useState([]);
@@ -607,39 +614,31 @@ export default function OwnerDashboard() {
     const occupiedStatuses = new Set(["Pending", "Confirmed"]);
     const wasOccupied = occupiedStatuses.has(currentStatus);
     const willBeOccupied = occupiedStatuses.has(nextStatus);
-    const slotKey = String(booking.time || "")
-      .replace(/[^a-z0-9]/gi, "_")
-      .toLowerCase();
-
     try {
+      // Move the slot's seat counter by this booking's seat count. The
+      // owner can always re-occupy (no capacity check) — they may be
+      // overriding on purpose, e.g. re-confirming a rejected request.
       if (
         wasOccupied !== willBeOccupied &&
         booking.cafeId &&
         booking.date &&
-        slotKey
+        booking.time
       ) {
-        const slotRef = ref(
-          db,
-          `cafeSlots/${booking.cafeId}/${booking.date}/${slotKey}`,
-        );
-        const tx = await import("firebase/database").then(
-          ({ runTransaction }) =>
-            runTransaction(slotRef, (current) => {
-              const booked = Math.max(0, Number(current?.booked || 0));
-              const nextBooked = willBeOccupied
-                ? booked + 1
-                : Math.max(0, booked - 1);
-              return {
-                ...(current || {}),
-                booked: nextBooked,
-                updatedAt: Date.now(),
-              };
-            }),
-        );
-
-        if (!tx.committed) {
-          setMessage("Could not update the café slot availability.");
-          return;
+        if (willBeOccupied) {
+          await reserveSeats(
+            booking.cafeId,
+            booking.date,
+            booking.time,
+            bookingSeats(booking),
+            Infinity,
+          );
+        } else {
+          await releaseSeats(
+            booking.cafeId,
+            booking.date,
+            booking.time,
+            bookingSeats(booking),
+          );
         }
       }
 
@@ -939,11 +938,33 @@ export default function OwnerDashboard() {
                     café.
                   </p>
                 </div>
-                <div className="owner-mini-stat">
-                  <strong>{bookings.length}</strong>
-                  <span>Total bookings</span>
+                <div className="owner-head-actions">
+                  {editableCafes.length > 0 && (
+                    <button
+                      type="button"
+                      className="owner-walkin-btn"
+                      onClick={() => setShowWalkIn((v) => !v)}
+                    >
+                      {showWalkIn ? "✕ Close" : "➕ Walk-in booking"}
+                    </button>
+                  )}
+                  <div className="owner-mini-stat">
+                    <strong>{bookings.length}</strong>
+                    <span>Total bookings</span>
+                  </div>
                 </div>
               </section>
+
+              {showWalkIn && (
+                <WalkInBookingForm
+                  cafes={editableCafes}
+                  ownerUid={user.uid}
+                  onDone={(text) => {
+                    setShowWalkIn(false);
+                    if (text) setMessage(text);
+                  }}
+                />
+              )}
 
               <nav className="dp-status-filter" aria-label="Filter bookings">
                 {["All", "Pending", "Confirmed", "Completed", "Cancelled"].map(
@@ -1023,8 +1044,14 @@ export default function OwnerDashboard() {
                           <span className="owner-small-label">{status}</span>
                         </div>
                         <div className="dp-meta-chips">
+                          {booking.walkIn && (
+                            <span className="dp-walkin-chip">🚶 Walk-in</span>
+                          )}
                           <span>🕐 {booking.time}</span>
                           <span>🎮 {booking.station || "Gaming station"}</span>
+                          {Number(booking.seats) > 1 && (
+                            <span>👥 {booking.seats} seats</span>
+                          )}
                           <span>
                             📍 {booking.address || "Address unavailable"}
                           </span>

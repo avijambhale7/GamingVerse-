@@ -17,6 +17,13 @@ import {
   isUserBanned,
 } from "../utils/ban.js";
 import { isValidPhone, normalizePhone } from "../utils/purchaseRequests.js";
+import {
+  USERNAME_RULE_TEXT,
+  claimUsername,
+  isUsernameAvailable,
+  isValidUsername,
+  normalizeUsername,
+} from "../utils/usernames.js";
 import "./Login.css";
 
 /* Load all game images from src/assets/horizontal */
@@ -49,6 +56,7 @@ function Login() {
 
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
+  const [signupUsername, setSignupUsername] = useState("");
   const [signupPhone, setSignupPhone] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
@@ -190,6 +198,20 @@ function Login() {
       return;
     }
 
+    if (!isValidUsername(signupUsername)) {
+      notify(`Username must be ${USERNAME_RULE_TEXT}`, "error");
+      return;
+    }
+
+    try {
+      if (!(await isUsernameAvailable(signupUsername))) {
+        notify("This username is already taken. Please choose another.", "error");
+        return;
+      }
+    } catch (error) {
+      console.error("Username check failed:", error);
+    }
+
     if (signupPassword.length < 6) {
       notify("Password must contain at least 6 characters.", "error");
       return;
@@ -229,10 +251,18 @@ function Login() {
       const { ref, set } = await import("firebase/database");
       const { db } = await import("../firebase");
 
+      // Reserve the handle. If someone grabbed it in the last few seconds,
+      // fall back to handle + 3 digits rather than failing the signup.
+      let handle = normalizeUsername(signupUsername);
+      if (!(await claimUsername(handle, result.user.uid))) {
+        handle = `${handle.slice(0, 16)}${Math.floor(100 + Math.random() * 900)}`;
+        await claimUsername(handle, result.user.uid);
+      }
+
       await set(ref(db, `users/${result.user.uid}`), {
         firstName: signupName.trim().split(" ")[0] || signupName.trim(),
         lastName: signupName.trim().split(" ").slice(1).join(" "),
-        username: signupName.trim(),
+        username: handle,
         email: signupEmail.trim(),
         phone: normalizePhone(signupPhone),
         dob: signupDob,
@@ -243,6 +273,7 @@ function Login() {
       notify("Account created successfully!", "success");
 
       setSignupName("");
+      setSignupUsername("");
       setSignupEmail("");
       setSignupPassword("");
       setSignupConfirmPassword("");
@@ -616,6 +647,21 @@ function Login() {
                 value={signupName}
                 onChange={(e) => setSignupName(e.target.value)}
                 autoComplete="name"
+                required
+              />
+
+              <input
+                type="text"
+                placeholder="Username (e.g. ram_gamer)"
+                value={signupUsername}
+                onChange={(e) =>
+                  setSignupUsername(
+                    e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ""),
+                  )
+                }
+                autoComplete="username"
+                maxLength={20}
+                title={USERNAME_RULE_TEXT}
                 required
               />
 

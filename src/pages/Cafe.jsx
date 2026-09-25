@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import {
-  get,
-  onValue,
-  push,
-  ref,
-  remove,
-  runTransaction,
-  set,
-} from "firebase/database";
+import { get, onValue, push, ref, remove, set } from "firebase/database";
 import { auth, db } from "../firebase";
 import PageSkeleton from "../components/PageSkeleton.jsx";
 import "./Cafe.css";
@@ -19,7 +11,18 @@ import {
   saveLocalBookings,
 } from "./cafe/utils/localBookings.js";
 import { getTimeSlots, localISO, todayISO } from "./cafe/utils/time.js";
-import { isDateBlocked, normalizeCafe } from "./cafe/utils/cafeModel.js";
+import {
+  isCafeOpenNow,
+  isDateBlocked,
+  normalizeCafe,
+} from "./cafe/utils/cafeModel.js";
+import {
+  MAX_SEATS_PER_BOOKING,
+  bookingSeats,
+  releaseSeats,
+  reserveSeats,
+  stationLabel,
+} from "./cafe/utils/slots.js";
 import CafeQrModal from "./cafe/views/CafeQrModal.jsx";
 
 export default function Cafe() {
@@ -31,6 +34,11 @@ export default function Cafe() {
   const [selectedSpec, setSelectedSpec] = useState(null);
   const [selectedDate, setSelectedDate] = useState(todayISO());
   const [selectedTime, setSelectedTime] = useState("");
+  // Group bookings: how many seats this request takes in the slot.
+  const [seatCount, setSeatCount] = useState(1);
+  // Café ids the user hearted, live from savedCafes/{uid}.
+  const [savedCafeIds, setSavedCafeIds] = useState([]);
+  const [showSavedOnly, setShowSavedOnly] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [slotAvailability, setSlotAvailability] = useState({});
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -94,10 +102,14 @@ export default function Cafe() {
         (snapshot) => {
           const localBookings = loadLocalBookings(currentUser.uid);
           const firebaseBookings = snapshot.exists()
-            ? Object.entries(snapshot.val()).map(([id, value]) => ({
-                id,
-                ...value,
-              }))
+            ? Object.entries(snapshot.val())
+                .map(([id, value]) => ({
+                  id,
+                  ...value,
+                }))
+                // Walk-ins an owner logs for their café are stored under
+                // the owner's uid; they aren't the owner's own bookings.
+                .filter((booking) => !booking.walkIn)
             : [];
 
           const merged = [
@@ -136,21 +148,48 @@ export default function Cafe() {
     window.gvCafeMessageTimer = window.setTimeout(() => setMessage(""), 3500);
   };
 
+  useEffect(() => {
+    if (!user) return undefined;
+    return onValue(
+      ref(db, `savedCafes/${user.uid}`),
+      (snap) => setSavedCafeIds(Object.keys(snap.val() || {})),
+      (error) => console.error("Saved cafés listener error:", error),
+    );
+  }, [user]);
+
+  const toggleSavedCafe = async (cafe) => {
+    if (!user) {
+      notify("Please login to save cafés.");
+      return;
+    }
+    const saved = savedCafeIds.includes(cafe.id);
+    try {
+      if (saved) await remove(ref(db, `savedCafes/${user.uid}/${cafe.id}`));
+      else await set(ref(db, `savedCafes/${user.uid}/${cafe.id}`), true);
+      notify(saved ? "Removed from saved cafés." : "♥ Café saved.");
+    } catch (error) {
+      console.error("Save café error:", error);
+      notify("Could not update saved cafés.");
+    }
+  };
+
   const filteredCafes = useMemo(() => {
     // Customers only ever browse admin-approved cafés — a newly listed
     // café stays invisible here until it's reviewed.
-    const approved = cafes.filter((c) => c.status === "approved");
+    let list = cafes.filter((c) => c.status === "approved");
+    if (showSavedOnly) list = list.filter((c) => savedCafeIds.includes(c.id));
     const q = search.trim().toLowerCase();
-    if (!q) return approved;
-    return approved.filter((c) =>
+    if (!q) return list;
+    return list.filter((c) =>
       `${c.name} ${c.address}`.toLowerCase().includes(q),
     );
-  }, [cafes, search]);
+  }, [cafes, search, showSavedOnly, savedCafeIds]);
 
   const selectCafe = (cafe) => {
     setSelectedCafeId(cafe.id);
     setSelectedSpec(null);
     setSelectedTime("");
+    setSeatCount(1);
     setShowBookings(false);
   };
 
@@ -280,8 +319,12 @@ export default function Cafe() {
       locallyBooked,
     );
 
-    if (currentlyBooked >= totalSeats) {
-      notify("That slot is full. Please choose another time.");
+    if (currentlyBooked + seatCount > totalSeats) {
+      notify(
+        currentlyBooked >= totalSeats
+          ? "That slot is full. Please choose another time."
+          : `Only ${totalSeats - currentlyBooked} seat(s) left in that slot.`,
+      );
       setSlotAvailability((prev) => ({
         ...prev,
         [selectedTime]: totalSeats,
@@ -306,10 +349,11 @@ export default function Cafe() {
       address: selectedCafe.address,
       date: selectedDate,
       time: selectedTime,
-      station: `Station ${(locallyBooked % totalSeats) + 1}`,
+      station: stationLabel(currentlyBooked, seatCount, totalSeats),
+      seats: seatCount,
       specLabel: selectedSpec ? selectedSpec.label : "",
       pricePerHour,
-      totalPrice: pricePerHour,
+      totalPrice: pricePerHour * seatCount,
       status: "Pending",
       customerName:
         user.displayName || user.email?.split("@")[0] || "GamingVerse User",
@@ -322,26 +366,16 @@ export default function Cafe() {
       let savedToFirebase = false;
 
       try {
-        const slotRef = ref(
-          db,
-          `cafeSlots/${selectedCafe.id}/${selectedDate}/${selectedTime
-            .replace(/[^a-z0-9]/gi, "_")
-            .toLowerCase()}`,
+        const committed = await reserveSeats(
+          selectedCafe.id,
+          selectedDate,
+          selectedTime,
+          seatCount,
+          totalSeats,
         );
 
-        const tx = await runTransaction(slotRef, (current) => {
-          const booked = Number(current?.booked || 0);
-
-          if (booked >= totalSeats) return;
-
-          return {
-            booked: booked + 1,
-            updatedAt: Date.now(),
-          };
-        });
-
-        if (!tx.committed) {
-          notify("That slot is full. Please choose another time.");
+        if (!committed) {
+          notify("Not enough seats left in that slot. Please pick another.");
           setSlotAvailability((prev) => ({
             ...prev,
             [selectedTime]: totalSeats,
@@ -388,7 +422,7 @@ export default function Cafe() {
       setSlotAvailability((prev) => ({
         ...prev,
         [selectedTime]: Math.min(
-          Number(prev[selectedTime] || 0) + 1,
+          Number(prev[selectedTime] || 0) + seatCount,
           totalSeats,
         ),
       }));
@@ -422,32 +456,25 @@ export default function Cafe() {
         );
         setSlotAvailability((prev) => ({
           ...prev,
-          [booking.time]: Math.max(0, Number(prev[booking.time] || 0) - 1),
+          [booking.time]: Math.max(
+            0,
+            Number(prev[booking.time] || 0) - bookingSeats(booking),
+          ),
         }));
         notify("Booking cancelled.");
         return;
       }
-
-      const slotKey = booking.time.replace(/[^a-z0-9]/gi, "_").toLowerCase();
 
       try {
         const occupied = ["Pending", "Confirmed"].includes(
           String(booking.status || ""),
         );
         if (occupied) {
-          await runTransaction(
-            ref(db, `cafeSlots/${booking.cafeId}/${booking.date}/${slotKey}`),
-            (current) => {
-              if (!current) return current;
-              const nextBooked = Math.max(0, Number(current.booked || 0) - 1);
-              return nextBooked === 0
-                ? null
-                : {
-                    ...current,
-                    booked: nextBooked,
-                    updatedAt: Date.now(),
-                  };
-            },
+          await releaseSeats(
+            booking.cafeId,
+            booking.date,
+            booking.time,
+            bookingSeats(booking),
           );
         }
 
@@ -566,6 +593,15 @@ export default function Cafe() {
               </button>
             )}
           </label>
+          <button
+            type="button"
+            className={`cafe-saved-toggle${showSavedOnly ? " active" : ""}`}
+            onClick={() => setShowSavedOnly((v) => !v)}
+            aria-pressed={showSavedOnly}
+          >
+            {showSavedOnly ? "♥" : "♡"} Saved
+            {savedCafeIds.length ? <b>{savedCafeIds.length}</b> : null}
+          </button>
         </section>
 
         {message && <div className="cafe-message">{message}</div>}
@@ -693,6 +729,15 @@ export default function Cafe() {
                   <p className="cafe-about-text">{selectedCafe.about}</p>
                 )}
                 <div className="cafe-info-pills">
+                  {isCafeOpenNow(selectedCafe, now) !== null && (
+                    <span
+                      className={`cafe-open-pill ${
+                        isCafeOpenNow(selectedCafe, now) ? "is-open" : "is-closed"
+                      }`}
+                    >
+                      {isCafeOpenNow(selectedCafe, now) ? "● Open now" : "● Closed now"}
+                    </span>
+                  )}
                   <span>
                     🕘 {selectedCafe.opening} – {selectedCafe.closing}
                   </span>
@@ -800,10 +845,47 @@ export default function Cafe() {
                         </small>
                       </div>
                     )}
+                    <div className="cafe-seat-picker">
+                      <div>
+                        <strong>How many seats?</strong>
+                        <small>Book together with friends (max {Math.min(MAX_SEATS_PER_BOOKING, totalSeats)})</small>
+                      </div>
+                      <div className="cafe-seat-stepper">
+                        <button
+                          type="button"
+                          onClick={() => setSeatCount((n) => Math.max(1, n - 1))}
+                          disabled={seatCount <= 1}
+                          aria-label="Fewer seats"
+                        >
+                          −
+                        </button>
+                        <strong>{seatCount}</strong>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSeatCount((n) =>
+                              Math.min(
+                                MAX_SEATS_PER_BOOKING,
+                                totalSeats,
+                                n + 1,
+                              ),
+                            );
+                          }}
+                          disabled={
+                            seatCount >=
+                            Math.min(MAX_SEATS_PER_BOOKING, totalSeats)
+                          }
+                          aria-label="More seats"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
                     <div className="slots-grid">
                       {timeSlots.map((slot) => {
                         const booked = Number(slotAvailability[slot] || 0);
-                        const full = booked >= totalSeats;
+                        // Not enough room for this group counts as full.
+                        const full = booked + seatCount > totalSeats;
                         return (
                           <button
                             key={slot}
@@ -811,12 +893,15 @@ export default function Cafe() {
                             className={`time-slot ${selectedTime === slot ? "selected" : ""} ${full ? "full" : ""}`}
                             disabled={full || loadingSlots}
                             onClick={() => setSelectedTime(slot)}
+                            title={full ? "Not enough seats for your group" : undefined}
                           >
                             <strong>{slot}</strong>
                             <small>
-                              {full
+                              {booked >= totalSeats
                                 ? "Full"
-                                : `${totalSeats - booked} available`}
+                                : full
+                                  ? `Only ${totalSeats - booked} left`
+                                  : `${totalSeats - booked} available`}
                             </small>
                           </button>
                         );
@@ -831,7 +916,7 @@ export default function Cafe() {
                       {saving
                         ? "Sending Request..."
                         : selectedTime
-                          ? `Request ${selectedTime} Booking • ₹${selectedSpec ? selectedSpec.price : selectedCafe.pricePerHour}/hr`
+                          ? `Request ${selectedTime} • ${seatCount} seat${seatCount > 1 ? "s" : ""} • ₹${(Number(selectedSpec ? selectedSpec.price : selectedCafe.pricePerHour) || 0) * seatCount}/hr`
                           : "Select a Time Slot"}
                     </button>
                   </>
@@ -886,6 +971,34 @@ export default function Cafe() {
                       ₹{cafe.pricePerHour}
                       <small>/hr</small>
                     </span>
+                    {(() => {
+                      const open = isCafeOpenNow(cafe, now);
+                      return open === null ? null : (
+                        <span
+                          className={`cafe-open-badge ${open ? "is-open" : "is-closed"}`}
+                        >
+                          <i aria-hidden="true" />
+                          {open ? "Open now" : "Closed"}
+                        </span>
+                      );
+                    })()}
+                    <button
+                      type="button"
+                      className={`cafe-save-btn${
+                        savedCafeIds.includes(cafe.id) ? " is-saved" : ""
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSavedCafe(cafe);
+                      }}
+                      aria-label={
+                        savedCafeIds.includes(cafe.id)
+                          ? "Remove from saved cafés"
+                          : "Save café"
+                      }
+                    >
+                      {savedCafeIds.includes(cafe.id) ? "♥" : "♡"}
+                    </button>
                     {cafe.photos.length > 1 && (
                       <span className="cafe-card-photos">
                         📷 {cafe.photos.length}

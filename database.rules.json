@@ -66,6 +66,22 @@
       }
     },
 
+    "usernames": {
+      ".read": true,
+      "$handle": {
+        ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid) || (data.val() === auth.uid && (!newData.exists() || newData.val() === auth.uid)))",
+        ".validate": "newData.isString() && $handle.matches(/^[a-z0-9_.]{3,20}$/)"
+      }
+    },
+
+    "savedCafes": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "$cafeId": { ".validate": "newData.isBoolean()" }
+      }
+    },
+
     "wishlists": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
@@ -151,6 +167,7 @@
     },
 
     "clubDiscussions": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
       "$clubId": {
         ".read": "auth != null",
         "$discussionId": {
