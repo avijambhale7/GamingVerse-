@@ -172,24 +172,102 @@
 }
 
 /* =========================================================
-   MOBILE HEADER — profile avatar next to the bell
-   The header now carries search + bell + profile on phones, so
-   the search box flexes to whatever room is left instead of a
-   fixed width that would push the icons off-screen.
+   MOBILE HEADER — one row: logo left, 🔍 · 🔔 · profile right
+   On phones the search box collapses to a round icon button.
+   Tapping it focuses the (visually hidden) input, and
+   :focus-within expands the search across the whole header;
+   it stays open while it has text, and collapses on blur.
+   Desktop is untouched.
 ========================================================= */
 @media (max-width: 750px) {
-  .navbar-right {
+  .games-navbar {
+    flex-wrap: nowrap;
+    gap: 10px;
+  }
+  .games-navbar .brand {
     flex: 1 1 auto;
     min-width: 0;
-    justify-content: flex-end;
-    gap: 8px;
   }
-  .navbar-right .search-box {
-    flex: 1 1 auto;
+  .games-navbar .brand-text small {
+    display: none;
+  }
+  .games-navbar-right-group {
+    flex: 0 0 auto;
+    margin-left: auto;
+    gap: 0;
+  }
+  .games-navbar-right-group .navbar-right::before {
+    display: none;
+  }
+  /* static, so the expanded search positions against the header */
+  .games-navbar .navbar-right {
+    position: static;
+    margin-left: 0;
+    gap: 6px;
+  }
+
+  /* collapsed: just the round search icon */
+  .games-navbar .search-box {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    gap: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .games-navbar .search-box .search-icon-button {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    border-radius: 50%;
+    color: #d4d4dc;
+  }
+  .games-navbar .search-box input,
+  .games-navbar .search-box .clear-search {
+    position: absolute;
+    width: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* expanded: full-width bar over the header */
+  .games-navbar .search-box:focus-within,
+  .games-navbar .search-box.has-value {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    right: 12px;
+    z-index: 5;
     width: auto;
-    min-width: 0;
-    max-width: 230px;
+    height: 50px;
+    padding: 0 10px 0 4px;
+    gap: 6px;
+    justify-content: flex-start;
+    border-radius: 999px;
+    background: #121218;
+    transform: translateY(-50%);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
   }
+  .games-navbar .search-box:focus-within input,
+  .games-navbar .search-box.has-value input,
+  .games-navbar .search-box:focus-within .clear-search,
+  .games-navbar .search-box.has-value .clear-search {
+    position: static;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .games-navbar .search-box:focus-within input,
+  .games-navbar .search-box.has-value input {
+    flex: 1;
+    width: 100%;
+    font-size: 15px;
+  }
+  .games-navbar .search-box:focus-within .clear-search,
+  .games-navbar .search-box.has-value .clear-search {
+    width: auto;
+  }
+
   .navbar-icon-actions {
     flex-shrink: 0;
     gap: 6px;

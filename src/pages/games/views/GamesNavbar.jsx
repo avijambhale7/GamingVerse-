@@ -89,7 +89,7 @@ export default function GamesNavbar({
           <AppTopNav />
 
           <div className="navbar-right">
-          <div className="search-box">
+          <div className={`search-box${search ? " has-value" : ""}`}>
             <button
               type="button"
               className="search-icon-button"
