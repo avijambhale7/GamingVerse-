@@ -4,10 +4,9 @@
    AppTopNav (desktop) and AppBottomNav (mobile) always offer
    the exact same destinations and highlight the same tab.
 
-   Profile isn't listed here on purpose — every page already has
-   its own dedicated profile avatar button (top-right on desktop,
-   in the bottom bar on mobile), so repeating it in this row was
-   a redundant, duplicate button.
+   Profile isn't listed here on purpose — the header has its own
+   profile avatar button (right of the notification bell) on every
+   screen size, so repeating it in this row would be a duplicate.
 ========================================================= */
 export const NAV_TABS = [
   { key: "home", label: "Home", icon: "home", to: "/games" },

@@ -169,10 +169,29 @@
     padding-bottom: 104px;
   }
 
-  /* AppBottomNav's Profile tab covers this on mobile — showing
-     the header's avatar button too meant two profile buttons
-     on screen at once. */
-  .navbar-profile-desktop-only {
-    display: none;
+}
+
+/* =========================================================
+   MOBILE HEADER — profile avatar next to the bell
+   The header now carries search + bell + profile on phones, so
+   the search box flexes to whatever room is left instead of a
+   fixed width that would push the icons off-screen.
+========================================================= */
+@media (max-width: 750px) {
+  .navbar-right {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .navbar-right .search-box {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    max-width: 230px;
+  }
+  .navbar-icon-actions {
+    flex-shrink: 0;
+    gap: 6px;
   }
 }

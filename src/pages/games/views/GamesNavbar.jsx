@@ -202,7 +202,7 @@ export default function GamesNavbar({
 
               <button
                 type="button"
-                className="navbar-icon-button navbar-profile-desktop-only"
+                className="navbar-icon-button navbar-profile-button"
                 onClick={() => {
                   setShowNotifications(false);
                   navigate("/profile");
