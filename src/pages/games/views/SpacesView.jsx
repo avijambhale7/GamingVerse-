@@ -4,9 +4,10 @@
    Rendered by ../../Games.jsx.
 ========================================================= */
 
+import { Fragment, useEffect, useRef } from "react";
 import { auth } from "../../../firebase";
 import { CLUB_INTERESTS, getClubInterestMeta } from "../data/clubs.js";
-import { formatActivityDate } from "../utils/text.js";
+import { chatDayKey, chatDayLabel, chatTime } from "../utils/text.js";
 import { getGameDetails } from "../utils/gameInfo.js";
 import { horizontalGames } from "../utils/catalogue.js";
 
@@ -55,6 +56,23 @@ export default function SpacesView({
   spacesSection,
   toggleClubMembership,
 }) {
+  // Chats read top → bottom like a messenger: keep the newest message
+  // in view whenever the thread changes.
+  const communityChatRef = useRef(null);
+  const clubChatRef = useRef(null);
+  const lastCommunityId = communityTalks[communityTalks.length - 1]?.id;
+  const lastClubId = clubDiscussions[clubDiscussions.length - 1]?.id;
+
+  useEffect(() => {
+    const box = communityChatRef.current;
+    if (box) box.scrollTop = box.scrollHeight;
+  }, [lastCommunityId, activeView]);
+
+  useEffect(() => {
+    const box = clubChatRef.current;
+    if (box) box.scrollTop = box.scrollHeight;
+  }, [lastClubId, selectedClubId]);
+
   return (
     <>
       {(activeView === "trailers" ||
@@ -320,17 +338,29 @@ export default function SpacesView({
                               </div>
                             </header>
 
-                            <div className="club-whatsapp-messages">
-                              <div className="club-chat-day">TODAY</div>
+                            <div
+                              className="club-whatsapp-messages"
+                              ref={clubChatRef}
+                            >
                               {clubDiscussions.length ? (
-                                clubDiscussions.slice(0, 20).map((discussion) => {
+                                clubDiscussions.slice(-50).map((discussion, index, list) => {
                                   const isMine =
                                     discussion.authorUid ===
                                     auth.currentUser?.uid;
+                                  // Date pill whenever the day changes.
+                                  const newDay =
+                                    index === 0 ||
+                                    chatDayKey(list[index - 1].createdAt) !==
+                                      chatDayKey(discussion.createdAt);
                                   return (
+                                    <Fragment key={discussion.id}>
+                                    {newDay && (
+                                      <div className="club-chat-day">
+                                        {chatDayLabel(discussion.createdAt)}
+                                      </div>
+                                    )}
                                     <div
                                       className={`club-chat-message-row ${isMine ? "mine" : "theirs"}`}
-                                      key={discussion.id}
                                     >
                                       {!isMine && (
                                         <div className="club-chat-avatar">
@@ -347,12 +377,11 @@ export default function SpacesView({
                                         )}
                                         <p>{discussion.title}</p>
                                         <span className="club-chat-time">
-                                          {formatActivityDate(
-                                            discussion.createdAt,
-                                          )}
+                                          {chatTime(discussion.createdAt)}
                                         </span>
                                       </div>
                                     </div>
+                                    </Fragment>
                                   );
                                 })
                               ) : (
@@ -617,15 +646,28 @@ export default function SpacesView({
                         <span className="community-chat-online">● Online</span>
                       </div>
 
-                      <div className="community-chat-messages">
-                        {communityTalks.slice(0, 12).map((discussion) => {
+                      <div
+                        className="community-chat-messages"
+                        ref={communityChatRef}
+                      >
+                        {communityTalks.slice(-50).map((discussion, index, list) => {
                           const isMine =
                             discussion.authorUid === auth.currentUser?.uid;
+                          // Date pill whenever the day changes.
+                          const newDay =
+                            index === 0 ||
+                            chatDayKey(list[index - 1].createdAt) !==
+                              chatDayKey(discussion.createdAt);
 
                           return (
+                            <Fragment key={discussion.id}>
+                            {newDay && (
+                              <div className="community-chat-day">
+                                <span>{chatDayLabel(discussion.createdAt)}</span>
+                              </div>
+                            )}
                             <article
                               className={`community-message ${isMine ? "mine" : ""}`}
-                              key={discussion.id}
                             >
                               {!isMine && (
                                 <div className="community-message-avatar">
@@ -644,10 +686,11 @@ export default function SpacesView({
                                   {discussion.title}
                                 </div>
                                 <span className="community-message-time">
-                                  {formatActivityDate(discussion.createdAt)}
+                                  {chatTime(discussion.createdAt)}
                                 </span>
                               </div>
                             </article>
+                            </Fragment>
                           );
                         })}
 

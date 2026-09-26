@@ -401,28 +401,34 @@ export default function Marketplace({ embedded = false }) {
               className={page === "products" ? "active" : ""}
               onClick={() => navigate("products")}
             >
-              🛍 Shop
+              <span className="mtab-icon" aria-hidden="true">🛍</span>
+              <span className="mtab-label">Shop</span>
             </button>
             <button
               type="button"
               className={page === "wishlist" ? "active" : ""}
               onClick={() => navigate("wishlist")}
             >
-              ♡ Wishlist{wishlist.length ? ` (${wishlist.length})` : ""}
+              <span className="mtab-icon" aria-hidden="true">♡</span>
+              <span className="mtab-label">
+                Wishlist{wishlist.length ? ` (${wishlist.length})` : ""}
+              </span>
             </button>
             <button
               type="button"
               className={page === "requests" ? "active" : ""}
               onClick={() => navigate("requests")}
             >
-              📨 My Requests
+              <span className="mtab-icon" aria-hidden="true">📨</span>
+              <span className="mtab-label">My Requests</span>
             </button>
             <button
               type="button"
               className={page === "seller" ? "active" : ""}
               onClick={() => navigate("seller")}
             >
-              🏪 Sell
+              <span className="mtab-icon" aria-hidden="true">🏪</span>
+              <span className="mtab-label">Sell</span>
             </button>
           </div>
         </div>

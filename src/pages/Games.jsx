@@ -351,7 +351,8 @@ function Games() {
           id,
           ...talk,
         }));
-        next.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+        // Chat order: oldest first, newest at the bottom.
+        next.sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
         setCommunityTalks(next);
       },
       (error) => console.error("Community talks listener error:", error),
@@ -371,7 +372,8 @@ function Games() {
           id,
           ...discussion,
         }));
-        next.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
+        // Chat order: oldest first, newest at the bottom.
+        next.sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
         setClubDiscussions(next);
       },
       (error) => console.error("Club discussion listener error:", error),

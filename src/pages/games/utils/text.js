@@ -96,3 +96,40 @@ export function formatActivityDate(timestamp) {
     month: "short",
   });
 }
+
+/* ---------- chat date separators ---------- */
+
+// Local calendar day of a timestamp, e.g. "2026-9-26" — used to spot
+// where one day's messages end and the next begin.
+export function chatDayKey(timestamp) {
+  if (!Number(timestamp)) return "unknown";
+  const d = new Date(Number(timestamp));
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+// "Today", "Yesterday", "Monday" (this week) or "22 Sep 2026".
+export function chatDayLabel(timestamp) {
+  if (!Number(timestamp)) return "Earlier";
+  const date = new Date(Number(timestamp));
+  const today = new Date();
+  const startOf = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const days = Math.round((startOf(today) - startOf(date)) / 86400000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days > 1 && days < 7)
+    return date.toLocaleDateString("en-IN", { weekday: "long" });
+  return date.toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+// Clock time for a chat bubble, e.g. "2:30 pm".
+export function chatTime(timestamp) {
+  if (!Number(timestamp)) return "";
+  return new Date(Number(timestamp)).toLocaleTimeString("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}

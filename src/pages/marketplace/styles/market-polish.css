@@ -29,6 +29,8 @@
   background: rgba(0, 0, 0, 0.35);
 }
 .market-embedded-actions button {
+  /* icon + label are separate spans; keep the old "icon label" spacing */
+  gap: 5px;
   min-height: 40px;
   padding: 0 16px;
   border-color: transparent;
@@ -523,6 +525,47 @@
     overflow-x: auto;
     flex-wrap: nowrap;
     justify-content: flex-start;
+  }
+}
+
+/* ---------- mobile tab bar ----------
+   Phones: one row of four equal app-style tabs (icon over label)
+   instead of a wrapped 2×2 pill. Desktop is untouched. */
+@media (max-width: 600px) {
+  .market-embedded-actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    padding: 5px;
+    border-radius: 20px;
+    overflow: visible;
+  }
+  .market-embedded-actions button {
+    width: 100%;
+    min-width: 0;
+    min-height: 60px;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 4px;
+    border-radius: 15px;
+    font-size: 11px;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+  .market-embedded-actions .mtab-icon {
+    font-size: 19px;
+    line-height: 1;
+  }
+  .market-embedded-actions .mtab-label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .market-embedded-actions button.active {
+    box-shadow:
+      0 6px 16px rgba(var(--mp-violet), 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22);
   }
 }
 @media (max-width: 560px) {
