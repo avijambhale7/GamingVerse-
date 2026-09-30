@@ -1,12 +1,14 @@
 /* =========================================================
    GAMER PROFILE
-   Profile card, reviews, collections and the follow modal.
+   Profile card, reviews, collections, café tickets and the
+   follow modal.
    Rendered by ../../Profile.jsx.
 ========================================================= */
 
 import { formatGameName, getGameImage } from "../utils/gameImages.js";
 import AppTopNav from "../../../components/AppTopNav.jsx";
 import AppBottomNav from "../../../components/AppBottomNav.jsx";
+import ProfileTickets from "./ProfileTickets.jsx";
 
 export default function ProfileView({
   activeTab,
@@ -172,9 +174,21 @@ export default function ProfileView({
             >
               ▱ <span>Collections</span>
             </button>
+
+            <button
+              className={
+                activeTab === "tickets" ? "profile-tab active" : "profile-tab"
+              }
+              type="button"
+              onClick={() => setActiveTab("tickets")}
+            >
+              🎫 <span>Tickets</span>
+            </button>
           </div>
 
-          {activeTab === "reviews" ? (
+          {activeTab === "tickets" ? (
+            <ProfileTickets navigate={navigate} uid={user?.uid} />
+          ) : activeTab === "reviews" ? (
             <>
               <div className="profile-filter-row">
                 {[

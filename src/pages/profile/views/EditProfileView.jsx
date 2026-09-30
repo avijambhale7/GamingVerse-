@@ -9,7 +9,6 @@ export default function EditProfileView({
   handlePhotoSelect,
   handleSave,
   message,
-  navigate,
   photoFile,
   profile,
   profileAge,
@@ -34,24 +33,6 @@ export default function EditProfileView({
         <button className="edit-side-item active" type="button">
           <span>👤</span>
           Profile
-        </button>
-
-        <button
-          className="edit-side-item"
-          type="button"
-          onClick={() => navigate("/games?view=collections")}
-        >
-          <span>🎮</span>
-          My Library
-        </button>
-
-        <button
-          className="edit-side-item"
-          type="button"
-          onClick={() => navigate("/games")}
-        >
-          <span>⌂</span>
-          Home
         </button>
 
         <div className="edit-sidebar-bottom">
@@ -81,6 +62,7 @@ export default function EditProfileView({
         </div>
 
         <form className="edit-profile-card" onSubmit={handleSave}>
+          <div className="edit-cover" aria-hidden="true" />
           <div className="edit-photo-section">
             <label
               className="upload-photo-button"
@@ -100,8 +82,14 @@ export default function EditProfileView({
             </label>
 
             <div className="edit-photo-copy">
-              <h3>Profile photo</h3>
-              <p>Upload a new profile photo</p>
+              <h3>
+                {`${profile.firstName} ${profile.lastName}`.trim() ||
+                  "Your name"}
+              </h3>
+              <p className="edit-handle">@{profile.username || "username"}</p>
+              <label className="edit-photo-btn" htmlFor="profile-photo-upload">
+                📷 {profile.photoURL || photoFile ? "Change photo" : "Upload photo"}
+              </label>
 
               <input
                 id="profile-photo-upload"
@@ -117,10 +105,14 @@ export default function EditProfileView({
             </div>
           </div>
 
-          <div className="edit-divider" />
-
           <section className="edit-section">
-            <h2>Personal Information</h2>
+            <div className="edit-section-head">
+              <span aria-hidden="true">👤</span>
+              <div>
+                <h2>Personal Information</h2>
+                <p>How you appear to the GamingVerse community.</p>
+              </div>
+            </div>
 
             <div className="edit-grid">
               <div className="edit-field">
@@ -176,7 +168,17 @@ export default function EditProfileView({
 
               <div className="edit-field full-field age-status-field">
                 <label>GamingVerse Age Access</label>
-                <div className="age-status-card">
+                <div
+                  className={`age-status-card ${
+                    profileAge === null
+                      ? "is-unset"
+                      : profileAge < 16
+                        ? "is-protected"
+                        : profileAge < 18
+                          ? "is-teen"
+                          : "is-full"
+                  }`}
+                >
                   {profileAge === null ? (
                     <>
                       <strong>Age not set</strong>
@@ -226,14 +228,20 @@ export default function EditProfileView({
             </div>
           </section>
 
-          <div className="edit-divider" />
-
           <section className="edit-section">
-            <h2>Social Links</h2>
+            <div className="edit-section-head is-social">
+              <span aria-hidden="true">🔗</span>
+              <div>
+                <h2>Social Links</h2>
+                <p>Optional — shown on your profile so gamers can find you.</p>
+              </div>
+            </div>
 
             <div className="edit-grid">
               <div className="edit-field">
                 <label htmlFor="instagram">Instagram</label>
+                <div className="social-input-wrap">
+                  <span aria-hidden="true">📸</span>
                 <input
                   id="instagram"
                   type="text"
@@ -242,10 +250,13 @@ export default function EditProfileView({
                   onChange={handleEditChange}
                   placeholder="@username"
                 />
+                </div>
               </div>
 
               <div className="edit-field">
                 <label htmlFor="twitter">Twitter / X</label>
+                <div className="social-input-wrap">
+                  <span aria-hidden="true">𝕏</span>
                 <input
                   id="twitter"
                   type="text"
@@ -254,10 +265,13 @@ export default function EditProfileView({
                   onChange={handleEditChange}
                   placeholder="@username"
                 />
+                </div>
               </div>
 
               <div className="edit-field full-field">
                 <label htmlFor="youtube">YouTube</label>
+                <div className="social-input-wrap">
+                  <span aria-hidden="true">▶</span>
                 <input
                   id="youtube"
                   type="text"
@@ -266,6 +280,7 @@ export default function EditProfileView({
                   onChange={handleEditChange}
                   placeholder="YouTube channel URL"
                 />
+                </div>
               </div>
             </div>
           </section>
@@ -282,7 +297,7 @@ export default function EditProfileView({
             </div>
           )}
 
-          <div className="edit-actions">
+          <div className="edit-actions edit-actions-sticky">
             <button
               type="button"
               className="cancel-profile-btn"

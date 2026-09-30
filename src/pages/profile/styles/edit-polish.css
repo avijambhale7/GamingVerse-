@@ -1,0 +1,348 @@
+/* =========================================================
+   EDIT PROFILE POLISH
+   Cover-banner photo header, card-per-section form, colour-
+   coded age access, icon inputs and a sticky save bar —
+   matching the profile page polish. Imported last.
+========================================================= */
+
+.edit-profile-page {
+  --ep-violet: 168, 85, 247;
+  --ep-pink: 236, 72, 153;
+  --ep-green: 16, 185, 129;
+  --ep-amber: 245, 179, 1;
+  background:
+    radial-gradient(760px 420px at 30% -8%, rgba(var(--ep-violet), 0.18), transparent 62%),
+    radial-gradient(620px 380px at 100% 10%, rgba(var(--ep-pink), 0.08), transparent 62%),
+    var(--gv-surface-1, #08080b);
+}
+
+/* ---------- sidebar ---------- */
+
+.edit-profile-page .edit-sidebar {
+  background: rgba(10, 10, 14, 0.85);
+  border-right-color: rgba(255, 255, 255, 0.06);
+}
+.edit-profile-page .edit-side-item {
+  border-radius: 14px;
+}
+.edit-profile-page .edit-side-item.active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(var(--ep-violet), 0.3), rgba(var(--ep-pink), 0.15));
+  box-shadow: inset 0 0 0 1px rgba(var(--ep-violet), 0.45);
+}
+.edit-profile-page .logout-side {
+  color: #fda4af;
+}
+.edit-profile-page .logout-side:hover {
+  color: #fff;
+  background: rgba(244, 63, 94, 0.85);
+}
+
+/* ---------- page header ---------- */
+
+.edit-profile-page .edit-profile-main {
+  padding-bottom: 20px;
+}
+.edit-profile-page .back-profile-button {
+  padding: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #d4d4dc;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+.edit-profile-page .back-profile-button:hover {
+  color: #fff;
+  border-color: rgba(var(--ep-violet), 0.55);
+}
+.edit-profile-page .edit-profile-top h1 {
+  letter-spacing: -0.03em;
+  background: linear-gradient(100deg, #fff 30%, #f0abfc 70%, #c4b5fd);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- form becomes a stack of cards ---------- */
+
+.edit-profile-page .edit-profile-card {
+  display: grid;
+  gap: 18px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.edit-profile-page .edit-divider {
+  display: none;
+}
+
+/* photo header card */
+.edit-cover {
+  height: 118px;
+  margin-bottom: -18px;
+  border-radius: 24px 24px 0 0;
+  border: 1px solid rgba(var(--ep-violet), 0.3);
+  border-bottom: 0;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(236, 72, 153, 0.45), transparent 45%),
+    radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.55), transparent 50%),
+    linear-gradient(135deg, #3b0764, #6d28d9 50%, #312e81);
+  position: relative;
+  overflow: hidden;
+}
+.edit-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.18) 1px, transparent 1px);
+  background-size: 14px 14px;
+  mask-image: linear-gradient(180deg, #000, transparent);
+  -webkit-mask-image: linear-gradient(180deg, #000, transparent);
+}
+.edit-profile-page .edit-photo-section {
+  display: flex;
+  align-items: flex-end;
+  gap: 22px;
+  margin: 0;
+  padding: 0 28px 24px;
+  border: 1px solid rgba(var(--ep-violet), 0.3);
+  border-top: 0;
+  border-radius: 0 0 24px 24px;
+  background: #0f0f14;
+}
+.edit-profile-page .upload-photo-button {
+  margin-top: -58px;
+  flex-shrink: 0;
+}
+.edit-profile-page .large-profile-avatar {
+  width: 128px;
+  height: 128px;
+  border: 4px solid #0f0f14;
+  background: linear-gradient(135deg, #7c3aed, #a855f7 60%, #c084fc);
+  box-shadow:
+    0 0 0 3px rgba(var(--ep-violet), 0.75),
+    0 14px 36px rgba(var(--ep-violet), 0.4);
+}
+.edit-profile-page .large-profile-avatar > span {
+  font-size: 40px;
+}
+.edit-profile-page .edit-photo-copy {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 6px;
+  min-width: 0;
+}
+.edit-profile-page .edit-photo-copy h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 22px;
+  text-transform: capitalize;
+}
+.edit-profile-page .edit-photo-copy .edit-handle {
+  width: fit-content;
+  margin: 0 0 6px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--ep-violet), 0.35);
+  background: rgba(var(--ep-violet), 0.14);
+  color: #d8b4fe;
+  font-size: 13px;
+}
+.edit-photo-btn {
+  width: fit-content;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.edit-photo-btn:hover {
+  border-color: transparent;
+  background: linear-gradient(120deg, #ec4899, #a855f7);
+}
+
+/* section cards */
+.edit-profile-page .edit-section {
+  padding: 24px 28px 26px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 24px;
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01)),
+    #0f0f14;
+}
+.edit-section-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.edit-section-head > span {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(var(--ep-violet), 0.4), rgba(var(--ep-violet), 0.12));
+  border: 1px solid rgba(var(--ep-violet), 0.45);
+  font-size: 20px;
+}
+.edit-section-head.is-social > span {
+  background: linear-gradient(135deg, rgba(var(--ep-pink), 0.4), rgba(var(--ep-pink), 0.12));
+  border-color: rgba(var(--ep-pink), 0.45);
+}
+.edit-profile-page .edit-section-head h2 {
+  margin: 0;
+  font-size: 19px;
+}
+.edit-section-head p {
+  margin: 3px 0 0;
+  color: #9a9aa4;
+  font-size: 13px;
+}
+
+/* inputs */
+.edit-profile-page .edit-field label {
+  color: #d4d4dc;
+  font-size: 13px;
+}
+.edit-profile-page .edit-field input,
+.edit-profile-page .edit-field textarea,
+.edit-profile-page .username-input-wrap {
+  border-radius: 14px;
+  border-color: rgba(255, 255, 255, 0.09);
+  background-color: rgba(0, 0, 0, 0.35);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.edit-profile-page .username-input-wrap input {
+  background: transparent;
+}
+.edit-profile-page .edit-field input:hover,
+.edit-profile-page .edit-field textarea:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.edit-profile-page .edit-field input:focus,
+.edit-profile-page .edit-field textarea:focus,
+.edit-profile-page .username-input-wrap:focus-within {
+  outline: none;
+  border-color: #ec4899;
+  box-shadow: 0 0 0 4px rgba(var(--ep-pink), 0.14);
+}
+.edit-profile-page .username-input-wrap input:focus {
+  border: 0;
+  box-shadow: none;
+}
+.edit-profile-page .username-input-wrap span {
+  color: #c084fc;
+  font-weight: 800;
+}
+.edit-profile-page .edit-field small {
+  display: block;
+  text-align: right;
+  color: #6e6e78;
+}
+
+.social-input-wrap {
+  position: relative;
+}
+.social-input-wrap > span {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #c084fc;
+  font-size: 14px;
+  font-weight: 900;
+  pointer-events: none;
+}
+.edit-profile-page .social-input-wrap input {
+  width: 100%;
+  padding-left: 42px;
+}
+
+/* age access */
+.edit-profile-page .age-status-card {
+  --k: var(--ep-violet);
+  border-radius: 16px;
+  border: 1px solid rgba(var(--k), 0.4);
+  background: linear-gradient(135deg, rgba(var(--k), 0.16), rgba(var(--k), 0.04));
+  box-shadow: inset 4px 0 0 rgba(var(--k), 0.85);
+}
+.edit-profile-page .age-status-card.is-full {
+  --k: var(--ep-green);
+}
+.edit-profile-page .age-status-card.is-teen {
+  --k: var(--ep-amber);
+}
+.edit-profile-page .age-status-card.is-protected {
+  --k: var(--ep-pink);
+}
+.edit-profile-page .age-status-card strong {
+  color: rgb(var(--k));
+  filter: brightness(1.25);
+}
+
+/* ---------- messages + sticky actions ---------- */
+
+.edit-profile-page .profile-message {
+  border-radius: 14px;
+}
+.edit-actions-sticky {
+  position: sticky;
+  bottom: 14px;
+  z-index: 5;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  background: rgba(15, 15, 20, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+.edit-profile-page .cancel-profile-btn {
+  border-radius: 999px;
+}
+.edit-profile-page .save-profile-btn {
+  border: 0;
+  border-radius: 999px;
+  padding-inline: 26px;
+  background: linear-gradient(120deg, #ec4899, #a855f7 55%, #6366f1);
+  color: #fff;
+  box-shadow: 0 10px 26px rgba(var(--ep-pink), 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.edit-profile-page .save-profile-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(var(--ep-pink), 0.45);
+}
+
+/* ---------- mobile ---------- */
+
+@media (max-width: 640px) {
+  .edit-profile-page .edit-photo-section {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0 18px 20px;
+  }
+  .edit-profile-page .edit-photo-copy {
+    justify-items: center;
+  }
+  .edit-profile-page .edit-section {
+    padding: 20px 18px;
+  }
+  .edit-actions-sticky {
+    bottom: 84px;
+  }
+  .edit-actions-sticky button {
+    flex: 1;
+  }
+}

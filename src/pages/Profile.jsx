@@ -63,7 +63,7 @@ function Profile() {
   const [myReviews, setMyReviews] = useState([]);
   const [activeTab, setActiveTab] = useState(() => {
     const tab = new URLSearchParams(window.location.search).get("tab");
-    return tab === "collections" ? "collections" : "reviews";
+    return tab === "collections" || tab === "tickets" ? tab : "reviews";
   });
   const [filter, setFilter] = useState("all");
   const [reviewViewMode, setReviewViewMode] = useState("list");
@@ -622,7 +622,6 @@ function Profile() {
         handlePhotoSelect={handlePhotoSelect}
         handleSave={handleSave}
         message={message}
-        navigate={navigate}
         photoFile={photoFile}
         profile={profile}
         profileAge={profileAge}

@@ -1,70 +1,85 @@
 /* =========================================================
    APP TOP NAV
-   Icon-only desktop nav row shared by every page. Hidden below
-   750px, where AppBottomNav takes over instead.
+   Desktop nav row shared by every page: inactive tabs are
+   icons only, the active tab also shows its name with a
+   glowing underline. Hidden below 750px, where AppBottomNav
+   takes over instead.
 ========================================================= */
 .app-top-nav {
   display: flex;
   align-items: center;
-  gap: 6px;
-
-  padding: 5px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  gap: 4px;
 }
 
 .app-top-nav-link {
-  display: grid;
-  place-items: center;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 
-  width: 38px;
-  height: 38px;
+  height: 42px;
+  padding: 0 11px;
 
   border: 0;
-  border-radius: 50%;
+  border-radius: 12px;
   background: transparent;
-  color: #9a9aa4;
+  color: #8a8a94;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 800;
+  white-space: nowrap;
 
   cursor: pointer;
   outline: none;
   transition:
     background 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease;
+    color 0.2s ease;
 
   -webkit-tap-highlight-color: transparent;
 }
 
 .app-top-nav-link:hover {
   color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.app-top-nav-link:active {
-  transform: scale(0.92);
-}
-
-/* A default browser focus ring is a rectangle; on a circular
-   button that reads as a stray, misaligned line. Replace it
-   with a round glow that actually follows the button's shape. */
 .app-top-nav-link:focus-visible {
   box-shadow: 0 0 0 3px rgba(168, 50, 255, 0.45);
 }
 
-.app-top-nav-link.active {
-  color: #fff;
-  background: linear-gradient(135deg, #8f2df0, #b04cff);
-  /* A tight, symmetric shadow that hugs the circle — the earlier
-     wide/offset glow made the active icon visually read as a
-     bigger, oval shape next to the other same-size tabs. */
-  box-shadow: 0 0 0 1px rgba(168, 50, 255, 0.5);
+/* Only the active tab shows its name; the rest keep it for
+   screen readers and show it as a tooltip. */
+.app-top-nav-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 
-.app-top-nav-link.active:focus-visible {
-  box-shadow:
-    0 0 0 1px rgba(168, 50, 255, 0.5),
-    0 0 0 4px rgba(168, 50, 255, 0.45);
+.app-top-nav-link.active {
+  color: #fff;
+  padding-inline: 12px 14px;
+}
+
+.app-top-nav-link.active .app-top-nav-label {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+}
+
+.app-top-nav-link.active::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: -9px;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, transparent, #a855f7 20%, #c084fc 50%, #a855f7 80%, transparent);
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.8);
 }
 
 @media (max-width: 750px) {

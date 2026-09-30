@@ -88,6 +88,13 @@ export function GVIcon({ name, size = 21 }) {
         <path d="M8 5v1.6M11 5v1.6M14 5v1.6" />
       </>
     ),
+    gamepad: (
+      <>
+        <path d="M17.3 5H6.7a4 4 0 0 0-4 3.6C2.6 9.4 2 14.5 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.4-1.4a2 2 0 0 1 1.4-.6h4.4a2 2 0 0 1 1.4.6L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.5-.6-6.6-.7-7.4a4 4 0 0 0-4-3.6Z" />
+        <path d="M6 11h4M8 9v4" />
+        <path d="M15 12h.01M18 10h.01" />
+      </>
+    ),
   };
 
   return <svg {...common}>{paths[name]}</svg>;

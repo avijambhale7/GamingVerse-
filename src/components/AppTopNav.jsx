@@ -1,7 +1,7 @@
 /* =========================================================
    APP TOP NAV
-   The desktop counterpart to AppBottomNav — a minimal,
-   icon-only nav row (logo left, icons right) shown identically
+   The desktop counterpart to AppBottomNav — icon tabs, with the
+   active tab's name shown beside its icon, the same
    on every page, so Profile no longer looks like a different
    app from Games/Marketplace/Café.
 ========================================================= */
@@ -23,10 +23,11 @@ export default function AppTopNav() {
           className={`app-top-nav-link ${activeKey === tab.key ? "active" : ""}`}
           type="button"
           title={tab.label}
-          aria-label={tab.label}
+          aria-current={activeKey === tab.key ? "page" : undefined}
           onClick={() => navigate(tab.to)}
         >
-          <GVIcon name={tab.icon} size={19} />
+          <GVIcon name={tab.icon} size={18} />
+          <span className="app-top-nav-label">{tab.label}</span>
         </button>
       ))}
     </nav>

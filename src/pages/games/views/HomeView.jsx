@@ -8,7 +8,7 @@ import { useState } from "react";
 import { canAccessGame, getRequiredGameAge, isBlockedGame } from "../utils/access.js";
 import { containsBlockedGameTerm } from "../utils/text.js";
 import { gameAgeRatings } from "../data/ageRatings.js";
-import { getGameDetails } from "../utils/gameInfo.js";
+import { getGameDetails, getGameGenreLabel } from "../utils/gameInfo.js";
 
 // Poster art with a graceful fallback: if the image can't load (bad URL,
 // file unavailable), show the "🎮 + name" tile instead of a broken icon.
@@ -491,7 +491,7 @@ export default function HomeView({
                           <h3>{game.name}</h3>
 
                           <div className="poster-meta">
-                            <span className="genre">Action</span>
+                            <span className="genre">{getGameGenreLabel(game)}</span>
                           </div>
                         </div>
                       </div>

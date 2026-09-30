@@ -1,6 +1,7 @@
 /* =========================================================
    SPACES VIEW
-   Trailers, gaming news and the gaming clubs hub.
+   The community feed (user posts), gaming news and the gaming
+   clubs hub.
    Rendered by ../../Games.jsx.
 ========================================================= */
 
@@ -8,8 +9,8 @@ import { Fragment, useEffect, useRef } from "react";
 import { auth } from "../../../firebase";
 import { CLUB_INTERESTS, getClubInterestMeta } from "../data/clubs.js";
 import { chatDayKey, chatDayLabel, chatTime } from "../utils/text.js";
-import { getGameDetails } from "../utils/gameInfo.js";
 import { horizontalGames } from "../utils/catalogue.js";
+import UserFeed from "./UserFeed.jsx";
 
 export default function SpacesView({
   activeView,
@@ -23,7 +24,6 @@ export default function SpacesView({
   createGamingClub,
   fetchLiveGamingNews,
   filteredGamingClubs,
-  filteredHorizontal,
   filteredPosters,
   gamingClubs,
   joinedClubIds,
@@ -738,89 +738,7 @@ export default function SpacesView({
                 )}
               </main>
             ) : (
-              <main className="trailers-feed">
-                <div className="trailers-feed-head">
-                  <div>
-                    <span className="section-label">WATCH NOW</span>
-                    <h1>Latest Spaces</h1>
-                    <p>
-                      Discover new game reveals, gameplay footage and featured
-                      gaming content.
-                    </p>
-                  </div>
-
-                  <div className="trailers-search-pill">
-                    <span>🔍</span>
-                    <span>
-                      {filteredHorizontal.slice(0, 8).length} trailers
-                    </span>
-                  </div>
-                </div>
-
-                <div className="trailers-list">
-                  {filteredHorizontal.slice(0, 8).map((game, index) => {
-                    const details = getGameDetails(game.name);
-                    const trailerLink =
-                      details.trailerUrl || details.trailerSearchUrl;
-                    return (
-                      <article
-                        className={`trailer-post ${index === 0 ? "featured" : ""}`}
-                        key={`trailer-post-${game.name}-${index}`}
-                      >
-                        <a
-                          className="trailer-media"
-                          href={trailerLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`Watch ${game.name} trailer`}
-                        >
-                          <img src={game.image} alt={game.name} />
-                          <span className="trailer-media-shade"></span>
-                          <span className="trailer-play">▶</span>
-                          <span className="trailer-media-label">
-                            {index === 0 ? "★ FEATURED" : "▶ TRAILER"}
-                          </span>
-                        </a>
-
-                        <div className="trailer-post-copy">
-                          <h2>
-                            Featured content for <strong>{game.name}</strong> is
-                            here.
-                          </h2>
-
-                          <p>{details.description}</p>
-
-                          <div className="trailer-post-meta">
-                            <span>GamingVerse</span>
-                            <span>•</span>
-                            <span>Featured Game</span>
-                          </div>
-                        </div>
-
-                        <div className="trailer-post-actions">
-                          <a
-                            className="trailer-watch-link"
-                            href={trailerLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Open Space ↗
-                          </a>
-
-                          <button
-                            className="trailer-comment-button"
-                            type="button"
-                            onClick={() => openDetails(game)}
-                            aria-label={`Open ${game.name}`}
-                          >
-                            ◌
-                          </button>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              </main>
+              <UserFeed />
             )}
 
             <aside className="trailers-promo">

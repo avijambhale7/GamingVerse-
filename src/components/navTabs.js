@@ -18,7 +18,7 @@ export const NAV_TABS = [
   },
   { key: "spaces", label: "Spaces", icon: "spaces", to: "/games?view=spaces" },
   { key: "shop", label: "Shop", icon: "cart", to: "/games?view=marketplace" },
-  { key: "cafe", label: "Café", icon: "coffee", to: "/games?view=cafe" },
+  { key: "cafe", label: "Café", icon: "gamepad", to: "/games?view=cafe" },
 ];
 
 export function getActiveNavKey(pathname, search) {

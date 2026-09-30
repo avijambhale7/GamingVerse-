@@ -162,7 +162,9 @@ export default function NotificationBell({ path }) {
                       ? "🛒"
                       : item.title === "GamingVerse Café"
                         ? "☕"
-                        : "🔔"}
+                        : item.title === "GamingVerse Feed"
+                          ? "📸"
+                          : "🔔"}
                   </span>
                   <span className="nb-copy">
                     <span>{item.message}</span>

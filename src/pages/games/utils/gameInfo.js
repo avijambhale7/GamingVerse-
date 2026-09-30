@@ -108,6 +108,17 @@ export function getGameCategory(game) {
   return "Action";
 }
 
+/* Short genre label for a game card: the first genre from the
+   game's details ("Racing • Open World" → "Racing"), or its
+   home-page category when no genre is known. */
+export function getGameGenreLabel(game) {
+  const genre = getGameDetails(game?.name || "").genre;
+  const first = String(genre || "")
+    .split(/[•,/|]/)[0]
+    .trim();
+  return first && first !== "Game" ? first : getGameCategory(game);
+}
+
 export function matchesHomeCategory(game, category) {
   if (category === "All") return true;
 

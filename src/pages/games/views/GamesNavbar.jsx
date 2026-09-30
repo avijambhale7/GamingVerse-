@@ -25,6 +25,9 @@ function getNotificationMeta(title) {
   if (title === "GamingVerse Market") {
     return { icon: "🛒", label: "Marketplace", tone: "market" };
   }
+  if (title === "GamingVerse Feed") {
+    return { icon: "📸", label: "Feed", tone: "feed" };
+  }
   if (title === "GamingVerse Café") {
     return { icon: "☕", label: "Café", tone: "cafe" };
   }

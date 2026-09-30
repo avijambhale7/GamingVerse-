@@ -17,3 +17,5 @@
 @import "./profile/styles/owner-business.css"; /* CAFÉ OWNER BUSINESS PROFILE */
 @import "./profile/styles/touch-polish.css"; /* TOUCH-DEVICE PRESS FEEDBACK */
 @import "./profile/styles/profile-polish.css"; /* COLOURFUL PROFILE CARD, TABS, VERDICT CHIPS + REVIEW CARDS */
+@import "./profile/styles/edit-polish.css"; /* EDIT PROFILE: COVER HEADER, SECTION CARDS, STICKY SAVE BAR */
+@import "./profile/styles/tickets.css"; /* TICKETS TAB: CAFÉ BOOKING QR TICKETS */

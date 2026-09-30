@@ -13,6 +13,7 @@ import { sendPush } from "./push.js";
 export const NOTIFY_TITLES = {
   market: "GamingVerse Market",
   cafe: "GamingVerse Café",
+  feed: "GamingVerse Feed",
 };
 
 function write(path, title, message) {
