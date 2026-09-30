@@ -5,10 +5,11 @@
    Rendered by ../../Profile.jsx.
 ========================================================= */
 
-import { formatGameName, getGameImage } from "../utils/gameImages.js";
+import { formatGameName } from "../utils/gameImages.js";
 import AppTopNav from "../../../components/AppTopNav.jsx";
 import AppBottomNav from "../../../components/AppBottomNav.jsx";
 import ProfileTickets from "./ProfileTickets.jsx";
+import useRemotePosters from "../utils/useRemotePosters.js";
 
 export default function ProfileView({
   activeTab,
@@ -41,6 +42,15 @@ export default function ProfileView({
   user,
   verdictLabel,
 }) {
+  // Reviewed/collected games found through RAWG search have no bundled
+  // artwork; this fills their posters in from RAWG.
+  const posterFor = useRemotePosters([
+    ...filteredReviews.map((review) => review.rawGameName || review.gameName),
+    ...collectionGames,
+    ...playedGames,
+    ...playLaterGames,
+  ]);
+
   return (
     <div className="profile-page">
       <header className="profile-header">
@@ -331,13 +341,15 @@ export default function ProfileView({
                       <div className="my-review-head">
                         <div className="my-review-game">
                           <div className="my-review-game-icon">
-                            {getGameImage(review.gameName) ||
-                            review.gameImage ? (
+                            {posterFor(
+                              review.rawGameName || review.gameName,
+                              review.gameImage,
+                            ) ? (
                               <img
-                                src={
-                                  getGameImage(review.gameName) ||
-                                  review.gameImage
-                                }
+                                src={posterFor(
+                                  review.rawGameName || review.gameName,
+                                  review.gameImage,
+                                )}
                                 alt={review.gameName}
                                 loading="lazy"
                               />
@@ -407,7 +419,7 @@ export default function ProfileView({
                   {collectionGames.length > 0 ? (
                     <div className="profile-library-list">
                       {collectionGames.map((gameName) => {
-                        const image = getGameImage(gameName);
+                        const image = posterFor(gameName);
                         return (
                           <button
                             className="profile-library-item profile-library-item-button"
@@ -464,7 +476,7 @@ export default function ProfileView({
                   {playedGames.length > 0 ? (
                     <div className="profile-library-list">
                       {playedGames.map((gameName) => {
-                        const image = getGameImage(gameName);
+                        const image = posterFor(gameName);
                         return (
                           <button
                             className="profile-library-item profile-library-item-button"
@@ -521,7 +533,7 @@ export default function ProfileView({
                   {playLaterGames.length > 0 ? (
                     <div className="profile-library-list">
                       {playLaterGames.map((gameName) => {
-                        const image = getGameImage(gameName);
+                        const image = posterFor(gameName);
                         return (
                           <button
                             className="profile-library-item profile-library-item-button"

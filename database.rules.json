@@ -34,6 +34,7 @@
           },
           "gameId": { ".validate": "newData.isString()" },
           "gameName": { ".validate": "newData.isString()" },
+          "gameImage": { ".validate": "newData.isString() && newData.val().beginsWith('https://') && newData.val().length <= 2048" },
           "text": { ".validate": "newData.isString() && newData.val().length <= 1000" },
           "userName": { ".validate": "newData.isString()" },
           "initials": { ".validate": "newData.isString()" },

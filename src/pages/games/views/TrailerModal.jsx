@@ -3,7 +3,12 @@
    Rendered by ../../Games.jsx.
 ========================================================= */
 
-import { extractYouTubeId, getGameMediaFallback, getVerifiedTrailerUrl, toYouTubeEmbedUrl } from "../utils/media.js";
+import {
+  extractYouTubeId,
+  getGameMediaFallback,
+  getVerifiedTrailerUrl,
+  toYouTubeEmbedUrl,
+} from "../utils/media.js";
 import { getGameDetails } from "../utils/gameInfo.js";
 
 export default function TrailerModal({
@@ -11,6 +16,39 @@ export default function TrailerModal({
   selectedGame,
   showTrailer,
 }) {
+  // With no known video, open a YouTube search instead of doing nothing.
+  const openOnYouTube = () => {
+    const id = extractYouTubeId(selectedGame?.trailerUrl || "");
+    const url = id
+      ? `https://www.youtube.com/watch?v=${id}`
+      : selectedGame?.trailerSearchUrl ||
+        `https://www.youtube.com/results?search_query=${encodeURIComponent(
+          `${getGameDetails(selectedGame?.name).title} official trailer`,
+        )}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  // Not-found screen over the game's blurred artwork.
+  const renderMissing = () => {
+    const poster = selectedGame.trailerPreview || selectedGame.image || "";
+    const title = getGameDetails(selectedGame.name).title;
+    return (
+      <div className="gv-trailer-state" role="status">
+        {poster && <img className="gv-trailer-state-bg" src={poster} alt="" />}
+        <div className="gv-trailer-state-card">
+          <span className="gv-trailer-state-icon" aria-hidden="true">
+            🎬
+          </span>
+          <strong>No trailer found</strong>
+          <small>{`We couldn't find a playable trailer for ${title}.`}</small>
+          <button type="button" onClick={openOnYouTube}>
+            ▶ Search on YouTube
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
       {showTrailer && selectedGame && (
@@ -51,7 +89,14 @@ export default function TrailerModal({
                 const embedUrl = youtubeId
                   ? toYouTubeEmbedUrl(trailerUrl)
                   : trailerUrl;
-                return selectedGame.trailerType === "video" && !youtubeId ? (
+                // While the trailer is still loading, keep the player
+                // plain black (no spinner or message).
+                return selectedGame.trailerType === "searching" ? (
+                  <div
+                    className="gv-trailer-black"
+                    aria-label="Loading trailer"
+                  />
+                ) : selectedGame.trailerType === "video" && !youtubeId ? (
                   <video
                     className="gv-trailer-player"
                     src={embedUrl}
@@ -72,10 +117,7 @@ export default function TrailerModal({
                     referrerPolicy="strict-origin-when-cross-origin"
                   />
                 ) : (
-                  <div className="gv-trailer-empty">
-                    <strong>Trailer not available in embedded playback.</strong>
-                    <span>Use the YouTube button below to watch it.</span>
-                  </div>
+                  renderMissing()
                 );
               })()}
             </div>
@@ -88,16 +130,7 @@ export default function TrailerModal({
               <button
                 type="button"
                 className="gv-trailer-youtube-link"
-                onClick={() => {
-                  const id = extractYouTubeId(selectedGame.trailerUrl || "");
-                  if (id) {
-                    window.open(
-                      `https://www.youtube.com/watch?v=${id}`,
-                      "_blank",
-                      "noopener,noreferrer",
-                    );
-                  }
-                }}
+                onClick={openOnYouTube}
               >
                 ▶ YouTube
               </button>

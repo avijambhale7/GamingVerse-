@@ -70,6 +70,11 @@ import {
   resolveGameMedia,
 } from "./games/utils/media.js";
 import {
+  findYouTubeTrailer,
+  getCachedTrailer,
+  prefetchTrailer,
+} from "./games/utils/trailerSearch.js";
+import {
   mapRawgGame,
   RAWG_API_KEY,
   RAWG_KEY_IS_EXHAUSTED_DEMO,
@@ -1626,6 +1631,10 @@ function Games() {
     }
 
     const media = resolveGameMedia(game);
+    // Warm the trailer up now, so pressing Trailer plays it straight away.
+    if (!media.trailer) {
+      prefetchTrailer(getGameDetails(game?.name).title || game?.name);
+    }
     setSelectedGame({
       ...game,
       image: media.poster || game?.image || "",
@@ -1738,12 +1747,13 @@ function Games() {
     const knownYoutubeTrailer =
       verifiedTrailer ||
       details?.trailerUrl ||
-      (extractYouTubeId(gameTrailerUrl) ? gameTrailerUrl : "");
+      (extractYouTubeId(gameTrailerUrl) ? gameTrailerUrl : "") ||
+      getCachedTrailer(details?.title || gameName);
 
     setSelectedGame({
       ...game,
       trailerUrl: knownYoutubeTrailer,
-      trailerType: knownYoutubeTrailer ? "youtube" : "search",
+      trailerType: knownYoutubeTrailer ? "youtube" : "searching",
       trailerSearchUrl,
       trailerPreview: game?.image || "",
       fallbackYoutubeTrailer: knownYoutubeTrailer,
@@ -1756,7 +1766,29 @@ function Games() {
     // Known trailers should open immediately. No RAWG request is needed.
     if (knownYoutubeTrailer) return;
 
+    // Most games aren't in the verified list and RAWG rarely has clips
+    // any more, so search YouTube (via /api/trailer) first.
+    const foundTrailer = await findYouTubeTrailer(details?.title || gameName);
+    if (
+      trailerSession !== trailerSessionRef.current ||
+      !showTrailerRef.current
+    )
+      return;
+    if (foundTrailer) {
+      setSelectedGame((current) => ({
+        ...(current || game),
+        trailerUrl: foundTrailer,
+        trailerType: "youtube",
+        fallbackYoutubeTrailer: foundTrailer,
+      }));
+      return;
+    }
+
     if (!RAWG_API_KEY) {
+      setSelectedGame((current) => ({
+        ...(current || game),
+        trailerType: "search",
+      }));
       return;
     }
 
@@ -2167,6 +2199,12 @@ function Games() {
         initials: displayName.charAt(0).toUpperCase(),
         review: reviewId,
         text: text || existing?.text || "",
+        // Lets the profile show a poster for games found via RAWG search,
+        // which have no bundled artwork.
+        ...(/^https:\/\//.test(selectedGame.image || "") &&
+        selectedGame.image.length <= 2048
+          ? { gameImage: selectedGame.image }
+          : {}),
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
