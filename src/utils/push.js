@@ -90,10 +90,25 @@ export async function enablePush(uid) {
 
   const registration = await navigator.serviceWorker.register(SW_URL);
   await navigator.serviceWorker.ready;
-  const token = await fcm.m.getToken(fcm.messaging, {
-    vapidKey: VAPID_KEY,
-    serviceWorkerRegistration: registration,
-  });
+  let token;
+  try {
+    token = await fcm.m.getToken(fcm.messaging, {
+      vapidKey: VAPID_KEY,
+      serviceWorkerRegistration: registration,
+    });
+  } catch (error) {
+    // The browser couldn't reach its push service. Brave switches
+    // Google's push service off by default, which fails exactly here.
+    if (/push service/i.test(String(error?.message || ""))) {
+      throw new Error(
+        navigator.brave
+          ? "Brave blocks push by default. Turn on brave://settings/privacy → \"Use Google services for push messaging\", restart Brave, then try again."
+          : "Your browser's push service isn't reachable. Check that push/Google services aren't disabled in browser settings, then try again.",
+        { cause: error },
+      );
+    }
+    throw error;
+  }
   if (!token) throw new Error("Could not get a push token for this device.");
 
   const key = tokenKey(token);

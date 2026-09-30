@@ -113,6 +113,11 @@ export default function UserFeed() {
   const [likes, setLikes] = useState({});
   const [comments, setComments] = useState({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  // Set as soon as Firebase restores the session; the feed listeners
+  // wait for it, because a read made before sign-in is refused and
+  // Firebase then cancels that listener for good.
+  const [authUid, setAuthUid] = useState(null);
 
   const [composerOpen, setComposerOpen] = useState(false);
   const [file, setFile] = useState(null);
@@ -126,8 +131,11 @@ export default function UserFeed() {
   useEffect(
     () =>
       onAuthStateChanged(auth, async (user) => {
+        setAuthUid(user?.uid || null);
+        setLoadError("");
         if (!user) {
           setMe(null);
+          setLoading(false);
           return;
         }
         let data = {};
@@ -155,6 +163,16 @@ export default function UserFeed() {
   );
 
   useEffect(() => {
+    if (!authUid) return undefined;
+    const onReadError = (err) => {
+      console.error("Feed load error:", err);
+      setLoadError(
+        String(err?.message || "").includes("permission")
+          ? "The feed couldn't load because the latest database rules aren't published yet."
+          : "The feed couldn't load. Check your connection and refresh.",
+      );
+      setLoading(false);
+    };
     const stopPosts = onValue(
       query(
         ref(db, "posts"),
@@ -169,29 +187,34 @@ export default function UserFeed() {
         setPosts(list.reverse());
         setLoading(false);
       },
-      (err) => {
-        console.error("Feed load error:", err);
-        setLoading(false);
+      onReadError,
+    );
+    const stopLikes = onValue(
+      ref(db, "postLikes"),
+      (snap) => setLikes(snap.val() || {}),
+      onReadError,
+    );
+    const stopComments = onValue(
+      ref(db, "postComments"),
+      (snap) => {
+        const byPost = {};
+        Object.entries(snap.val() || {}).forEach(([postId, items]) => {
+          byPost[postId] = Object.entries(items || {})
+            .map(([id, value]) => ({ id, ...value }))
+            .sort(
+              (a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0),
+            );
+        });
+        setComments(byPost);
       },
+      onReadError,
     );
-    const stopLikes = onValue(ref(db, "postLikes"), (snap) =>
-      setLikes(snap.val() || {}),
-    );
-    const stopComments = onValue(ref(db, "postComments"), (snap) => {
-      const byPost = {};
-      Object.entries(snap.val() || {}).forEach(([postId, items]) => {
-        byPost[postId] = Object.entries(items || {})
-          .map(([id, value]) => ({ id, ...value }))
-          .sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
-      });
-      setComments(byPost);
-    });
     return () => {
       stopPosts();
       stopLikes();
       stopComments();
     };
-  }, []);
+  }, [authUid]);
 
   useEffect(() => () => preview && URL.revokeObjectURL(preview), [preview]);
 
@@ -357,6 +380,17 @@ export default function UserFeed() {
 
       {loading ? (
         <div className="uf-empty">Loading feed…</div>
+      ) : loadError ? (
+        <div className="uf-empty">
+          <div>⚠️</div>
+          <h3>Feed unavailable</h3>
+          <p>{loadError}</p>
+        </div>
+      ) : !authUid ? (
+        <div className="uf-empty">
+          <div>🔒</div>
+          <h3>Sign in to see the feed</h3>
+        </div>
       ) : posts.length === 0 ? (
         <div className="uf-empty">
           <div>📸</div>
