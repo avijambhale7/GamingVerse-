@@ -4,10 +4,28 @@
    Rendered by ../../Games.jsx.
 ========================================================= */
 
+import { useState } from "react";
 import { canAccessGame, getRequiredGameAge, isBlockedGame } from "../utils/access.js";
 import { containsBlockedGameTerm } from "../utils/text.js";
 import { gameAgeRatings } from "../data/ageRatings.js";
 import { getGameDetails } from "../utils/gameInfo.js";
+
+// Poster art with a graceful fallback: if the image can't load (bad URL,
+// file unavailable), show the "🎮 + name" tile instead of a broken icon.
+function PosterImage({ src, name }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) {
+    return (
+      <div className="database-game-fallback">
+        <span>🎮</span>
+        <strong>{name}</strong>
+      </div>
+    );
+  }
+  return (
+    <img src={src} alt={name} loading="lazy" onError={() => setFailed(true)} />
+  );
+}
 
 export default function HomeView({
   activeCategory,
@@ -417,14 +435,12 @@ export default function HomeView({
                               : game.name
                           }
                         >
-                          {game.image ? (
-                            <img src={game.image} alt={game.name} />
-                          ) : (
-                            <div className="database-game-fallback">
-                              <span>🎮</span>
-                              <strong>{game.name}</strong>
-                            </div>
-                          )}
+                          {/* key: a new src gets a fresh load attempt */}
+                          <PosterImage
+                            key={game.image || "none"}
+                            src={game.image}
+                            name={game.name}
+                          />
 
                           {!accessible && (
                             <div

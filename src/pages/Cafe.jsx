@@ -24,6 +24,7 @@ import {
   stationLabel,
 } from "./cafe/utils/slots.js";
 import CafeQrModal from "./cafe/views/CafeQrModal.jsx";
+import { NOTIFY_TITLES, notifyUser } from "../utils/notify.js";
 
 export default function Cafe() {
   const [user, setUser] = useState(null);
@@ -397,6 +398,13 @@ export default function Cafe() {
 
         setBookings((prev) => [firebaseBooking, ...prev]);
         savedToFirebase = true;
+
+        // Tell the café owner (in-app + push).
+        notifyUser(
+          selectedCafe.ownerUid,
+          `New booking request: ${bookingBase.customerName} • ${selectedDate} at ${selectedTime} • ${seatCount} seat${seatCount > 1 ? "s" : ""} at ${selectedCafe.name}.`,
+          NOTIFY_TITLES.cafe,
+        );
       } catch (firebaseError) {
         console.warn(
           "Firebase booking write failed; using local booking fallback.",
@@ -479,6 +487,13 @@ export default function Cafe() {
         }
 
         await remove(ref(db, `cafeBookings/${user.uid}/${booking.id}`));
+
+        const cafe = cafes.find((c) => c.id === booking.cafeId);
+        notifyUser(
+          cafe?.ownerUid,
+          `${booking.customerName || "A customer"} cancelled their ${booking.date} ${booking.time} booking at ${booking.cafeName}.`,
+          NOTIFY_TITLES.cafe,
+        );
       } catch (firebaseError) {
         console.warn("Firebase cancellation write failed:", firebaseError);
       }

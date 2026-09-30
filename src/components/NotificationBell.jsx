@@ -10,6 +10,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { limitToLast, onValue, query, ref, update } from "firebase/database";
 import { db } from "../firebase";
+import PushToggle from "./PushToggle.jsx";
 import "./NotificationBell.css";
 
 function timeAgo(timestamp) {
@@ -140,6 +141,8 @@ export default function NotificationBell({ path }) {
             )}
           </div>
 
+          <PushToggle />
+
           {items.length === 0 ? (
             <div className="nb-empty">
               <span>🔕</span>
@@ -155,7 +158,11 @@ export default function NotificationBell({ path }) {
                   onClick={() => !item.read && markRead(item.id)}
                 >
                   <span className="nb-icon" aria-hidden="true">
-                    {item.title === "GamingVerse Market" ? "🛒" : "🔔"}
+                    {item.title === "GamingVerse Market"
+                      ? "🛒"
+                      : item.title === "GamingVerse Café"
+                        ? "☕"
+                        : "🔔"}
                   </span>
                   <span className="nb-copy">
                     <span>{item.message}</span>

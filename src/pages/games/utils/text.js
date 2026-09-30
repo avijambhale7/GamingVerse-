@@ -30,12 +30,29 @@ export const normalizeCatalogueImageKey = (value = "") =>
     .replace(/\s+/g, " ")
     .trim();
 
+// Roman numerals → digits so "GTA V" and "Grand Theft Auto 5" agree.
+const ROMAN_TOKENS = {
+  i: "1",
+  ii: "2",
+  iii: "3",
+  iv: "4",
+  v: "5",
+  vi: "6",
+  vii: "7",
+  viii: "8",
+  ix: "9",
+};
+
 export const imageNameTokens = (value = "") =>
   new Set(
     normalizeCatalogueImageKey(value)
+      // "GTA" is how the local art is named; titles spell it out.
+      .replace(/\bgta\b/g, "grand theft auto")
       .split(" ")
       .map((token) => token.trim())
-      .filter((token) => token.length > 1),
+      .map((token) => ROMAN_TOKENS[token] || token)
+      // Keep numbers: "Red Dead Redemption" vs "... 2", "GTA 5" vs "6".
+      .filter((token) => token.length > 1 || /\d/.test(token)),
   );
 
 export const localImageSimilarity = (a = "", b = "") => {

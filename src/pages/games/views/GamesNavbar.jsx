@@ -9,6 +9,7 @@ import { formatActivityDate } from "../utils/text.js";
 import { getGameDetails } from "../utils/gameInfo.js";
 import AppTopNav from "../../../components/AppTopNav.jsx";
 import AppBottomNav from "../../../components/AppBottomNav.jsx";
+import PushToggle from "../../../components/PushToggle.jsx";
 
 /* The title on every notification is redundant branding text
    ("GamingVerse", "GamingVerse Verdict", "GamingVerse Review") —
@@ -23,6 +24,9 @@ function getNotificationMeta(title) {
   }
   if (title === "GamingVerse Market") {
     return { icon: "🛒", label: "Marketplace", tone: "market" };
+  }
+  if (title === "GamingVerse Café") {
+    return { icon: "☕", label: "Café", tone: "cafe" };
   }
   return { icon: "♡", label: "Collection", tone: "collection" };
 }
@@ -229,6 +233,8 @@ export default function GamesNavbar({
                     ×
                   </button>
                 </div>
+
+                <PushToggle />
 
                 <div className="notification-tabs">
                   <button

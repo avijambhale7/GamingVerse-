@@ -2,6 +2,7 @@
   "rules": {
     "users": {
       ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".indexOn": ["role"],
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": "auth != null && auth.uid === $uid && data.child('isBanned').val() !== true",
@@ -71,6 +72,16 @@
       "$handle": {
         ".write": "auth != null && ((!data.exists() && newData.val() === auth.uid) || (data.val() === auth.uid && (!newData.exists() || newData.val() === auth.uid)))",
         ".validate": "newData.isString() && $handle.matches(/^[a-z0-9_.]{3,20}$/)"
+      }
+    },
+
+    "pushTokens": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "$tokenKey": {
+          ".validate": "newData.hasChildren(['token', 'createdAt']) && newData.child('token').isString() && newData.child('token').val().length < 1024"
+        }
       }
     },
 

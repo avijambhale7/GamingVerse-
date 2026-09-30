@@ -11,15 +11,9 @@
    adminNotifications             shared feed for all admins
 ========================================================= */
 
-import {
-  get,
-  push,
-  ref,
-  serverTimestamp,
-  set,
-  update,
-} from "firebase/database";
+import { get, push, ref, set, update } from "firebase/database";
 import { auth, db } from "../firebase";
+import { notifyAdmins, notifyUser } from "./notify.js";
 
 export const REQUEST_STATUS = {
   PENDING_ADMIN: "pending_admin",
@@ -86,33 +80,9 @@ export async function getMyPhone() {
 
 /* ---------- notifications ---------- */
 
-const MARKET_TITLE = "GamingVerse Market";
-
-export function notifyUser(uid, message) {
-  const fromUid = auth.currentUser?.uid;
-  if (!uid || !fromUid) return Promise.resolve();
-  return push(ref(db, `notifications/${uid}`), {
-    title: MARKET_TITLE,
-    message,
-    type: "update",
-    fromUid,
-    read: false,
-    createdAt: serverTimestamp(),
-  }).catch((error) => console.error("Notify user failed:", error));
-}
-
-export function notifyAdmins(message) {
-  const fromUid = auth.currentUser?.uid;
-  if (!fromUid) return Promise.resolve();
-  return push(ref(db, "adminNotifications"), {
-    title: MARKET_TITLE,
-    message,
-    type: "update",
-    fromUid,
-    read: false,
-    createdAt: serverTimestamp(),
-  }).catch((error) => console.error("Notify admins failed:", error));
-}
+// In-app + push notifications live in ./notify.js (shared with café
+// bookings); re-exported so existing imports keep working.
+export { notifyAdmins, notifyUser };
 
 /* ---------- workflow actions ---------- */
 

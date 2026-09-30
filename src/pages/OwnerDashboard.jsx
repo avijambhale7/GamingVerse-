@@ -9,6 +9,7 @@ import NotificationBell from "../components/NotificationBell.jsx";
 import PurchaseRequestList from "../components/PurchaseRequestList.jsx";
 import usePurchaseRequests from "../utils/usePurchaseRequests.js";
 import { REQUEST_STATUS } from "../utils/purchaseRequests.js";
+import { NOTIFY_TITLES, notifyUser } from "../utils/notify.js";
 import ImageUploadButton from "../components/ImageUploadButton.jsx";
 import {
   DEFAULT_PRICE_PER_HOUR,
@@ -657,6 +658,17 @@ export default function OwnerDashboard() {
       setMessage(
         `${booking.customerName || "Customer"}'s ${booking.time || ""} booking is now ${nextStatus}.`,
       );
+
+      // Tell the customer (in-app + push); walk-ins have no account.
+      if (!booking.walkIn) {
+        const text = {
+          Confirmed: `✅ Your booking at ${booking.cafeName} on ${booking.date} at ${booking.time} is confirmed. Your QR ticket is ready.`,
+          Rejected: `Your booking request at ${booking.cafeName} on ${booking.date} at ${booking.time} was declined.`,
+          Completed: `Thanks for visiting ${booking.cafeName}! Your ${booking.date} session is complete.`,
+          Cancelled: `Your booking at ${booking.cafeName} on ${booking.date} at ${booking.time} was cancelled by the café.`,
+        }[nextStatus];
+        if (text) notifyUser(booking.customerId, text, NOTIFY_TITLES.cafe);
+      }
     } catch (error) {
       console.error("Booking status update error:", error);
       setMessage("Could not update booking status.");
