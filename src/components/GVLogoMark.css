@@ -23,10 +23,27 @@
   overflow: visible;
 }
 
-.edit-sidebar-logo-icon.gv-logo-host {
+/* Compact size: smaller than the old 50px emoji square. */
+.brand-icon.gv-logo-host,
+.profile-logo-icon.gv-logo-host {
   width: 38px;
   height: 38px;
-  border-radius: 10px;
+  border-radius: 11px;
+  box-shadow: 0 0 14px rgba(157, 43, 255, 0.3);
+}
+
+.edit-sidebar-logo-icon.gv-logo-host {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+}
+
+@media (max-width: 750px) {
+  .brand-icon.gv-logo-host,
+  .profile-logo-icon.gv-logo-host {
+    width: 34px;
+    height: 34px;
+  }
 }
 
 /* Bold wordmark with the gradient "Verse". */

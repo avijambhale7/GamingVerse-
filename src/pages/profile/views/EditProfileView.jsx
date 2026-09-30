@@ -31,7 +31,6 @@ export default function EditProfileView({
             <strong>
               Gaming<span>Verse</span>
             </strong>
-            <small>Level up your gaming experience</small>
           </span>
         </button>
 

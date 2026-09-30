@@ -69,7 +69,6 @@ export default function ProfileView({
             <strong>
               Gaming<span>Verse</span>
             </strong>
-            <small>Level up your gaming experience</small>
           </span>
         </button>
 

@@ -88,8 +88,6 @@ export default function GamesNavbar({
             <h2>
               Gaming<span>Verse</span>
             </h2>
-
-            <small>Level up your gaming experience</small>
           </span>
         </button>
 
