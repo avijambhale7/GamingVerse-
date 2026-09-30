@@ -158,6 +158,48 @@
   border-color: rgba(240, 178, 31, 0.35);
 }
 
+/* Released games (the side-by-side row): Collections is always
+   green and Play Later always amber, not only once added. Upcoming
+   games use full-width buttons outside this row and are unchanged. */
+.reference-hero-actions .reference-secondary-actions .reference-collections-button {
+  background: rgba(10, 212, 139, 0.09);
+  border-color: rgba(10, 212, 139, 0.3);
+  color: #8ff0cd;
+}
+
+.reference-hero-actions .reference-secondary-actions .reference-later-button {
+  background: rgba(240, 178, 31, 0.09);
+  border-color: rgba(240, 178, 31, 0.3);
+  color: #f6d488;
+}
+
+.reference-hero-actions
+  .reference-secondary-actions
+  .reference-collections-button:hover {
+  border-color: rgba(10, 212, 139, 0.55);
+}
+
+.reference-hero-actions .reference-secondary-actions .reference-later-button:hover {
+  border-color: rgba(240, 178, 31, 0.55);
+}
+
+/* Once added, a little stronger, so the state is still clear. */
+.reference-hero-actions
+  .reference-secondary-actions
+  .reference-collections-button.is-active {
+  background: rgba(10, 212, 139, 0.18);
+  border-color: rgba(10, 212, 139, 0.6);
+  box-shadow: 0 6px 18px rgba(10, 212, 139, 0.16);
+}
+
+.reference-hero-actions
+  .reference-secondary-actions
+  .reference-later-button.is-active {
+  background: rgba(240, 178, 31, 0.18);
+  border-color: rgba(240, 178, 31, 0.6);
+  box-shadow: 0 6px 18px rgba(240, 178, 31, 0.16);
+}
+
 /* =========================================================
    MOBILE — GAMES-PAGE-SPECIFIC NAV ADJUSTMENTS
    The floating bar itself (.games-bottom-tabbar/.bottom-tab-link)

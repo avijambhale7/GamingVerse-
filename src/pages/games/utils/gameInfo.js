@@ -63,49 +63,74 @@ export function getGameDetails(gameName) {
   };
 }
 
-export function getGameCategory(game) {
-  const details = game?.name ? gameDetails?.[game.name] : null;
-  const genre = String(
-    game?.genre || game?.genres || details?.genre || details?.genres || "",
-  ).toLowerCase();
+/* Every genre string known for a game: its own field (RAWG games), the
+   curated details and the main games database. "Game" is the
+   placeholder for "unknown" and is ignored. */
+function getGenreText(game) {
+  const name = String(game?.name || "");
+  const own = game?.genre || game?.genres || "";
+  const known = name ? getGameDetails(name).genre : "";
+  return [own, known]
+    .map((value) => String(value || ""))
+    .filter((value) => value && value !== "Game")
+    .join(" • ")
+    .toLowerCase();
+}
+
+const NAME_HINTS = {
+  Racing: /forza|need for speed|\bf1\b|gran turismo|mario kart|the crew/,
+  Sports: /ea sports|\bfc 2\d|nba 2k|fifa|madden|nhl|efootball|wwe 2k|pga tour/,
+  RPG: /elden ring|witcher|cyberpunk|hogwarts|diablo|baldur|persona|dragon age|fallout|final fantasy|starfield|skyrim|mass effect/,
+  Adventure:
+    /tomb raider|uncharted|last of us|god of war|ghost of tsushima|assassin|adventure|life is strange|little nightmares|zelda/,
+  Action:
+    /resident evil|silent hill|dead space|alan wake|outlast|call of duty|battlefield|doom|devil may cry|halo/,
+};
+
+/* All home-page categories a game belongs to (possibly none). */
+export function getGameCategories(game) {
+  const genre = getGenreText(game);
   const name = String(game?.name || "").toLowerCase();
+  const has = (pattern) => pattern.test(genre);
 
-  if (genre.includes("racing") || /forza|need for speed|f1/.test(name)) {
-    return "Racing";
+  // Racing and sports games are only that, even when their genre also
+  // says "Open World" (Forza) or "Multiplayer".
+  if (has(/racing|formula 1/) || NAME_HINTS.Racing.test(name)) {
+    return ["Racing"];
   }
   if (
-    genre.includes("sport") ||
-    /ea sports|fc 2\d|nba 2k|fifa|madden|nhl/.test(name)
+    has(/sport|football|basketball|soccer|cricket|tennis|golf/) ||
+    NAME_HINTS.Sports.test(name)
   ) {
-    return "Sports";
-  }
-  if (genre.includes("rpg")) return "RPG";
-  if (genre.includes("adventure")) return "Adventure";
-  if (genre.includes("action")) return "Action";
-
-  if (
-    /elden ring|witcher|cyberpunk|hogwarts|diablo|baldur|persona|dragon age|fallout/.test(
-      name,
-    )
-  ) {
-    return "RPG";
-  }
-  if (
-    /tomb raider|uncharted|last of us|god of war|ghost of tsushima|assassin|adventure|life is strange|little nightmares/.test(
-      name,
-    )
-  ) {
-    return "Adventure";
-  }
-  if (
-    /resident evil|silent hill|dead space|alan wake|phasmophobia|forest|sons of the forest|outlast/.test(
-      name,
-    )
-  ) {
-    return "Action";
+    return ["Sports"];
   }
 
-  return "Action";
+  const categories = [];
+  if (
+    has(/action|shooter|fps|battle royale|hack and slash|fighting|rogue|stealth|superhero|arcade/) ||
+    NAME_HINTS.Action.test(name)
+  ) {
+    categories.push("Action");
+  }
+  if (
+    has(/adventure|open world|story|metroidvania|platformer|survival|horror|sandbox|exploration|puzzle/) ||
+    NAME_HINTS.Adventure.test(name)
+  ) {
+    categories.push("Adventure");
+  }
+  if (has(/rpg|role.playing|soulslike/) || NAME_HINTS.RPG.test(name)) {
+    categories.push("RPG");
+  }
+  return categories;
+}
+
+/* A single main category (used as a card label when a game has no
+   genre text of its own). "Action RPG" counts as RPG. Defaults to
+   Action. */
+export function getGameCategory(game) {
+  const categories = getGameCategories(game);
+  if (categories.includes("RPG")) return "RPG";
+  return categories[0] || "Action";
 }
 
 /* Short genre label for a game card: the first genre from the
@@ -119,19 +144,9 @@ export function getGameGenreLabel(game) {
   return first && first !== "Game" ? first : getGameCategory(game);
 }
 
+/* Games that fit none of the five categories (e.g. Among Us) only
+   show under "All" — they are no longer lumped into Action. */
 export function matchesHomeCategory(game, category) {
   if (category === "All") return true;
-
-  const details = game?.name ? gameDetails?.[game.name] : null;
-  const genre = String(
-    game?.genre || game?.genres || details?.genre || details?.genres || "",
-  ).toLowerCase();
-
-  if (category === "Action" && genre.includes("action")) return true;
-  if (category === "Adventure" && genre.includes("adventure")) return true;
-  if (category === "RPG" && genre.includes("rpg")) return true;
-  if (category === "Racing" && genre.includes("racing")) return true;
-  if (category === "Sports" && genre.includes("sport")) return true;
-
-  return getGameCategory(game) === category;
+  return getGameCategories(game).includes(category);
 }

@@ -54,4 +54,38 @@ describe("matchesHomeCategory", () => {
       matchesHomeCategory({ name: "Some Game", genre: "Racing" }, "RPG"),
     ).toBe(false);
   });
+
+  it("does not put games with unknown genres under Action", () => {
+    expect(
+      matchesHomeCategory({ name: "Totally Unclassified Game" }, "Action"),
+    ).toBe(false);
+  });
+
+  it("does not put a farming sim under Action", () => {
+    expect(
+      matchesHomeCategory(
+        { name: "Farm Game", genre: "Simulation • RPG • Farming" },
+        "Action",
+      ),
+    ).toBe(false);
+  });
+
+  it("lets an action-adventure game appear in both categories", () => {
+    const game = { name: "Some Game", genre: "Action • Adventure" };
+    expect(matchesHomeCategory(game, "Action")).toBe(true);
+    expect(matchesHomeCategory(game, "Adventure")).toBe(true);
+  });
+
+  it("keeps open-world racing games out of Adventure", () => {
+    const game = { name: "Some Racer", genre: "Racing • Open World" };
+    expect(matchesHomeCategory(game, "Racing")).toBe(true);
+    expect(matchesHomeCategory(game, "Adventure")).toBe(false);
+  });
+
+  it("uses RAWG genre names for online games", () => {
+    const game = { name: "Online Game", genre: "Shooter, Adventure" };
+    expect(matchesHomeCategory(game, "Action")).toBe(true);
+    expect(matchesHomeCategory(game, "Adventure")).toBe(true);
+    expect(matchesHomeCategory(game, "RPG")).toBe(false);
+  });
 });
