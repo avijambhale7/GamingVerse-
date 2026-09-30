@@ -2,6 +2,7 @@
    EDIT PROFILE PAGE
    Rendered by ../../Profile.jsx.
 ========================================================= */
+import GVLogoMark from "../../../components/GVLogoMark.jsx";
 
 export default function EditProfileView({
   handleEditChange,
@@ -23,9 +24,13 @@ export default function EditProfileView({
           type="button"
           onClick={() => setIsEditing(false)}
         >
-          <span className="edit-sidebar-logo-icon">🎮</span>
+          <span className="edit-sidebar-logo-icon gv-logo-host" aria-hidden="true">
+            <GVLogoMark />
+          </span>
           <span>
-            <strong>GamingVerse</strong>
+            <strong>
+              Gaming<span>Verse</span>
+            </strong>
             <small>Level up your gaming experience</small>
           </span>
         </button>

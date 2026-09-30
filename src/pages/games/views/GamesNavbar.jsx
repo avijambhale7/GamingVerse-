@@ -10,6 +10,7 @@ import { getGameDetails } from "../utils/gameInfo.js";
 import AppTopNav from "../../../components/AppTopNav.jsx";
 import AppBottomNav from "../../../components/AppBottomNav.jsx";
 import PushToggle from "../../../components/PushToggle.jsx";
+import GVLogoMark from "../../../components/GVLogoMark.jsx";
 
 /* The title on every notification is redundant branding text
    ("GamingVerse", "GamingVerse Verdict", "GamingVerse Review") —
@@ -79,8 +80,8 @@ export default function GamesNavbar({
             window.scrollTo({ top: 0, behavior: "smooth" });
           }}
         >
-          <span className="brand-icon" aria-hidden="true">
-            🎮
+          <span className="brand-icon gv-logo-host" aria-hidden="true">
+            <GVLogoMark />
           </span>
 
           <span className="brand-text">

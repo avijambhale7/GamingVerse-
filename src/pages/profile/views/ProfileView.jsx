@@ -9,6 +9,7 @@ import { formatGameName } from "../utils/gameImages.js";
 import AppTopNav from "../../../components/AppTopNav.jsx";
 import AppBottomNav from "../../../components/AppBottomNav.jsx";
 import ProfileTickets from "./ProfileTickets.jsx";
+import GVLogoMark from "../../../components/GVLogoMark.jsx";
 import useRemotePosters from "../utils/useRemotePosters.js";
 
 export default function ProfileView({
@@ -60,10 +61,14 @@ export default function ProfileView({
           onClick={() => navigate("/games")}
           aria-label="Go to GamingVerse home"
         >
-          <span className="profile-logo-icon">🎮</span>
+          <span className="profile-logo-icon gv-logo-host" aria-hidden="true">
+            <GVLogoMark />
+          </span>
 
           <span className="profile-logo-text">
-            <strong>GamingVerse</strong>
+            <strong>
+              Gaming<span>Verse</span>
+            </strong>
             <small>Level up your gaming experience</small>
           </span>
         </button>

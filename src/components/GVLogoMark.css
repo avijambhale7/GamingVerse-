@@ -1,0 +1,67 @@
+/* =========================================================
+   GAMINGVERSE LOGO MARK
+   The SVG draws its own gradient tile, so the old purple
+   emoji squares it sits in lose their fill, and the
+   "GamingVerse" wordmarks become heavy bold with a gradient
+   "Verse" to match the logo.
+========================================================= */
+
+.gv-logo-mark {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Logo containers: keep their size and glow, drop the old fill. */
+.brand-icon.gv-logo-host,
+.profile-logo-icon.gv-logo-host,
+.edit-sidebar-logo-icon.gv-logo-host {
+  padding: 0;
+  background: none;
+  border-radius: 14px;
+  font-size: 0;
+  overflow: visible;
+}
+
+.edit-sidebar-logo-icon.gv-logo-host {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+}
+
+/* Bold wordmark with the gradient "Verse". */
+.games-navbar .brand-text h2,
+.profile-header .profile-logo-text strong,
+.edit-sidebar .edit-sidebar-logo strong,
+.games-footer .footer-brand {
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.games-navbar .brand-text h2 span,
+.profile-header .profile-logo-text strong span,
+.edit-sidebar .edit-sidebar-logo strong span,
+.games-footer .footer-brand-name span {
+  background: linear-gradient(100deg, #ec4899, #a855f7 60%, #6366f1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Small inline logo in the footer. */
+.games-footer .footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+/* footer.css colours every span in the footer brand purple; keep
+   "Gaming" white — only the inner "Verse" gets the gradient. */
+.games-footer .footer-brand-name {
+  color: #fff;
+}
+
+.footer-logo-mark {
+  width: 28px;
+  height: 28px;
+}
