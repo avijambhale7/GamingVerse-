@@ -169,17 +169,6 @@
   font-size: 13px;
 }
 
-.photo-url-input {
-  width: 430px;
-  max-width: 100%;
-}
-
-.edit-divider {
-  height: 1px;
-  background: #282828;
-  margin: 35px 0;
-}
-
 .edit-section h2 {
   font-size: 18px;
   margin: 0 0 22px;

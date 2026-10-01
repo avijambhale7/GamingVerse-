@@ -8,78 +8,6 @@
    Matches the clean monochrome icon navigation reference.
 ========================================================= */
 
-.games-main-nav {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.games-main-nav .nav-icon-link {
-  position: relative;
-  min-width: 52px;
-  height: 54px;
-  padding: 0 13px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  border: 1px solid transparent;
-  border-radius: 0;
-  background: transparent;
-  color: #8f9098;
-  cursor: pointer;
-  transition:
-    color 0.2s ease,
-    background 0.2s ease,
-    border-color 0.2s ease,
-    min-width 0.2s ease;
-}
-
-.games-main-nav .nav-icon-link svg {
-  flex: 0 0 auto;
-}
-
-.games-main-nav .nav-icon-label {
-  max-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  opacity: 0;
-  font-size: 14px;
-  font-weight: 800;
-  transition:
-    max-width 0.2s ease,
-    opacity 0.2s ease;
-}
-
-.games-main-nav .nav-icon-link:hover {
-  color: #f0f0f2;
-  background: rgba(255, 255, 255, 0.035);
-}
-
-.games-main-nav .nav-icon-link.active {
-  min-width: 112px;
-  color: var(--gv-text);
-  background: rgba(255, 255, 255, 0.055);
-  border-color: rgba(255, 255, 255, 0.02);
-}
-
-.games-main-nav .nav-icon-link.active .nav-icon-label {
-  max-width: 90px;
-  opacity: 1;
-}
-
-.games-main-nav .nav-icon-link.active::after {
-  content: "";
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 0;
-  height: 2px;
-  border-radius: 999px;
-  background: #a832ff;
-  box-shadow: 0 0 10px rgba(168, 50, 255, 0.7);
-}
-
 .search-box .search-icon {
   width: 18px;
   height: 18px;
@@ -97,36 +25,6 @@
 .profile-avatar-button {
   display: grid;
   place-items: center;
-}
-
-@media (max-width: 900px) {
-  .games-main-nav .nav-icon-link.active {
-    min-width: 52px;
-  }
-
-  .games-main-nav .nav-icon-link.active .nav-icon-label {
-    max-width: 0;
-    opacity: 0;
-  }
-}
-
-@media (max-width: 750px) {
-  .games-main-nav {
-    width: auto;
-    gap: 2px;
-  }
-
-  .games-main-nav .nav-icon-link,
-  .games-main-nav .nav-icon-link.active {
-    min-width: 44px;
-    width: 44px;
-    height: 46px;
-    padding: 0;
-  }
-
-  .games-main-nav .nav-icon-label {
-    display: none;
-  }
 }
 
 /* =========================================================

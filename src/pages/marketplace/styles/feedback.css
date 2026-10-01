@@ -23,16 +23,3 @@
 
 /* LOADING */
 
-.market-loading {
-  min-height: 75vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: var(--gv-surface-1);
-  color: #fff;
-  text-align: center;
-}
-
-.market-loading h2 {
-  font-size: 20px;
-}

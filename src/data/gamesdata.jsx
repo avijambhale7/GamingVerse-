@@ -5,7 +5,7 @@
 const yt = (query) =>
   `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
 
-export const gamesData = {
+const gamesData = {
   // ==========================================================
   // YOUR CURRENT GAMES
   // ==========================================================

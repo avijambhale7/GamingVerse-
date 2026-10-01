@@ -30,7 +30,7 @@ const posterImages = import.meta.glob(
   },
 );
 
-export function getGameName(path) {
+function getGameName(path) {
   const fileName = path
     .split("/")
     .pop()
@@ -81,7 +81,7 @@ export const posterGames = Object.entries(posterImages)
   }))
   .filter((game) => !containsBlockedGameTerm(game.name));
 
-export const databaseGames = Object.entries(gamesData || {})
+const databaseGames = Object.entries(gamesData || {})
   .map(([key, details]) => ({
     id: `database-${key}`,
     name: details?.title || key,

@@ -81,10 +81,7 @@
     font-size: 20px;
   }
 
-  .online-shopping-links,
-  .detail-shopping-links {
-    grid-template-columns: 1fr;
-  }
+  
 
   .market-header,
   .market-main {

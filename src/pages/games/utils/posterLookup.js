@@ -14,9 +14,9 @@ import {
   normalizeCatalogueImageKey,
 } from "./text.js";
 
-export const POSTER_CACHE_KEY = "gamingverse_poster_image_cache_v1";
+const POSTER_CACHE_KEY = "gamingverse_poster_image_cache_v1";
 
-export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function readPosterImageCache() {
   try {
@@ -27,7 +27,7 @@ export function readPosterImageCache() {
   }
 }
 
-export function writePosterImageCache(foundImages) {
+function writePosterImageCache(foundImages) {
   if (!foundImages || !Object.keys(foundImages).length) return;
   try {
     const existing = readPosterImageCache();
@@ -86,7 +86,7 @@ function chooseBestRawgResult(results, game) {
 }
 
 /* Searches RAWG for one game's poster. Returns { gameKey, image } or null. */
-export async function lookupGameImage(game) {
+async function lookupGameImage(game) {
   if (!RAWG_API_KEY) return null;
 
   for (const candidate of getSearchCandidates(game)) {

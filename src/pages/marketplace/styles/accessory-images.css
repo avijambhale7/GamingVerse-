@@ -27,9 +27,6 @@
 }
 
 /* Give real accessory images more visual presence. */
-.market-type-card + .market-type-card {
-  min-width: 0;
-}
 
 .product-card .product-image {
   height: 240px;

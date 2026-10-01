@@ -18,7 +18,6 @@ const OwnerDashboard = lazy(() => import("./pages/OwnerDashboard"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Profile = lazy(() => import("./pages/Profile"));
 
-import "./App.css";
 
 const PAGE_LOADING_STYLE = {
   minHeight: "100vh",

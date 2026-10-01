@@ -6,9 +6,6 @@
 /* =========================================================
    TRAILER POPUP - MOCTALE STYLE
 ========================================================= */
-.reference-game-hero-clickable {
-  cursor: pointer;
-}
 
 .reference-game-hero-thumbnail-image {
   position: absolute;
@@ -173,15 +170,6 @@ reference-game-hero-thumbnail {
   min-height: 0;
   border: 0;
   background: var(--gv-bg);
-}
-
-.gv-trailer-empty {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  color: #aaa;
-  font-size: 15px;
 }
 
 /* Plain black while a trailer loads; a glass card over the game's

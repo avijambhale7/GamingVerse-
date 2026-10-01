@@ -42,7 +42,7 @@ export const RAWG_KEY_IS_EXHAUSTED_DEMO = EXHAUSTED_DEMO_KEYS.has(configuredKey)
 /* Reported as unset so every `!RAWG_API_KEY` guard skips the doomed calls. */
 export const RAWG_API_KEY = RAWG_KEY_IS_EXHAUSTED_DEMO ? "" : configuredKey;
 
-export const RAWG_ALLOWED_PLATFORM_SLUGS = new Set([
+const RAWG_ALLOWED_PLATFORM_SLUGS = new Set([
   "pc",
   "playstation4",
   "playstation5",
@@ -51,7 +51,7 @@ export const RAWG_ALLOWED_PLATFORM_SLUGS = new Set([
   "xbox-series-s",
 ]);
 
-export function rawgRatingToGamingVerse(rating) {
+function rawgRatingToGamingVerse(rating) {
   const slug = String(rating?.slug || "").toLowerCase();
 
   if (slug === "adults-only") return "18+";

@@ -13,7 +13,7 @@ import {
   normalizeTrailerGameName,
 } from "./text.js";
 
-export const trailerMapByNormalizedName = Object.fromEntries(
+const trailerMapByNormalizedName = Object.fromEntries(
   Object.entries(VERIFIED_YOUTUBE_TRAILERS).map(([name, url]) => [
     normalizeTrailerGameName(name),
     url,

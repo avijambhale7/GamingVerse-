@@ -88,7 +88,7 @@ const NAME_HINTS = {
 };
 
 /* All home-page categories a game belongs to (possibly none). */
-export function getGameCategories(game) {
+function getGameCategories(game) {
   const genre = getGenreText(game);
   const name = String(game?.name || "").toLowerCase();
   const has = (pattern) => pattern.test(genre);

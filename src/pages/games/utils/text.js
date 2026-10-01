@@ -43,7 +43,7 @@ const ROMAN_TOKENS = {
   ix: "9",
 };
 
-export const imageNameTokens = (value = "") =>
+const imageNameTokens = (value = "") =>
   new Set(
     normalizeCatalogueImageKey(value)
       // "GTA" is how the local art is named; titles spell it out.

@@ -3,7 +3,7 @@
    The outlined icon set used by the games navbar and menus.
 ========================================================= */
 
-export function GVIcon({ name, size = 21 }) {
+function GVIcon({ name, size = 21 }) {
   const common = {
     width: size,
     height: size,

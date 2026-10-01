@@ -221,17 +221,3 @@
   box-shadow: 0 0 18px rgba(164, 44, 255, 0.3);
 }
 
-.profile-info strong {
-  display: block;
-  font-size: 13px;
-}
-
-.profile-info small {
-  display: block;
-
-  margin-top: 3px;
-
-  color: #42dc8a;
-
-  font-size: 10px;
-}

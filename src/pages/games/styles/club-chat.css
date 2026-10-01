@@ -7,10 +7,6 @@
    OPEN CLUB — WHATSAPP-STYLE GROUP CHAT
    Events panel removed from the open club view.
 ========================================================= */
-.club-open-columns {
-  display: block;
-  margin-top: 20px;
-}
 
 .club-whatsapp-chat {
   width: 100%;

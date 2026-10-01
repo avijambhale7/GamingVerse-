@@ -238,56 +238,6 @@
   font-size: 10px;
 }
 
-.profile-popover {
-  width: 240px;
-  padding: 10px;
-}
-
-.profile-popover-head {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 10px;
-  margin-bottom: 5px;
-}
-
-.profile-popover-head .profile-avatar {
-  width: 42px;
-  height: 42px;
-}
-
-.profile-popover-head strong {
-  display: block;
-  color: white;
-  font-size: 13px;
-}
-
-.profile-popover-head span {
-  display: block;
-  margin-top: 3px;
-  color: #42dc8a;
-  font-size: 10px;
-}
-
-.profile-popover > button {
-  width: 100%;
-  min-height: 43px;
-  padding: 0 12px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--gv-text-soft);
-  text-align: left;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.profile-popover > button:hover {
-  background: rgba(168, 50, 255, 0.09);
-  color: white;
-}
-
 @media (max-width: 750px) {
   .navbar-icon-actions {
     gap: 3px;

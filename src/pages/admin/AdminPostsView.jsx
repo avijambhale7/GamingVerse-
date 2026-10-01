@@ -8,22 +8,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { onValue, ref, remove } from "firebase/database";
 import { db } from "../../firebase";
+import timeAgo from "../../utils/timeAgo.js";
 
 const SOURCES = [
   { id: "all", label: "All" },
   { id: "community", label: "💬 Community Talks" },
   { id: "club", label: "🎮 Club Discussions" },
 ];
-
-function timeAgo(ts) {
-  const diff = Date.now() - Number(ts || 0);
-  if (!ts || diff < 0) return "";
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${Math.max(mins, 1)}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
-}
 
 export default function AdminPostsView({ bannedUids, onBan, onMessage }) {
   const [talks, setTalks] = useState({});

@@ -9,7 +9,7 @@
    Load all common image formats from the GamingVerse assets
    so every reviewed game can get its real artwork.
 ========================================================= */
-export const profileAllImages = import.meta.glob(
+const profileAllImages = import.meta.glob(
   "../../../assets/**/*.{jpg,jpeg,png,webp,avif}",
   {
     eager: true,
@@ -18,7 +18,7 @@ export const profileAllImages = import.meta.glob(
   },
 );
 
-export function normalizeGameKey(value = "") {
+function normalizeGameKey(value = "") {
   return value
     .toLowerCase()
     .replace(/\.(jpg|jpeg|png|webp|avif)$/i, "")
@@ -26,12 +26,12 @@ export function normalizeGameKey(value = "") {
     .replace(/[^a-z0-9]/g, "");
 }
 
-export function getImageKey(path = "") {
+function getImageKey(path = "") {
   const fileName = path.split("/").pop() || "";
   return normalizeGameKey(fileName);
 }
 
-export const profileGameImages = Object.entries(profileAllImages).map(
+const profileGameImages = Object.entries(profileAllImages).map(
   ([path, image]) => ({
     path,
     image,
@@ -39,7 +39,7 @@ export const profileGameImages = Object.entries(profileAllImages).map(
   }),
 );
 
-export const gameAliases = {
+const gameAliases = {
   blackmythwukong: ["blackmythwukong", "blackmyth", "wukong"],
   assassinscreedshadows: [
     "assassinscreedshadows",
@@ -82,7 +82,7 @@ export const gameAliases = {
 /* Canonical names used by GamingVerse reviews. */
 
 /* Canonical names used by GamingVerse reviews. */
-export const canonicalGameAliases = {
+const canonicalGameAliases = {
   "black myth: wukong": ["blackmythwukong", "blackmyth", "wukong"],
   "black myth wukong": ["blackmythwukong", "blackmyth", "wukong"],
   "assassin's creed shadows": [

@@ -31,15 +31,6 @@ textarea {
    LOADING
 ========================================================= */
 
-.profile-loading {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--gv-surface-1);
-  color: #fff;
-}
-
 /* =========================================================
    PROFILE HEADER
    Branding on the left, the shared AppTopNav on the right —

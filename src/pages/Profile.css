@@ -8,7 +8,6 @@
 @import "./profile/styles/layout.css"; /* PAGE SHELL, LOADING, HEADER, MAIN LAYOUT */
 @import "./profile/styles/profile-card.css"; /* LEFT PROFILE CARD */
 @import "./profile/styles/activity.css"; /* ACTIVITY COLUMN, REVIEW CARDS, EMPTY STATE */
-@import "./profile/styles/interests.css"; /* RIGHT COLUMN — INTERESTED IN */
 @import "./profile/styles/edit-profile.css"; /* EDIT PROFILE PAGE */
 @import "./profile/styles/responsive.css"; /* RESPONSIVE BREAKPOINTS */
 @import "./profile/styles/photo-upload.css"; /* EDIT PROFILE — UPLOAD PHOTO UI */

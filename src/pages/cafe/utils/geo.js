@@ -36,7 +36,7 @@ const valid = (lat, lng) =>
   Math.abs(lng) <= 180 &&
   !(lat === 0 && lng === 0);
 
-export function coordsFromMapUrl(url) {
+function coordsFromMapUrl(url) {
   const text = decodeURIComponent(String(url || ""));
   const patterns = [
     /!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/,

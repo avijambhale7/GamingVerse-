@@ -15,7 +15,6 @@
 @import "./games/styles/review-system.css"; /* GAMINGVERSE REVIEW SYSTEM */
 @import "./games/styles/meter-modal.css"; /* GAMINGVERSE METER BUTTON + METER MODAL */
 @import "./games/styles/details-modal.css"; /* GAME DETAILS MODAL */
-@import "./games/styles/details-hero.css"; /* GAME DETAILS HERO */
 @import "./games/styles/details-reference.css"; /* REFERENCE-STYLE DETAILS + WATCHLIST ACTIONS */
 @import "./games/styles/community-reviews.css"; /* COMMUNITY REVIEWS */
 @import "./games/styles/trailers-page.css"; /* TRAILERS PAGE */
@@ -24,7 +23,6 @@
 @import "./games/styles/nav-icons-search.css"; /* ICON NAVIGATION + LIVE SEARCH RESULTS */
 @import "./games/styles/news.css"; /* CURRENT GAMING NEWS */
 @import "./games/styles/sidebar-nav.css"; /* SIDEBAR NAV ICONS + PROFILE ICON */
-@import "./games/styles/trailers-popup.css"; /* TRAILERS POPUP */
 @import "./games/styles/news-pill.css"; /* CLICKABLE LIVE NEWS PILL */
 @import "./games/styles/auto-catalogue.css"; /* AUTOMATIC GAME CATALOGUE */
 @import "./games/styles/clubs.css"; /* GAMING CLUBS */
@@ -32,7 +30,6 @@
 @import "./games/styles/notifications.css"; /* NOTIFICATIONS POPOVER */
 @import "./games/styles/database-cards.css"; /* BRAND HOME TARGET + DATABASE GAME CARDS */
 @import "./games/styles/review-composer.css"; /* REVIEW COMPOSER */
-@import "./games/styles/trailer-player.css"; /* YOUTUBE-STYLE TRAILER PLAYER */
 @import "./games/styles/cinematic-hero.css"; /* CINEMATIC GAME HERO */
 @import "./games/styles/trailer-popup.css"; /* TRAILER POPUP */
 @import "./games/styles/inline-meter.css"; /* INLINE GAMINGVERSE METER */

@@ -81,8 +81,7 @@ export async function getMyPhone() {
 /* ---------- notifications ---------- */
 
 // In-app + push notifications live in ./notify.js (shared with café
-// bookings); re-exported so existing imports keep working.
-export { notifyAdmins, notifyUser };
+// bookings).
 
 /* ---------- workflow actions ---------- */
 

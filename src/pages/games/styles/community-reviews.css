@@ -7,10 +7,6 @@
    GAMINGVERSE COMMUNITY REVIEWS
    Reference-style review composer + user reviews
 ========================================================= */
-.community-review-section {
-  margin-top: 22px;
-  padding: 0 10px 8px;
-}
 
 .community-review-box {
   padding: 20px;
@@ -186,49 +182,6 @@
   font-size: 22px;
 }
 
-.community-review-filters {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.review-sort-button,
-.community-review-filters label {
-  min-height: 40px;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--gv-s-2);
-  padding: 0 var(--gv-s-3);
-  border: 1px solid var(--gv-border);
-  border-radius: var(--gv-r-sm);
-  background: var(--gv-surface-3);
-  color: var(--gv-text-soft);
-  font-size: 12px;
-  font-weight: 700;
-  transition:
-    border-color var(--gv-t) var(--gv-ease),
-    background-color var(--gv-t) var(--gv-ease);
-}
-
-.review-sort-button:hover,
-.community-review-filters label:hover {
-  border-color: var(--gv-border-strong);
-  background: var(--gv-surface-4);
-}
-
-.review-sort-button {
-  cursor: pointer;
-}
-
-.community-review-filters input {
-  width: 17px;
-  height: 17px;
-  accent-color: var(--gv-accent);
-  margin: 0;
-}
-
 .community-review-list {
   display: flex;
   flex-direction: column;
@@ -284,13 +237,6 @@
 
 /* Hidden until the reader opts in, but still selectable-safe:
    the text is masked rather than removed from the DOM. */
-.community-review-spoiler {
-  padding: var(--gv-s-3) var(--gv-s-4);
-  border-radius: var(--gv-r-sm);
-  background: var(--gv-surface-3);
-  color: transparent !important;
-  user-select: none;
-}
 
 .community-review-actions {
   display: flex;
@@ -322,13 +268,6 @@
   color: var(--gv-skip);
 }
 
-.community-more {
-  margin-left: auto;
-  color: var(--gv-text-dim);
-  letter-spacing: 3px;
-}
-
-
 .community-empty {
   padding: 34px 10px;
   color: #868792;
@@ -352,10 +291,7 @@
     min-width: 0;
   }
 
-  .community-review-filters {
-    width: 100%;
-    justify-content: flex-start;
-  }
+  
 }
 
 @media (max-width: 520px) {
@@ -363,11 +299,7 @@
     padding: 16px;
   }
 
-  .community-review-filters label,
-  .review-sort-button {
-    width: 100%;
-    justify-content: center;
-  }
+  
 }
 
 /* =========================================================
@@ -375,23 +307,6 @@
 ========================================================= */
 
 /* Keep hero/detail action buttons predictable. */
-.details-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  width: 100%;
-  align-items: center;
-  justify-content: flex-start;
-
-  margin-top: 17px;
-  padding-right: 25px;
-}
-
-@media (max-width: 700px) {
-  .details-actions {
-    justify-content: flex-start;
-  }
-}
 
 /* =========================================================
    REVIEW CARD EXTRAS

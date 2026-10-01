@@ -12,7 +12,7 @@ import { db } from "../../../firebase";
 
 export const MAX_SEATS_PER_BOOKING = 4;
 
-export function slotKey(time) {
+function slotKey(time) {
   return String(time || "")
     .replace(/[^a-z0-9]/gi, "_")
     .toLowerCase();

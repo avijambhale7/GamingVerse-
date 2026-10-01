@@ -24,3 +24,24 @@ button,
 input {
   font-family: inherit;
 }
+
+/* Global page look (moved here from the old App.css, unchanged). */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgba(111, 40, 180, 0.12),
+      transparent 35%
+    ),
+    var(--gv-surface-1);
+
+  color: white;
+
+  font-family: Arial, Helvetica, sans-serif;
+}

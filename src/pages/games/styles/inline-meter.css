@@ -57,9 +57,7 @@
 }
 
 /* Hide the old hero Meter button completely. */
-.reference-meter-hero-button {
-  display: none !important;
-}
+
 .inline-gv-meter {
   grid-column: 1 / -1;
   margin: 0;
@@ -72,16 +70,6 @@
   max-width: var(--gv-container);
   margin: 0 auto;
   padding: 0 var(--gv-s-6);
-}
-
-.inline-gv-meter-eyebrow {
-  display: block;
-  margin-bottom: var(--gv-s-2);
-  color: var(--gv-accent);
-  font-size: var(--gv-eyebrow-size);
-  font-weight: 800;
-  letter-spacing: var(--gv-eyebrow-track);
-  text-transform: uppercase;
 }
 
 .inline-gv-meter-heading h3 {
@@ -263,10 +251,6 @@
 }
 
 /* Avoid making the old modal styles visually relevant after the modal JSX is removed. */
-.meter-backdrop,
-.meter-modal {
-  display: none !important;
-}
 
 @media (max-width: 900px) {
   .inline-gv-meter-breakdown {
@@ -295,10 +279,7 @@
     height: 190px;
   }
 
-  .inline-gv-meter-arc {
-    width: 300px;
-    height: 150px;
-  }
+  
 
   .inline-gv-meter-inner {
     width: 216px;

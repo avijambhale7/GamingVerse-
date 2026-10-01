@@ -17,81 +17,6 @@
   border-radius: 18px;
 }
 
-.reference-game-header {
-  display: grid;
-  grid-template-columns: 170px minmax(0, 1fr);
-  gap: 26px;
-  padding: 34px 38px 28px;
-  align-items: center;
-  background:
-    radial-gradient(
-      circle at 80% 20%,
-      rgba(155, 50, 255, 0.12),
-      transparent 35%
-    ),
-    linear-gradient(180deg, var(--gv-surface-2) 0%, var(--gv-surface-1) 100%);
-}
-
-.reference-game-poster {
-  width: 170px;
-  height: 220px;
-  object-fit: cover;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
-}
-
-.reference-game-header-content {
-  min-width: 0;
-}
-
-.reference-eyebrow {
-  display: inline-block;
-  margin-bottom: 7px;
-  color: var(--gv-accent);
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 2px;
-}
-
-.reference-game-header-content h2 {
-  margin: 0 0 10px;
-  color: #fff;
-  font-size: clamp(30px, 4vw, 48px);
-  line-height: 1.06;
-}
-
-.reference-tagline {
-  max-width: 760px;
-  margin: 0 0 16px;
-  color: #bfc0ca;
-  font-size: 14px;
-  line-height: 1.65;
-}
-
-.reference-meta-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 18px;
-}
-
-.reference-meta-row span {
-  padding: 7px 11px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.035);
-  color: #d6d6dd;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.reference-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-}
-
 .reference-divider,
 .reference-section-divider {
   height: 1px;
@@ -261,27 +186,10 @@
   line-height: 1.55;
 }
 
-.reference-trailer {
-  padding: 0 38px 34px;
-}
-
-.reference-trailer h3 {
-  margin: 0 0 14px;
-  color: #fff;
-  font-size: 21px;
-}
-
 @media (max-width: 850px) {
-  .reference-game-header {
-    grid-template-columns: 110px minmax(0, 1fr);
-    gap: 18px;
-    padding: 24px;
-  }
+  
 
-  .reference-game-poster {
-    width: 110px;
-    height: 150px;
-  }
+  
 
   .reference-content-grid {
     grid-template-columns: 1fr;
@@ -292,43 +200,21 @@
     order: -1;
   }
 
-  .reference-trailer {
-    padding: 0 24px 28px;
-  }
+  
 }
 
 @media (max-width: 600px) {
-  .reference-game-header {
-    grid-template-columns: 1fr;
-  }
-  .reference-game-poster {
-    width: 100%;
-    height: 210px;
-  }
+  
+  
   .reference-story-grid {
     grid-template-columns: 1fr;
   }
-  .reference-game-header-content h2 {
-    font-size: 30px;
-  }
+  
 }
 
 /* =========================================================
    REFERENCE WATCHLIST / COLLECTION ACTIONS
 ========================================================= */
-.reference-actions-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 9px;
-  width: min(390px, 100%);
-  margin-left: auto;
-}
-.reference-actions-side {
-  display: flex;
-  gap: 9px;
-  width: 100%;
-}
 
 .reference-watch-button {
   width: 100%;
@@ -395,10 +281,7 @@
 }
 
 @media (max-width: 700px) {
-  .reference-actions-stack {
-    width: 100%;
-    margin-left: 0;
-  }
+  
 
   .reference-secondary-actions {
     grid-template-columns: 1fr;
@@ -408,32 +291,4 @@
 /* =====================================================
    FORCE METER + TRAILER TO THE FAR RIGHT
    ===================================================== */
-.reference-actions-bottom {
-  display: flex !important;
-  flex-wrap: wrap;
-  gap: 10px !important;
-  width: 100% !important;
-  justify-content: flex-end !important;
-  align-items: center !important;
-  margin-left: auto !important;
-  margin-right: 0 !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
 
-.reference-actions-bottom .primary-detail-action,
-.reference-actions-bottom .secondary-detail-action {
-  flex: 0 0 auto !important;
-}
-
-.reference-actions-side .primary-detail-action,
-.reference-actions-side .secondary-detail-action {
-  flex: 0 0 auto !important;
-}
-
-@media (max-width: 700px) {
-  .reference-actions-bottom {
-    justify-content: flex-start !important;
-    width: 100% !important;
-  }
-}

@@ -561,12 +561,7 @@
   font-size: 12px;
   line-height: 1.7;
 }
-.owner-customer-info {
-  margin-top: 10px !important;
-  padding-top: 10px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.08);
-  color: var(--gv-text-soft) !important;
-}
+
 .owner-request-time {
   color: var(--gv-text-dim) !important;
 }

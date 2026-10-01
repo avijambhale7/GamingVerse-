@@ -2,7 +2,7 @@
    TIME SLOT HELPERS
 ========================================================= */
 
-export const pad = (n) => String(n).padStart(2, "0");
+const pad = (n) => String(n).padStart(2, "0");
 
 export function parseTime(value) {
   const m = String(value || "").match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?/i);
@@ -15,7 +15,7 @@ export function parseTime(value) {
   return hour * 60 + minute;
 }
 
-export function formatTime(totalMinutes) {
+function formatTime(totalMinutes) {
   const h24 = Math.floor(totalMinutes / 60) % 24;
   const minute = totalMinutes % 60;
   const suffix = h24 >= 12 ? "PM" : "AM";

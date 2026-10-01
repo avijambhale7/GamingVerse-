@@ -9,6 +9,7 @@
 import { get, ref, remove, serverTimestamp, set, update } from "firebase/database";
 import { db } from "../firebase";
 import { NOTIFY_TITLES, notifyUser } from "./notify.js";
+import { localISO } from "../pages/cafe/utils/time.js";
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -19,13 +20,8 @@ const alertKey = (name) =>
     .replace(/^-|-$/g, "")
     .slice(0, 80) || "game";
 
-const localISO = (date) => {
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return local.toISOString().slice(0, 10);
-};
-
 /* "2026-11-19", "19 Nov 2026", a Date… → "YYYY-MM-DD" or "" */
-export function toReleaseISO(value) {
+function toReleaseISO(value) {
   const text = String(value || "").trim();
   if (ISO_DATE.test(text)) return text;
   const parsed = new Date(text);

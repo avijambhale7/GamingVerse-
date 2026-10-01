@@ -1670,10 +1670,6 @@ function Games() {
     );
   };
 
-  const openMeter = (game) => {
-    openDetails(game);
-  };
-
   const openDetails = (game) => {
     if (!canAccessGame(game, userAge)) {
       handleRestrictedGame(game);
@@ -2283,9 +2279,6 @@ function Games() {
     (sum, value) => sum + value,
     0,
   );
-  const positiveVotes = reviewCounts.perfection + reviewCounts["go-for-it"];
-  const meterPercent =
-    totalVotes === 0 ? 0 : Math.round((positiveVotes / totalVotes) * 100);
   const focusSearch = () => {
     searchInputRef.current?.focus();
   };
@@ -2322,9 +2315,7 @@ function Games() {
       {/* ===================================================
             NAVBAR
         =================================================== */}
-      <GamesNavbar
-        activeCategory={activeCategory}
-        activeView={activeView}
+      <GamesNavbar
         focusSearch={focusSearch}
         navigate={navigate}
         markNotificationRead={markNotificationRead}
@@ -2340,8 +2331,7 @@ function Games() {
         setActiveView={setActiveView}
         setNotificationTab={setNotificationTab}
         setSearch={setSearch}
-        setShowNotifications={setShowNotifications}
-        setSpacesSection={setSpacesSection}
+        setShowNotifications={setShowNotifications}
         showNotifications={showNotifications}
       />
 
@@ -2369,8 +2359,7 @@ function Games() {
         filteredPosters={filteredPosters}
         heroGames={heroGames}
         heroIndex={heroIndex}
-        openDetails={openDetails}
-        openMeter={openMeter}
+        openDetails={openDetails}
         setActiveCategory={setActiveCategory}
         setHeroIndex={setHeroIndex}
         setSearch={setSearch}
@@ -2398,8 +2387,7 @@ function Games() {
         communityTalks={communityTalks}
         createGamingClub={createGamingClub}
         fetchLiveGamingNews={fetchLiveGamingNews}
-        filteredGamingClubs={filteredGamingClubs}
-        filteredHorizontal={filteredHorizontal}
+        filteredGamingClubs={filteredGamingClubs}
         filteredPosters={filteredPosters}
         gamingClubs={gamingClubs}
         joinedClubIds={joinedClubIds}
@@ -2441,9 +2429,7 @@ function Games() {
         collectionGames={collectionGames}
         composerVerdict={composerVerdict}
         formatReviewAge={formatReviewAge}
-        likedReviewIds={likedReviewIds}
-        meterPercent={meterPercent}
-        positiveVotes={positiveVotes}
+        likedReviewIds={likedReviewIds}
         openPoster={openPoster}
         openTrailer={openTrailer}
         postCommunityReview={postCommunityReview}

@@ -92,9 +92,7 @@
     width: 160px;
   }
 
-  .profile-info {
-    display: none;
-  }
+  
 
   /* Hero thumbnail strip — mobile only. Desktop keeps it. */
   .hero-carousel {

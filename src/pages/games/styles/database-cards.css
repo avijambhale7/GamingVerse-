@@ -115,9 +115,6 @@
 }
 
 /* Detail-information cards remain readable for longer values. */
-.details-grid .detail-item strong {
-  overflow-wrap: anywhere;
-}
 
 /* Keep the full catalogue usable on smaller screens. */
 @media (max-width: 1100px) {

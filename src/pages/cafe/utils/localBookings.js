@@ -4,7 +4,7 @@
    stay correct while the device is offline.
 ========================================================= */
 
-export function localBookingKey(uid) {
+function localBookingKey(uid) {
   return `gamingverse_cafe_bookings_${uid}`;
 }
 

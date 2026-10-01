@@ -53,7 +53,7 @@ export function normalizeCafe(id, raw) {
   };
 }
 
-export function weekdayAbbrev(date) {
+function weekdayAbbrev(date) {
   return date.toLocaleDateString("en-US", { weekday: "short" });
 }
 
