@@ -11,7 +11,7 @@
    adminNotifications             shared feed for all admins
 ========================================================= */
 
-import { get, push, ref, set, update } from "firebase/database";
+import { get, push, ref, runTransaction, set, update } from "firebase/database";
 import { auth, db } from "../firebase";
 import { notifyAdmins, notifyUser } from "./notify.js";
 
@@ -192,26 +192,45 @@ export async function sellerDecide(request, accept) {
   if (!isValidPhone(sellerPhone))
     throw new Error("Add your mobile number to your account first.");
 
-  const productRef = ref(db, `products/${request.productId}`);
-  const productSnap = await get(productRef);
-  const stock = Number(productSnap.val()?.stock || 0);
-  if (!productSnap.exists() || stock < Number(request.quantity))
-    throw new Error(`Not enough stock — only ${stock} left.`);
+  // Take the stock atomically first, so two requests accepted at the
+  // same moment can't both take the same units.
+  const quantity = Number(request.quantity) || 1;
+  const stockRef = ref(db, `products/${request.productId}/stock`);
+  let shortBy = null;
+  const taken = await runTransaction(stockRef, (current) => {
+    if (current === null) return current; // not loaded yet: retried
+    const stock = Number(current) || 0;
+    if (stock < quantity) {
+      shortBy = stock;
+      return; // abort: not enough
+    }
+    return stock - quantity;
+  });
+  if (!taken.committed || taken.snapshot.val() === null) {
+    throw new Error(`Not enough stock — only ${shortBy ?? 0} left.`);
+  }
 
-  // Phone first: the contact node is only readable once "accepted".
-  await set(
-    ref(db, `purchaseRequestContacts/${request.id}/sellerPhone`),
-    normalizePhone(sellerPhone),
-  );
-  await update(ref(db, `purchaseRequests/${request.id}`), {
-    status: REQUEST_STATUS.ACCEPTED,
-    sellerActionAt: Date.now(),
-    updatedAt: Date.now(),
-  });
-  await update(productRef, {
-    stock: Math.max(stock - Number(request.quantity), 0),
-    updatedAt: Date.now(),
-  });
+  try {
+    // Phone first: the contact node is only readable once "accepted".
+    await set(
+      ref(db, `purchaseRequestContacts/${request.id}/sellerPhone`),
+      normalizePhone(sellerPhone),
+    );
+    await update(ref(db, `purchaseRequests/${request.id}`), {
+      status: REQUEST_STATUS.ACCEPTED,
+      sellerActionAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+    await update(ref(db, `products/${request.productId}`), {
+      updatedAt: Date.now(),
+    });
+  } catch (error) {
+    // The request wasn't accepted: give the stock back.
+    await runTransaction(stockRef, (current) =>
+      current === null ? current : (Number(current) || 0) + quantity,
+    ).catch(() => {});
+    throw error;
+  }
 
   const contactSnap = await get(
     ref(db, `purchaseRequestContacts/${request.id}`),

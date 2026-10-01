@@ -23,6 +23,7 @@ import NotificationBell from "../components/NotificationBell.jsx";
 import PurchaseRequestList from "../components/PurchaseRequestList.jsx";
 import usePurchaseRequests from "../utils/usePurchaseRequests.js";
 import { REQUEST_STATUS } from "../utils/purchaseRequests.js";
+import { notifyUser } from "../utils/notify.js";
 
 // Module scope, evaluated once at page load — not a render-time call, so
 // the activity chart's "last 14 days" window doesn't need Date.now() (an
@@ -472,6 +473,32 @@ export default function Admin() {
     return days;
   }, [users, bookings, purchaseRequests]);
 
+  // Business signups request a role; an admin grants it here.
+  const ROLE_LABELS = {
+    cafe_owner: "Café owner",
+    shop_owner: "Shop owner",
+    accessory_owner: "Accessory seller",
+  };
+  const pendingBusinesses = users.filter((u) => u.requestedRole && !u.role);
+  const decideBusiness = async (account, approve) => {
+    try {
+      await update(ref(db), {
+        ...(approve ? { [`users/${account.uid}/role`]: account.requestedRole } : {}),
+        [`users/${account.uid}/requestedRole`]: null,
+      });
+      notifyUser(
+        account.uid,
+        approve
+          ? `Your ${ROLE_LABELS[account.requestedRole] || "business"} account was approved. Your dashboard is ready.`
+          : "Your business account request was not approved. Contact GamingVerse support if you think this is a mistake.",
+      );
+      setMessage(approve ? "Business account approved." : "Business request declined.");
+    } catch (error) {
+      console.error("Business approval error:", error);
+      setMessage("Could not update that business account.");
+    }
+  };
+
   const setBanned = async (uid, banned) => {
     try {
       await set(ref(db, `users/${uid}/isBanned`), banned);
@@ -804,6 +831,43 @@ export default function Admin() {
               <span>Total users</span>
             </div>
           </section>
+
+          {pendingBusinesses.length > 0 && (
+            <section className="admin-approvals">
+              <h3>
+                🏢 Business accounts awaiting approval{" "}
+                <span>{pendingBusinesses.length}</span>
+              </h3>
+              {pendingBusinesses.map((account) => (
+                <article key={account.uid} className="admin-approval-row">
+                  <div>
+                    <strong>
+                      {account.businessName ||
+                        `${account.firstName || ""} ${account.lastName || ""}`.trim() ||
+                        account.email}
+                    </strong>
+                    <small>
+                      {ROLE_LABELS[account.requestedRole] || account.requestedRole} ·{" "}
+                      {account.email}
+                      {account.phone ? ` · ${account.phone}` : ""}
+                    </small>
+                  </div>
+                  <div className="admin-approval-actions">
+                    <button
+                      type="button"
+                      className="is-approve"
+                      onClick={() => decideBusiness(account, true)}
+                    >
+                      Approve
+                    </button>
+                    <button type="button" onClick={() => decideBusiness(account, false)}>
+                      Decline
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </section>
+          )}
 
           <section className="admin-filters-row">
             <input

@@ -29,13 +29,9 @@ import {
 } from "./cafe/utils/cafeModel.js";
 import { decodeTicket } from "./cafe/utils/ticket.js";
 import { nowMs, todayISO } from "./cafe/utils/time.js";
-import {
-  bookingSeats,
-  releaseSeats,
-  reserveSeats,
-} from "./cafe/utils/slots.js";
 import WalkInBookingForm from "./owner/views/WalkInBookingForm.jsx";
 import useOwnerBookings from "./owner/useOwnerBookings.js";
+import { changeBookingStatus } from "./cafe/utils/bookingWrites.js";
 
 const OWNER_ROLES = new Set([
   "owner",
@@ -124,6 +120,8 @@ export default function OwnerDashboard() {
   const [role, setRole] = useState("");
   const [profile, setProfile] = useState({});
   const [loading, setLoading] = useState(true);
+  // Business signup awaiting admin approval (users/{uid}/requestedRole).
+  const [pendingRole, setPendingRole] = useState("");
   const [section, setSection] = useState("overview");
   const [products, setProducts] = useState([]);
   const [savingProduct, setSavingProduct] = useState(false);
@@ -168,6 +166,10 @@ export default function OwnerDashboard() {
         const snap = await get(ref(db, `users/${currentUser.uid}`));
         const data = snap.exists() ? snap.val() : {};
         const nextRole = String(data.role || "").toLowerCase();
+        if (!OWNER_ROLES.has(nextRole) && data.requestedRole) {
+          setPendingRole(String(data.requestedRole));
+          return;
+        }
         if (!OWNER_ROLES.has(nextRole)) {
           await signOut(auth);
           navigate("/login", { replace: true });
@@ -604,59 +606,17 @@ export default function OwnerDashboard() {
     const nextStatus = String(status || "Pending");
     if (currentStatus === nextStatus) return;
 
-    const occupiedStatuses = new Set(["Pending", "Confirmed"]);
-    const wasOccupied = occupiedStatuses.has(currentStatus);
-    const willBeOccupied = occupiedStatuses.has(nextStatus);
     try {
-      // Move the slot's seat counter by this booking's seat count. The
-      // owner can always re-occupy (no capacity check) — they may be
-      // overriding on purpose, e.g. re-confirming a rejected request.
-      const movesSeats =
-        wasOccupied !== willBeOccupied &&
-        booking.cafeId &&
-        booking.date &&
-        booking.time;
-      if (movesSeats) {
-        if (willBeOccupied) {
-          await reserveSeats(
-            booking.cafeId,
-            booking.date,
-            booking.time,
-            bookingSeats(booking),
-            Infinity,
-          );
-        } else {
-          await releaseSeats(
-            booking.cafeId,
-            booking.date,
-            booking.time,
-            bookingSeats(booking),
-          );
-        }
-      }
-
-      try {
-        await update(
-          ref(db, `cafeBookings/${booking.customerId}/${booking.id}`),
-          {
-            status: nextStatus,
-            ownerUpdatedAt: nowMs(),
-            ownerId: user.uid,
-            ...(nextStatus === "Confirmed" ? { confirmedAt: nowMs() } : {}),
-            ...(nextStatus === "Rejected" ? { rejectedAt: nowMs() } : {}),
-            ...(nextStatus === "Completed" ? { completedAt: nowMs() } : {}),
-          },
-        );
-      } catch (saveError) {
-        // Undo the seat move so the slot matches the unchanged booking.
-        if (movesSeats) {
-          const undo = willBeOccupied
-            ? releaseSeats(booking.cafeId, booking.date, booking.time, bookingSeats(booking))
-            : reserveSeats(booking.cafeId, booking.date, booking.time, bookingSeats(booking), Infinity);
-          await undo.catch(() => {});
-        }
-        throw saveError;
-      }
+      // The booking and its seat count change in one write (the owner
+      // may overbook, e.g. re-confirming a rejected request).
+      await changeBookingStatus(booking.customerId, booking.id, {
+        status: nextStatus,
+        ownerUpdatedAt: nowMs(),
+        ownerId: user.uid,
+        ...(nextStatus === "Confirmed" ? { confirmedAt: nowMs() } : {}),
+        ...(nextStatus === "Rejected" ? { rejectedAt: nowMs() } : {}),
+        ...(nextStatus === "Completed" ? { completedAt: nowMs() } : {}),
+      });
 
       setMessage(
         `${booking.customerName || "Customer"}'s ${booking.time || ""} booking is now ${nextStatus}.`,
@@ -775,6 +735,19 @@ export default function OwnerDashboard() {
     return (
       <PageSkeleton variant="list" />
     );
+
+  if (pendingRole) {
+    return (
+      <PendingApproval
+        role={pendingRole}
+        uid={user?.uid}
+        onLogout={async () => {
+          await signOut(auth);
+          navigate("/login", { replace: true });
+        }}
+      />
+    );
+  }
 
   if (!user || !OWNER_ROLES.has(role)) return null;
 
@@ -1940,5 +1913,40 @@ export default function OwnerDashboard() {
         </main>
       )}
     </div>
+  );
+}
+
+/* Shown to a business account until an admin approves it. Watches the
+   account's role and opens the dashboard as soon as it is granted. */
+const ROLE_NAMES = {
+  cafe_owner: "café owner",
+  shop_owner: "shop owner",
+  accessory_owner: "accessory seller",
+};
+
+function PendingApproval({ role, uid, onLogout }) {
+  useEffect(() => {
+    if (!uid) return undefined;
+    return onValue(ref(db, `users/${uid}/role`), (snapshot) => {
+      if (OWNER_ROLES.has(String(snapshot.val() || ""))) window.location.reload();
+    });
+  }, [uid]);
+
+  return (
+    <main className="owner-pending">
+      <div className="owner-pending-card">
+        <div className="owner-pending-icon" aria-hidden="true">⏳</div>
+        <h1>Awaiting approval</h1>
+        <p>
+          Your {ROLE_NAMES[role] || "business"} account has been created. A
+          GamingVerse admin checks every business account before it can list
+          cafés or products — you&apos;ll get a notification, and this page
+          opens your dashboard automatically, once it&apos;s approved.
+        </p>
+        <button type="button" onClick={onLogout}>
+          Log out
+        </button>
+      </div>
+    </main>
   );
 }

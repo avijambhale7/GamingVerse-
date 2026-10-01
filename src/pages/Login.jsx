@@ -123,8 +123,9 @@ function Login() {
 
       const { ref, get } = await import("firebase/database");
       const { db } = await import("../firebase");
-      const roleSnap = await get(ref(db, `users/${cred.user.uid}/role`));
-      const role = String(roleSnap.val() || "").toLowerCase();
+      const userSnap = await get(ref(db, `users/${cred.user.uid}`));
+      const role = String(userSnap.child("role").val() || "").toLowerCase();
+      const awaitingApproval = !role && userSnap.child("requestedRole").exists();
       const ownerRoles = new Set([
         "owner",
         "cafe_owner",
@@ -137,7 +138,7 @@ function Login() {
         navigate(
           role === "admin"
             ? "/admin"
-            : ownerRoles.has(role)
+            : ownerRoles.has(role) || awaitingApproval
               ? "/owner-dashboard"
               : "/games",
         );
@@ -362,7 +363,8 @@ function Login() {
         username: ownerSignupName.trim(),
         email: ownerSignupEmail.trim(),
         phone: normalizePhone(ownerSignupPhone),
-        role: ownerSignupRole,
+        // Business roles need admin approval (database rules enforce it).
+        requestedRole: ownerSignupRole,
         businessName:
           ownerSignupRole === "shop_owner"
             ? ownerSignupBusinessName.trim()
@@ -371,9 +373,7 @@ function Login() {
       });
 
       notify(
-        ownerSignupRole === "cafe_owner"
-          ? "Business account created! List your café from the dashboard next."
-          : "Business account created! Taking you to your dashboard.",
+        "Business account created! An admin will review and approve it shortly.",
         "success",
       );
 

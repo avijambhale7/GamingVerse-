@@ -34,8 +34,6 @@ import {
 import {
   MAX_SEATS_PER_BOOKING,
   bookingSeats,
-  releaseSeats,
-  reserveSeats,
   stationLabel,
 } from "./cafe/utils/slots.js";
 import CafeQrModal from "./cafe/views/CafeQrModal.jsx";
@@ -50,6 +48,7 @@ import { distanceKm, formatKm } from "./cafe/utils/geo.js";
 import "./cafe/styles/cafe-map.css";
 import { NOTIFY_TITLES, notifyUser } from "../utils/notify.js";
 import {
+  SlotFullError,
   createBooking,
   deleteBooking,
   indexBookings,
@@ -458,6 +457,8 @@ export default function Cafe() {
       station: stationLabel(currentlyBooked, seatCount, totalSeats),
       seats: seatCount,
       specLabel: selectedSpec ? selectedSpec.label : "",
+      // The database checks the price against this setup (or the café).
+      ...(selectedSpec ? { specId: selectedSpec.id } : {}),
       pricePerHour,
       totalPrice: pricePerHour * seatCount,
       status: "Pending",
@@ -472,23 +473,6 @@ export default function Cafe() {
       let savedToFirebase = false;
 
       try {
-        const committed = await reserveSeats(
-          selectedCafe.id,
-          selectedDate,
-          selectedTime,
-          seatCount,
-          totalSeats,
-        );
-
-        if (!committed) {
-          notify("Not enough seats left in that slot. Please pick another.");
-          setSlotAvailability((prev) => ({
-            ...prev,
-            [selectedTime]: totalSeats,
-          }));
-          return;
-        }
-
         // The account phone (users/{uid}/phone) — email sign-ins have no
         // phoneNumber on the Firebase user.
         let customerPhone = "";
@@ -500,22 +484,23 @@ export default function Cafe() {
           customerPhone = "";
         }
 
+        // Booking, café index and seats are saved in one write.
         let bookingId;
         try {
-          bookingId = await createBooking(user.uid, {
-            ...bookingBase,
-            customerPhone,
-            localId,
-          });
+          bookingId = await createBooking(
+            user.uid,
+            { ...bookingBase, customerPhone, localId },
+            { capacity: totalSeats },
+          );
         } catch (writeError) {
-          // The seats were taken above; hand them back so the slot
-          // doesn't stay "occupied" by a booking that was never saved.
-          await releaseSeats(
-            selectedCafe.id,
-            selectedDate,
-            selectedTime,
-            seatCount,
-          ).catch(() => {});
+          if (writeError instanceof SlotFullError) {
+            notify("Not enough seats left in that slot. Please pick another.");
+            setSlotAvailability((prev) => ({
+              ...prev,
+              [selectedTime]: totalSeats,
+            }));
+            return;
+          }
           throw writeError;
         }
 
@@ -603,19 +588,8 @@ export default function Cafe() {
       }
 
       try {
-        const occupied = ["Pending", "Confirmed"].includes(
-          String(booking.status || ""),
-        );
-        // Booking first: if this fails, nothing else changes.
+        // Removes the booking + index and frees its seats in one write.
         await deleteBooking(user.uid, booking);
-        if (occupied) {
-          await releaseSeats(
-            booking.cafeId,
-            booking.date,
-            booking.time,
-            bookingSeats(booking),
-          );
-        }
 
         const cafe = cafes.find((c) => c.id === booking.cafeId);
         notifyUser(

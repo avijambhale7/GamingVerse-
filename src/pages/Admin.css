@@ -667,3 +667,71 @@
   opacity: 0.55;
   cursor: default;
 }
+
+/* Business accounts awaiting approval */
+.admin-approvals {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid rgba(245, 179, 1, 0.35);
+  border-radius: 18px;
+  background: linear-gradient(140deg, rgba(245, 179, 1, 0.08), rgba(255, 255, 255, 0.02));
+}
+.admin-approvals h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+.admin-approvals h3 span {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(245, 179, 1, 0.2);
+  color: #fcd34d;
+  font-size: 12px;
+}
+.admin-approval-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: #0f0f14;
+}
+.admin-approval-row > div:first-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.admin-approval-row strong {
+  color: #fff;
+}
+.admin-approval-row small {
+  color: #9a9aa4;
+  overflow-wrap: anywhere;
+}
+.admin-approval-actions {
+  display: flex;
+  gap: 8px;
+}
+.admin-approval-actions button {
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: transparent;
+  color: #e6e1f2;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.admin-approval-actions button.is-approve {
+  border-color: transparent;
+  background: #22a06b;
+  color: #fff;
+}

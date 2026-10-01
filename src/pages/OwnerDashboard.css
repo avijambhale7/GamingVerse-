@@ -17,3 +17,47 @@
 @import "./owner/styles/touch-polish.css"; /* TOUCH-DEVICE CARD GLOW + PRESS FEEDBACK */
 @import "../styles/dashboard-polish.css"; /* SHARED DASHBOARD VISUAL POLISH (also used by Admin) */
 @import "../styles/dashboard-colors.css"; /* SHARED DASHBOARD COLOUR BOOST (also used by Admin) */
+
+/* Business account awaiting admin approval */
+.owner-pending {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+  background: radial-gradient(600px 300px at 50% 0%, rgba(168, 85, 247, 0.2), transparent 70%), #08080b;
+}
+.owner-pending-card {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  width: min(460px, 100%);
+  padding: 32px 26px;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 22px;
+  background: #111117;
+  text-align: center;
+}
+.owner-pending-icon {
+  font-size: 44px;
+}
+.owner-pending-card h1 {
+  margin: 0;
+  color: #fff;
+  font-size: 24px;
+}
+.owner-pending-card p {
+  margin: 0;
+  color: #c4c4cc;
+  line-height: 1.55;
+}
+.owner-pending-card button {
+  margin-top: 8px;
+  padding: 10px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: transparent;
+  color: #e6e1f2;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}

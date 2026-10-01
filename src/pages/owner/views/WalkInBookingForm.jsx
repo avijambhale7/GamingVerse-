@@ -8,13 +8,11 @@
 ========================================================= */
 
 import { useState } from "react";
-import { createBooking } from "../../cafe/utils/bookingWrites.js";
+import { SlotFullError, createBooking } from "../../cafe/utils/bookingWrites.js";
 import { getTimeSlots, localISO } from "../../cafe/utils/time.js";
 import { isDateBlocked } from "../../cafe/utils/cafeModel.js";
 import {
   MAX_SEATS_PER_BOOKING,
-  releaseSeats,
-  reserveSeats,
 } from "../../cafe/utils/slots.js";
 import {
   isValidPhone,
@@ -60,21 +58,9 @@ export default function WalkInBookingForm({ cafes, ownerUid, onDone }) {
 
     setSaving(true);
     try {
-      const ok = await reserveSeats(
-        cafe.id,
-        date,
-        time,
-        seats,
-        cafe.totalSeats,
-      );
-      if (!ok) {
-        setError("Not enough free seats in that slot.");
-        return;
-      }
-
       const pricePerHour = Number(cafe.pricePerHour) || 0;
       const now = Date.now();
-      // Booking + café index in one write; if it fails, free the seats.
+      // Booking, café index and seats are saved in one write.
       await createBooking(ownerUid, {
         walkIn: true,
         cafeId: cafe.id,
@@ -93,15 +79,16 @@ export default function WalkInBookingForm({ cafes, ownerUid, onDone }) {
         ownerId: ownerUid,
         createdAt: now,
         confirmedAt: now,
-      }).catch(async (writeError) => {
-        await releaseSeats(cafe.id, date, time, seats).catch(() => {});
-        throw writeError;
-      });
+      }, { capacity: cafe.totalSeats });
 
       onDone(`Walk-in booked: ${name.trim()} • ${time} • ${seats} seat(s).`);
     } catch (err) {
       console.error("Walk-in booking error:", err);
-      setError("Could not save the walk-in booking.");
+      setError(
+        err instanceof SlotFullError
+          ? "Not enough free seats in that slot."
+          : "Could not save the walk-in booking.",
+      );
     } finally {
       setSaving(false);
     }
