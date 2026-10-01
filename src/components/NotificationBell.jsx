@@ -164,6 +164,8 @@ export default function NotificationBell({ path }) {
                         ? "☕"
                         : item.title === "GamingVerse Feed"
                           ? "📸"
+                          : item.title === "GamingVerse Release"
+                            ? "🚀"
                           : "🔔"}
                   </span>
                   <span className="nb-copy">

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { get, onValue, push, ref, remove, set } from "firebase/database";
 import { auth, db } from "../firebase";
@@ -10,7 +10,13 @@ import {
   localSlotCount,
   saveLocalBookings,
 } from "./cafe/utils/localBookings.js";
-import { getTimeSlots, localISO, todayISO } from "./cafe/utils/time.js";
+import {
+  getTimeSlots,
+  localISO,
+  makeLocalBookingId,
+  nowMs as currentTimeMs,
+  todayISO,
+} from "./cafe/utils/time.js";
 import {
   isCafeOpenNow,
   isDateBlocked,
@@ -24,12 +30,25 @@ import {
   stationLabel,
 } from "./cafe/utils/slots.js";
 import CafeQrModal from "./cafe/views/CafeQrModal.jsx";
+import CafeMap from "./cafe/views/CafeMap.jsx";
+import {
+  CafeReviewList,
+  RateVisitModal,
+  RatingBadge,
+} from "./cafe/views/CafeReviews.jsx";
+import { summariseReviews } from "./cafe/utils/reviews.js";
+import useCafeCoords from "./cafe/utils/useCafeCoords.js";
+import { distanceKm, formatKm } from "./cafe/utils/geo.js";
+import "./cafe/styles/cafe-map.css";
 import { NOTIFY_TITLES, notifyUser } from "../utils/notify.js";
 
 export default function Cafe() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  // ?q= pre-fills the search (set by the navbar's search results).
+  const [search, setSearch] = useState(
+    () => new URLSearchParams(window.location.search).get("q") || "",
+  );
   const [cafes, setCafes] = useState([]);
   const [selectedCafeId, setSelectedCafeId] = useState(null);
   const [selectedSpec, setSelectedSpec] = useState(null);
@@ -45,6 +64,13 @@ export default function Cafe() {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const messageTimerRef = useRef(null);
+  // List / map view, "Near me" location, café reviews.
+  const [viewMode, setViewMode] = useState("list");
+  const [userLocation, setUserLocation] = useState(null);
+  const [locating, setLocating] = useState(false);
+  const [allReviews, setAllReviews] = useState({});
+  const [rateBooking, setRateBooking] = useState(null);
   const [showBookings, setShowBookings] = useState(false);
   const [qrBooking, setQrBooking] = useState(null);
   // Ticks every minute so today's slot list drops slots as they start.
@@ -145,8 +171,8 @@ export default function Cafe() {
 
   const notify = (text) => {
     setMessage(text);
-    window.clearTimeout(window.gvCafeMessageTimer);
-    window.gvCafeMessageTimer = window.setTimeout(() => setMessage(""), 3500);
+    window.clearTimeout(messageTimerRef.current);
+    messageTimerRef.current = window.setTimeout(() => setMessage(""), 3500);
   };
 
   useEffect(() => {
@@ -174,17 +200,72 @@ export default function Cafe() {
     }
   };
 
+  const approvedCafes = useMemo(
+    () => cafes.filter((c) => c.status === "approved"),
+    [cafes],
+  );
+  // Locations are only looked up when the map or "Near me" needs them.
+  const cafeCoords = useCafeCoords(
+    approvedCafes,
+    viewMode === "map" || Boolean(userLocation),
+  );
+  const reviewSummary = useMemo(() => summariseReviews(allReviews), [allReviews]);
+
+  useEffect(() => {
+    if (!user) return undefined;
+    return onValue(
+      ref(db, "cafeReviews"),
+      (snapshot) => setAllReviews(snapshot.val() || {}),
+      (error) => console.warn("Café reviews unavailable:", error),
+    );
+  }, [user]);
+
+  const findNearMe = () => {
+    if (userLocation) {
+      setUserLocation(null);
+      return;
+    }
+    if (!navigator.geolocation) {
+      notify("Your browser can't share your location.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+        setLocating(false);
+      },
+      () => {
+        setLocating(false);
+        notify("Location is blocked. Allow it in your browser to sort cafés by distance.");
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+    );
+  };
+
   const filteredCafes = useMemo(() => {
     // Customers only ever browse admin-approved cafés — a newly listed
     // café stays invisible here until it's reviewed.
-    let list = cafes.filter((c) => c.status === "approved");
+    let list = approvedCafes;
     if (showSavedOnly) list = list.filter((c) => savedCafeIds.includes(c.id));
     const q = search.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter((c) =>
-      `${c.name} ${c.address}`.toLowerCase().includes(q),
-    );
-  }, [cafes, search, showSavedOnly, savedCafeIds]);
+    if (q) {
+      list = list.filter((c) =>
+        `${c.name} ${c.address}`.toLowerCase().includes(q),
+      );
+    }
+    if (!userLocation) return list;
+    // Near me: closest first; cafés without a known location go last.
+    return list
+      .map((cafe) => ({
+        ...cafe,
+        distance: distanceKm(userLocation, cafeCoords[cafe.id]),
+      }))
+      .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity));
+  }, [approvedCafes, search, showSavedOnly, savedCafeIds, userLocation, cafeCoords]);
 
   const selectCafe = (cafe) => {
     setSelectedCafeId(cafe.id);
@@ -335,9 +416,7 @@ export default function Cafe() {
 
     setSaving(true);
 
-    const localId = `local-${Date.now()}-${Math.random()
-      .toString(36)
-      .slice(2, 8)}`;
+    const localId = makeLocalBookingId();
 
     const pricePerHour = selectedSpec
       ? Number(selectedSpec.price) || selectedCafe.pricePerHour
@@ -360,7 +439,7 @@ export default function Cafe() {
         user.displayName || user.email?.split("@")[0] || "GamingVerse User",
       customerEmail: user.email || "",
       customerPhone: user.phoneNumber || "",
-      createdAt: Date.now(),
+      createdAt: currentTimeMs(),
     };
 
     try {
@@ -617,6 +696,33 @@ export default function Cafe() {
             {showSavedOnly ? "♥" : "♡"} Saved
             {savedCafeIds.length ? <b>{savedCafeIds.length}</b> : null}
           </button>
+          <button
+            type="button"
+            className={`cafe-near-btn${userLocation ? " active" : ""}`}
+            onClick={findNearMe}
+            aria-pressed={Boolean(userLocation)}
+            disabled={locating}
+          >
+            📍 {locating ? "Finding you…" : userLocation ? "Nearest first" : "Near me"}
+          </button>
+          <div className="cafe-view-toggle" role="group" aria-label="View">
+            <button
+              type="button"
+              className={viewMode === "list" ? "active" : ""}
+              aria-pressed={viewMode === "list"}
+              onClick={() => setViewMode("list")}
+            >
+              ☰ List
+            </button>
+            <button
+              type="button"
+              className={viewMode === "map" ? "active" : ""}
+              aria-pressed={viewMode === "map"}
+              onClick={() => setViewMode("map")}
+            >
+              🗺️ Map
+            </button>
+          </div>
         </section>
 
         {message && <div className="cafe-message">{message}</div>}
@@ -687,6 +793,25 @@ export default function Cafe() {
                               🎫 {status === "Completed" ? "View Ticket" : "View QR Ticket"}
                             </button>
                           )}
+                        {status === "Completed" &&
+                          !String(b.id || "").startsWith("local-") &&
+                          (reviewSummary[b.cafeId]?.byUser?.[user?.uid] ? (
+                            <button
+                              type="button"
+                              className="rate-visit-btn"
+                              onClick={() => setRateBooking(b)}
+                            >
+                              ★ {reviewSummary[b.cafeId].byUser[user.uid].rating} · Edit review
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="rate-visit-btn"
+                              onClick={() => setRateBooking(b)}
+                            >
+                              ★ Rate your visit
+                            </button>
+                          ))}
                         {status === "Pending" && (
                           <span className="ticket-pending">
                             🎫 QR ticket unlocks once the café confirms
@@ -739,6 +864,7 @@ export default function Cafe() {
                   <div className="cafe-cover-icon">🎮</div>
                 )}
                 <h2>{selectedCafe.name}</h2>
+                <RatingBadge summary={reviewSummary[selectedCafe.id]} />
                 <p>📍 {selectedCafe.address}</p>
                 {selectedCafe.about && (
                   <p className="cafe-about-text">{selectedCafe.about}</p>
@@ -782,6 +908,7 @@ export default function Cafe() {
                     <a href={`tel:${selectedCafe.phone}`}>Call</a>
                   )}
                 </div>
+                <CafeReviewList summary={reviewSummary[selectedCafe.id]} />
               </div>
               <div className="cafe-slot-card">
                 {selectedCafe.specs.length > 0 && (
@@ -969,6 +1096,14 @@ export default function Cafe() {
                 </p>
               </div>
             </div>
+            {viewMode === "map" ? (
+              <CafeMap
+                cafes={filteredCafes}
+                coords={cafeCoords}
+                userLocation={userLocation}
+                onSelect={selectCafe}
+              />
+            ) : (
             <div className="cafe-grid">
               {filteredCafes.map((cafe) => (
                 <article
@@ -1024,6 +1159,19 @@ export default function Cafe() {
                     <small>GAMING CAFÉ</small>
                     <h3>{cafe.name}</h3>
                     <p>📍 {cafe.address || "Address coming soon"}</p>
+                    {(reviewSummary[cafe.id] || cafe.distance != null) && (
+                      <p>
+                        <RatingBadge summary={reviewSummary[cafe.id]} />
+                        {reviewSummary[cafe.id] && cafe.distance != null
+                          ? " · "
+                          : ""}
+                        {cafe.distance != null && (
+                          <span className="cafe-distance">
+                            {formatKm(cafe.distance)}
+                          </span>
+                        )}
+                      </p>
+                    )}
                     <div className="cafe-card-meta">
                       <span>
                         🕘 {cafe.opening} – {cafe.closing}
@@ -1060,6 +1208,7 @@ export default function Cafe() {
                 </article>
               ))}
             </div>
+            )}
             {!filteredCafes.length && (
               <div className="cafe-empty">
                 <div>🔎</div>
@@ -1073,6 +1222,16 @@ export default function Cafe() {
           </section>
         )}
       </main>
+
+      {rateBooking && user && (
+        <RateVisitModal
+          booking={rateBooking}
+          user={user}
+          existing={reviewSummary[rateBooking.cafeId]?.byUser?.[user.uid]}
+          onClose={() => setRateBooking(null)}
+          onDone={() => notify("Thanks for rating your visit!")}
+        />
+      )}
 
       {qrBooking && user && (
         <CafeQrModal

@@ -11,6 +11,7 @@ import { onValue, ref } from "firebase/database";
 import { db } from "../../../firebase";
 import CafeQrModal from "../../cafe/views/CafeQrModal.jsx";
 import "../../cafe/styles/qr.css";
+import "../../../components/PageSkeleton.css";
 
 // Usable tickets first, then waiting ones, then history.
 const STATUS_ORDER = {
@@ -65,7 +66,20 @@ export default function ProfileTickets({ navigate, uid }) {
   }, [uid]);
 
   if (loading) {
-    return <div className="profile-tickets-empty">Loading tickets…</div>;
+    return (
+      <div className="profile-tickets" aria-label="Loading tickets" aria-busy="true">
+        {[0, 1, 2].map((i) => (
+          <div className="profile-ticket profile-ticket-skeleton" key={i}>
+            <div className="profile-ticket-main">
+              <div className="skeleton-bar skeleton-line short" />
+              <div className="skeleton-bar skeleton-line" />
+              <div className="skeleton-bar skeleton-line short" />
+            </div>
+            <div className="profile-ticket-stub" />
+          </div>
+        ))}
+      </div>
+    );
   }
 
   if (!bookings.length) {

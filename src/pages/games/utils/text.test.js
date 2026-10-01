@@ -66,13 +66,18 @@ describe("localImageSimilarity", () => {
     expect(localImageSimilarity("Minecraft", "Cyberpunk 2077")).toBe(0);
   });
 
-  it("gives partial credit for a shared token", () => {
-    // "Grand Theft Auto VI" vs "GTA VI" only share the "vi" token, so the
-    // fuzzy match is weak — this is the exact case that caused Games.jsx's
-    // poster grid to fall through to a RAWG image instead of the local one.
-    const score = localImageSimilarity("Grand Theft Auto VI", "GTA VI");
-    expect(score).toBeGreaterThan(0);
-    expect(score).toBeLessThan(0.5);
+  it("treats GTA as Grand Theft Auto", () => {
+    // Local art is named "GTA VI"; titles spell it out. They used to only
+    // share the "vi" token, so the poster grid fell through to a RAWG
+    // image instead of the local one.
+    expect(localImageSimilarity("Grand Theft Auto VI", "GTA VI")).toBe(1);
+  });
+
+  it("gives partial credit for shared tokens", () => {
+    // Same series, different game: a good but not perfect match.
+    const score = localImageSimilarity("God of War Ragnarok", "God of War");
+    expect(score).toBeGreaterThan(0.5);
+    expect(score).toBeLessThan(1);
   });
 });
 

@@ -11,6 +11,7 @@ import AppTopNav from "../../../components/AppTopNav.jsx";
 import AppBottomNav from "../../../components/AppBottomNav.jsx";
 import PushToggle from "../../../components/PushToggle.jsx";
 import GVLogoMark from "../../../components/GVLogoMark.jsx";
+import SearchMoreResults from "./SearchMoreResults.jsx";
 
 /* The title on every notification is redundant branding text
    ("GamingVerse", "GamingVerse Verdict", "GamingVerse Review") —
@@ -25,6 +26,9 @@ function getNotificationMeta(title) {
   }
   if (title === "GamingVerse Market") {
     return { icon: "🛒", label: "Marketplace", tone: "market" };
+  }
+  if (title === "GamingVerse Release") {
+    return { icon: "🚀", label: "Release", tone: "release" };
   }
   if (title === "GamingVerse Feed") {
     return { icon: "📸", label: "Feed", tone: "feed" };
@@ -42,6 +46,7 @@ export default function GamesNavbar({
   notificationTab,
   notifications,
   openDetails,
+  openSearchResult,
   profileMenuRef,
   search,
   searchInputRef,
@@ -152,7 +157,7 @@ export default function GamesNavbar({
           {search.trim() && (
             <div className="search-results-dropdown">
               <div className="search-results-header">
-                <span>SEARCH RESULTS</span>
+                <span>GAMES</span>
                 <strong>{searchResults.length}</strong>
               </div>
 
@@ -186,6 +191,8 @@ export default function GamesNavbar({
                   <small>Try a different game name.</small>
                 </div>
               )}
+
+              <SearchMoreResults query={search} onPick={openSearchResult} />
             </div>
           )}
 

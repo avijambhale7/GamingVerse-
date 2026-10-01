@@ -1,24 +1,13 @@
-import {
-  getStorage,
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL,
-} from "firebase/storage";
+import { compressImageToDataUrl } from "./imageData.js";
 
 /* =========================================================
    UPLOAD IMAGE
-   Shared with Profile.jsx's existing photo-upload flow —
-   same storage layout (a safe filename under a caller-given
-   path prefix), just factored out so café/marketplace forms
-   can reuse it instead of asking sellers for a hosted URL.
+   Used by ImageUploadButton (café, marketplace and admin
+   forms). Returns the image as a compressed JPEG data URL,
+   which the caller saves in the Realtime Database like any
+   other image URL — this project has no Firebase Storage
+   bucket, so uploads there never completed.
 ========================================================= */
-export async function uploadImageFile(file, pathPrefix) {
-  const storage = getStorage();
-  const safeFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const fileRef = storageRef(
-    storage,
-    `${pathPrefix}/${Date.now()}_${safeFileName}`,
-  );
-  const uploadResult = await uploadBytes(fileRef, file);
-  return getDownloadURL(uploadResult.ref);
+export async function uploadImageFile(file) {
+  return compressImageToDataUrl(file, { maxSide: 1080, maxChars: 400000 });
 }

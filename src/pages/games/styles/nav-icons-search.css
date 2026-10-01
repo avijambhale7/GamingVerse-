@@ -311,3 +311,33 @@
     width: min(370px, calc(100vw - 16px));
   }
 }
+
+/* =====================================================
+   SEARCH EVERYWHERE — cafés, shop and clubs sections
+   (SearchMoreResults.jsx). The whole dropdown scrolls as
+   one list instead of each section scrolling on its own.
+===================================================== */
+.search-results-dropdown {
+  overflow-y: auto;
+}
+
+.search-results-dropdown .search-results-list {
+  max-height: none;
+  overflow: visible;
+}
+
+.search-more-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.search-more-icon {
+  width: 78px;
+  height: 52px;
+  flex: 0 0 78px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  border: 1px solid rgba(168, 50, 255, 0.25);
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.18), rgba(99, 102, 241, 0.18));
+  font-size: 22px;
+}

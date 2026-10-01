@@ -351,3 +351,10 @@
   background: linear-gradient(120deg, #ec4899, #a855f7 55%, #6366f1);
   color: #fff;
 }
+
+/* Followers / following list while it loads */
+.profile-page .social-skeleton {
+  display: grid;
+  gap: 10px;
+  padding: 6px 0;
+}

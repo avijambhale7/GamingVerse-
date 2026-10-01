@@ -11,6 +11,7 @@ import { CLUB_INTERESTS, getClubInterestMeta } from "../data/clubs.js";
 import { chatDayKey, chatDayLabel, chatTime } from "../utils/text.js";
 import { horizontalGames } from "../utils/catalogue.js";
 import UserFeed from "./UserFeed.jsx";
+import Leaderboard from "./Leaderboard.jsx";
 
 export default function SpacesView({
   activeView,
@@ -77,7 +78,8 @@ export default function SpacesView({
     <>
       {(activeView === "trailers" ||
         activeView === "news" ||
-        activeView === "clubs") && (
+        activeView === "clubs" ||
+        activeView === "leaderboard") && (
         <section className="trailers-page">
           <div className="trailers-layout">
             <aside className="trailers-sidebar">
@@ -124,9 +126,26 @@ export default function SpacesView({
                 <span className="sidebar-nav-icon">♣</span>
                 <span>Gaming Clubs</span>
               </button>
+
+              <button
+                className={`trailers-side-item ${
+                  activeView === "leaderboard" ? "active" : ""
+                }`}
+                type="button"
+                onClick={() => {
+                  setActiveView("leaderboard");
+                  setSelectedClubId(null);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                <span className="sidebar-nav-icon">🏆</span>
+                <span>Leaderboard</span>
+              </button>
             </aside>
 
-            {activeView === "news" ? (
+            {activeView === "leaderboard" ? (
+              <Leaderboard />
+            ) : activeView === "news" ? (
               <main className="news-feed">
                 <div className="news-feed-header">
                   <div>
@@ -738,7 +757,7 @@ export default function SpacesView({
                 )}
               </main>
             ) : (
-              <UserFeed />
+              <UserFeed onOpenGame={openDetails} />
             )}
 
             <aside className="trailers-promo">

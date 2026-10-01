@@ -3,19 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { onAuthStateChanged, signOut, updateProfile } from "firebase/auth";
 import { get, onValue, ref, update } from "firebase/database";
 import { auth, db } from "../firebase";
-import {
-  getStorage,
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL,
-} from "firebase/storage";
+import { compressImageToDataUrl, isDataUrl } from "../utils/imageData.js";
 import PageSkeleton from "../components/PageSkeleton.jsx";
 import "./Profile.css";
 
-import {
-  formatGameName,
-  getGameImage,
-} from "./profile/utils/gameImages.js";
+import { formatGameName, getGameImage } from "./profile/utils/gameImages.js";
 import { normalizeSocialList } from "./profile/utils/social.js";
 
 import EditProfileView from "./profile/views/EditProfileView.jsx";
@@ -63,7 +55,7 @@ function Profile() {
   const [myReviews, setMyReviews] = useState([]);
   const [activeTab, setActiveTab] = useState(() => {
     const tab = new URLSearchParams(window.location.search).get("tab");
-    return tab === "collections" || tab === "tickets" ? tab : "reviews";
+    return ["collections", "tickets", "stats"].includes(tab) ? tab : "reviews";
   });
   const [filter, setFilter] = useState("all");
   const [reviewViewMode, setReviewViewMode] = useState("list");
@@ -112,6 +104,9 @@ function Profile() {
     following: [],
   });
   const [socialModal, setSocialModal] = useState(null);
+  // Live follows from the Feed's Follow button (followers/{uid},
+  // follows/{uid}); merged with any older lists stored on the profile.
+  const [liveSocial, setLiveSocial] = useState({ followers: [], following: [] });
   const [socialMembers, setSocialMembers] = useState([]);
   const [socialLoading, setSocialLoading] = useState(false);
 
@@ -248,6 +243,46 @@ function Profile() {
     );
   }, [user?.uid]);
 
+  useEffect(() => {
+    const uid = user?.uid;
+    if (!uid) return undefined;
+    const listen = (path, key) =>
+      onValue(
+        ref(db, path),
+        (snapshot) =>
+          setLiveSocial((previous) => ({
+            ...previous,
+            [key]: normalizeSocialList(snapshot.val() || {}),
+          })),
+        (error) => console.warn(`Could not load ${key}:`, error),
+      );
+    const stopFollowers = listen(`followers/${uid}`, "followers");
+    const stopFollowing = listen(`follows/${uid}`, "following");
+    return () => {
+      stopFollowers();
+      stopFollowing();
+    };
+  }, [user?.uid]);
+
+  const mergedSocialLists = useMemo(() => {
+    const merge = (older, live) => {
+      const seen = new Set();
+      return [...live, ...older].filter((entry) => {
+        const id =
+          typeof entry === "object" && entry !== null
+            ? entry.uid || entry.userId || entry.id
+            : entry;
+        if (!id || seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+    };
+    return {
+      followers: merge(socialLists.followers || [], liveSocial.followers),
+      following: merge(socialLists.following || [], liveSocial.following),
+    };
+  }, [socialLists, liveSocial]);
+
   const fullName =
     `${profile.firstName} ${profile.lastName}`.trim() ||
     profile.username ||
@@ -258,7 +293,9 @@ function Profile() {
 
     if (filter === "recent") {
       list = [...list].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-    } else if (["skip", "timepass", "go-for-it", "perfection"].includes(filter)) {
+    } else if (
+      ["skip", "timepass", "go-for-it", "perfection"].includes(filter)
+    ) {
       list = list.filter((review) => review.verdict === filter);
     }
 
@@ -273,7 +310,7 @@ function Profile() {
   }, [myReviews, filter, reviewSearch]);
 
   const openSocialModal = async (type) => {
-    const entries = socialLists[type] || [];
+    const entries = mergedSocialLists[type] || [];
     setSocialModal(type);
     setSocialMembers([]);
     setSocialLoading(true);
@@ -288,7 +325,15 @@ function Profile() {
           const uid = item.uid || item.userId || item.id || "";
           let data = item;
 
-          if (uid && !item.username && !item.displayName && !item.firstName) {
+          // Entries from the Follow button already carry name + handle;
+          // other users' profiles are private, so only look up the rest.
+          if (
+            uid &&
+            !item.username &&
+            !item.displayName &&
+            !item.firstName &&
+            !item.name
+          ) {
             try {
               const snapshot = await get(ref(db, `users/${uid}`));
               if (snapshot.exists()) data = { ...item, ...snapshot.val() };
@@ -303,7 +348,8 @@ function Profile() {
             data.name ||
             data.username ||
             "GamingVerse User";
-          const username = data.username || data.displayName || "gamer";
+          const username =
+            data.username || data.handle || data.displayName || "gamer";
 
           return {
             uid,
@@ -430,14 +476,11 @@ function Profile() {
         let savedPhotoURL = profile.photoURL.trim();
 
         if (photoFile) {
-          const storage = getStorage();
-          const safeFileName = photoFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-          const photoRef = storageRef(
-            storage,
-            `profilePhotos/${user.uid}/${Date.now()}_${safeFileName}`,
-          );
-          const uploadResult = await uploadBytes(photoRef, photoFile);
-          savedPhotoURL = await getDownloadURL(uploadResult.ref);
+          // Saved in the database (no Storage bucket on this project).
+          savedPhotoURL = await compressImageToDataUrl(photoFile, {
+            maxSide: 400,
+            maxChars: 120000,
+          });
         }
 
         const ownerData = {
@@ -455,7 +498,9 @@ function Profile() {
         await update(ref(db, `users/${user.uid}`), ownerData);
         await updateProfile(user, {
           displayName: cleanBusinessName,
-          ...(savedPhotoURL ? { photoURL: savedPhotoURL } : {}),
+          ...(savedPhotoURL && !isDataUrl(savedPhotoURL)
+            ? { photoURL: savedPhotoURL }
+            : {}),
         });
 
         setProfile((previous) => ({
@@ -532,15 +577,11 @@ function Profile() {
       let savedPhotoURL = profile.photoURL.trim();
 
       if (photoFile) {
-        const storage = getStorage();
-        const safeFileName = photoFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const photoRef = storageRef(
-          storage,
-          `profilePhotos/${user.uid}/${Date.now()}_${safeFileName}`,
-        );
-
-        const uploadResult = await uploadBytes(photoRef, photoFile);
-        savedPhotoURL = await getDownloadURL(uploadResult.ref);
+        // Saved in the database (no Storage bucket on this project).
+        savedPhotoURL = await compressImageToDataUrl(photoFile, {
+          maxSide: 400,
+          maxChars: 120000,
+        });
       }
 
       const updatedData = {
@@ -558,7 +599,9 @@ function Profile() {
 
       await updateProfile(user, {
         displayName: finalUsername,
-        ...(savedPhotoURL ? { photoURL: savedPhotoURL } : {}),
+        ...(savedPhotoURL && !isDataUrl(savedPhotoURL)
+          ? { photoURL: savedPhotoURL }
+          : {}),
       });
 
       await update(ref(db, `users/${user.uid}`), updatedData);
@@ -669,7 +712,7 @@ function Profile() {
       setShowReviewSearch={setShowReviewSearch}
       setSocialModal={setSocialModal}
       showReviewSearch={showReviewSearch}
-      socialLists={socialLists}
+      socialLists={mergedSocialLists}
       socialLoading={socialLoading}
       socialMembers={socialMembers}
       socialModal={socialModal}

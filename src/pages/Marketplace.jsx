@@ -38,10 +38,15 @@ export default function Marketplace({ embedded = false }) {
   const [requestProduct, setRequestProduct] = useState(null);
 
   const [page, setPage] = useState("products");
-  const [marketType, setMarketType] = useState("accessories");
+  // ?type= and ?q= come from the navbar's search results.
+  const [marketType, setMarketType] = useState(() =>
+    new URLSearchParams(window.location.search).get("type") === "games" ? "games" : "accessories",
+  );
   const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(
+    () => new URLSearchParams(window.location.search).get("q") || "",
+  );
   const [platform, setPlatform] = useState("All");
   const [category, setCategory] = useState("All");
   const [condition, setCondition] = useState("All");

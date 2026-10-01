@@ -8,6 +8,8 @@
                                   since users/{uid} is private)
    postLikes/{postId}/{uid}       true
    postComments/{postId}/{id}     { uid, text, authorName, ... }
+   postReports/{postId}/{uid}     { reason, createdAt } (admins read)
+   follows/{uid}/{targetUid}      who I follow (+ followers/{target}/{uid})
 
    Photos are stored inside the post as a compressed JPEG data
    URL (imageData), because this Firebase project has no
@@ -30,14 +32,37 @@ import {
 } from "firebase/database";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../../../firebase";
-import { NOTIFY_TITLES, notifyUser } from "../../../utils/notify.js";
+import {
+  NOTIFY_TITLES,
+  notifyAdmins,
+  notifyUser,
+} from "../../../utils/notify.js";
+import { compressImageToDataUrl } from "../../../utils/imageData.js";
+import { completeGameCatalogue } from "../utils/catalogue.js";
 import "../styles/user-feed.css";
+import "../../../components/PageSkeleton.css";
 
 const MAX_CAPTION = 2200;
 const MAX_COMMENT = 500;
 const FEED_SIZE = 50;
 // Must stay under the imageData limit in database.rules.json.
 const MAX_IMAGE_CHARS = 560000;
+const REPORT_REASONS = [
+  ["spam", "Spam"],
+  ["offensive", "Offensive or hateful"],
+  ["inappropriate", "Inappropriate image"],
+  ["other", "Something else"],
+];
+
+// Game names for the "tag a game" picker, de-duplicated.
+const GAME_NAMES = [
+  ...new Set(completeGameCatalogue.map((game) => game?.name).filter(Boolean)),
+].sort((a, b) => a.localeCompare(b));
+
+const findGame = (name) =>
+  completeGameCatalogue.find(
+    (game) => game?.name?.toLowerCase() === String(name).toLowerCase(),
+  ) || { name };
 
 function timeAgo(value) {
   const ms = Date.now() - Number(value || 0);
@@ -65,30 +90,6 @@ function initialsOf(name) {
   );
 }
 
-/* Phone photos are often 4–12 MB; shrink to a JPEG data URL of a
-   few hundred KB, stepping size/quality down until it fits. */
-async function compressImage(file) {
-  const bitmap = await createImageBitmap(file);
-  const attempts = [
-    [1080, 0.82],
-    [960, 0.72],
-    [800, 0.65],
-    [640, 0.6],
-  ];
-  for (const [maxSide, quality] of attempts) {
-    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(bitmap.width * scale);
-    canvas.height = Math.round(bitmap.height * scale);
-    canvas
-      .getContext("2d")
-      .drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL("image/jpeg", quality);
-    if (dataUrl.length <= MAX_IMAGE_CHARS) return dataUrl;
-  }
-  throw new Error("Image too large after compression.");
-}
-
 // A post write should never leave the button stuck on "Sharing…".
 function withTimeout(promise, ms) {
   return Promise.race([
@@ -107,7 +108,7 @@ function Avatar({ name, photo, size = 38 }) {
   );
 }
 
-export default function UserFeed() {
+export default function UserFeed({ onOpenGame }) {
   const [me, setMe] = useState(null);
   const [posts, setPosts] = useState([]);
   const [likes, setLikes] = useState({});
@@ -118,11 +119,18 @@ export default function UserFeed() {
   // wait for it, because a read made before sign-in is refused and
   // Firebase then cancels that listener for good.
   const [authUid, setAuthUid] = useState(null);
+  const [following, setFollowing] = useState({});
+  const [feedTab, setFeedTab] = useState("all");
+  // ?post=<id> (a shared link) scrolls to that post once it has loaded.
+  const [targetPostId] = useState(() =>
+    new URLSearchParams(window.location.search).get("post"),
+  );
 
   const [composerOpen, setComposerOpen] = useState(false);
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState("");
   const [caption, setCaption] = useState("");
+  const [gameTag, setGameTag] = useState("");
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
@@ -209,12 +217,60 @@ export default function UserFeed() {
       },
       onReadError,
     );
+    // Follows are optional extras: a failure here shouldn't hide the feed.
+    const stopFollows = onValue(
+      ref(db, `follows/${authUid}`),
+      (snap) => setFollowing(snap.val() || {}),
+      (err) => console.warn("Follows load error:", err),
+    );
     return () => {
       stopPosts();
       stopLikes();
       stopComments();
+      stopFollows();
     };
   }, [authUid]);
+
+  useEffect(() => {
+    if (!targetPostId || loading) return;
+    document
+      .getElementById(`post-${targetPostId}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [targetPostId, loading]);
+
+  async function toggleFollow(post) {
+    if (!me || post.uid === me.uid) return;
+    const isFollowing = Boolean(following[post.uid]);
+    const updates = isFollowing
+      ? {
+          [`follows/${me.uid}/${post.uid}`]: null,
+          [`followers/${post.uid}/${me.uid}`]: null,
+        }
+      : {
+          [`follows/${me.uid}/${post.uid}`]: {
+            name: String(post.authorName || "").slice(0, 80),
+            handle: String(post.authorHandle || "").slice(0, 30),
+            createdAt: serverTimestamp(),
+          },
+          [`followers/${post.uid}/${me.uid}`]: {
+            name: me.name.slice(0, 80),
+            handle: me.handle.slice(0, 30),
+            createdAt: serverTimestamp(),
+          },
+        };
+    try {
+      await update(ref(db), updates);
+      if (!isFollowing) {
+        notifyUser(
+          post.uid,
+          `${me.name} started following you.`,
+          NOTIFY_TITLES.feed,
+        );
+      }
+    } catch (err) {
+      console.error("Follow error:", err);
+    }
+  }
 
   useEffect(() => () => preview && URL.revokeObjectURL(preview), [preview]);
 
@@ -237,6 +293,7 @@ export default function UserFeed() {
     setFile(null);
     setPreview("");
     setCaption("");
+    setGameTag("");
     setError("");
   }
 
@@ -250,10 +307,14 @@ export default function UserFeed() {
     setError("");
     let imageData;
     try {
-      imageData = await compressImage(file);
+      imageData = await compressImageToDataUrl(file, {
+        maxChars: MAX_IMAGE_CHARS,
+      });
     } catch (err) {
       console.error("Image compress error:", err);
-      setError("Couldn't read this photo. Try a JPG or PNG image.");
+      setError(
+        err.message || "Couldn't read this photo. Try a JPG or PNG image.",
+      );
       setPosting(false);
       return;
     }
@@ -268,6 +329,7 @@ export default function UserFeed() {
           authorHandle: me.handle.slice(0, 30),
           // Profile photos may themselves be data URLs; skip big ones.
           authorPhoto: me.photo.length <= 2048 ? me.photo : "",
+          ...(gameTag.trim() ? { game: gameTag.trim().slice(0, 100) } : {}),
           createdAt: serverTimestamp(),
         }),
         30000,
@@ -288,6 +350,10 @@ export default function UserFeed() {
   }
 
   const composerDisabled = !me || posting;
+  const visiblePosts =
+    feedTab === "following"
+      ? posts.filter((post) => following[post.uid] || post.uid === me?.uid)
+      : posts;
 
   return (
     <main className="trailers-feed user-feed">
@@ -341,6 +407,22 @@ export default function UserFeed() {
             onChange={(e) => setCaption(e.target.value)}
             disabled={posting}
           />
+          <label className="uf-game-picker">
+            <span aria-hidden="true">🎮</span>
+            <input
+              list="uf-game-names"
+              value={gameTag}
+              maxLength={100}
+              placeholder="Tag a game (optional)"
+              onChange={(e) => setGameTag(e.target.value)}
+              disabled={posting}
+            />
+            <datalist id="uf-game-names">
+              {GAME_NAMES.map((name) => (
+                <option key={name} value={name} />
+              ))}
+            </datalist>
+          </label>
           {error && <p className="uf-error">{error}</p>}
           <div className="uf-composer-actions">
             <small>
@@ -378,8 +460,49 @@ export default function UserFeed() {
       )}
       {!composerOpen && error && <p className="uf-error">{error}</p>}
 
+      {authUid && !loadError && (
+        <div className="uf-tabs" role="tablist" aria-label="Feed">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={feedTab === "all"}
+            className={feedTab === "all" ? "is-active" : ""}
+            onClick={() => setFeedTab("all")}
+          >
+            For you
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={feedTab === "following"}
+            className={feedTab === "following" ? "is-active" : ""}
+            onClick={() => setFeedTab("following")}
+          >
+            Following
+            <small>{Object.keys(following).length}</small>
+          </button>
+        </div>
+      )}
+
       {loading ? (
-        <div className="uf-empty">Loading feed…</div>
+        <div className="uf-list" aria-label="Loading feed" aria-busy="true">
+          {[0, 1].map((i) => (
+            <div className="uf-post uf-skeleton" key={i}>
+              <div className="uf-post-head">
+                <div className="skeleton-block uf-skel-avatar" />
+                <div className="uf-skel-lines">
+                  <div className="skeleton-bar skeleton-line" />
+                  <div className="skeleton-bar skeleton-line short" />
+                </div>
+              </div>
+              <div className="skeleton-block uf-skel-media" />
+              <div className="uf-skel-lines uf-skel-body">
+                <div className="skeleton-bar skeleton-line short" />
+                <div className="skeleton-bar skeleton-line" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : loadError ? (
         <div className="uf-empty">
           <div>⚠️</div>
@@ -391,21 +514,35 @@ export default function UserFeed() {
           <div>🔒</div>
           <h3>Sign in to see the feed</h3>
         </div>
-      ) : posts.length === 0 ? (
-        <div className="uf-empty">
-          <div>📸</div>
-          <h3>No posts yet</h3>
-          <p>Be the first to share a gaming moment.</p>
-        </div>
+      ) : visiblePosts.length === 0 ? (
+        feedTab === "following" ? (
+          <div className="uf-empty">
+            <div>👥</div>
+            <h3>Nothing from people you follow yet</h3>
+            <p>
+              Tap Follow on a post in For you to see that gamer's posts here.
+            </p>
+          </div>
+        ) : (
+          <div className="uf-empty">
+            <div>📸</div>
+            <h3>No posts yet</h3>
+            <p>Be the first to share a gaming moment.</p>
+          </div>
+        )
       ) : (
         <div className="uf-list">
-          {posts.map((post) => (
+          {visiblePosts.map((post) => (
             <FeedPost
               key={post.id}
               post={post}
               me={me}
               likes={likes[post.id] || {}}
               comments={comments[post.id] || []}
+              isFollowing={Boolean(following[post.uid])}
+              onToggleFollow={() => toggleFollow(post)}
+              onOpenGame={(name) => onOpenGame?.(findGame(name))}
+              highlighted={post.id === targetPostId}
             />
           ))}
         </div>
@@ -414,18 +551,75 @@ export default function UserFeed() {
   );
 }
 
-function FeedPost({ post, me, likes, comments }) {
+function FeedPost({
+  post,
+  me,
+  likes,
+  comments,
+  isFollowing,
+  onToggleFollow,
+  onOpenGame,
+  highlighted,
+}) {
   const [showAll, setShowAll] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [sending, setSending] = useState(false);
   const [burst, setBurst] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [reporting, setReporting] = useState(false);
+  const [toast, setToast] = useState("");
   const commentInputRef = useRef(null);
 
   const likeCount = Object.keys(likes).length;
   const liked = Boolean(me && likes[me.uid]);
   const canDelete = Boolean(me && (me.uid === post.uid || me.isAdmin));
+  const isOwn = Boolean(me && me.uid === post.uid);
+
+  function flash(text) {
+    setToast(text);
+    window.setTimeout(() => setToast(""), 2200);
+  }
+
+  async function sharePostLink() {
+    const url = `${window.location.origin}/games?view=spaces&post=${post.id}`;
+    const title = `${post.authorName || "A gamer"} on GamingVerse`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text: post.caption || title, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      flash("Link copied");
+    } catch (err) {
+      // Closing the share sheet throws AbortError — that's not a failure.
+      if (err?.name !== "AbortError") flash("Couldn't share this post");
+    }
+  }
+
+  async function reportPost(reason) {
+    if (!me) return;
+    setReporting(false);
+    setMenuOpen(false);
+    try {
+      await set(ref(db, `postReports/${post.id}/${me.uid}`), {
+        reason,
+        createdAt: serverTimestamp(),
+      });
+      notifyAdmins(
+        `A post by ${post.authorName || "a gamer"} was reported (${reason}).`,
+        NOTIFY_TITLES.feed,
+      );
+      flash("Thanks — our admins will review it");
+    } catch (err) {
+      console.error("Report error:", err);
+      flash(
+        String(err?.message || "").includes("PERMISSION_DENIED")
+          ? "You've already reported this post"
+          : "Couldn't send the report",
+      );
+    }
+  }
   const authorLabel = post.authorHandle || post.authorName || "gamer";
 
   const visibleComments = useMemo(
@@ -516,7 +710,10 @@ function FeedPost({ post, me, likes, comments }) {
     longCaption && !expanded ? `${post.caption.slice(0, 140)}…` : post.caption;
 
   return (
-    <article className="uf-post">
+    <article
+      className={`uf-post${highlighted ? " is-highlighted" : ""}`}
+      id={`post-${post.id}`}
+    >
       <header className="uf-post-head">
         <Avatar name={post.authorName} photo={post.authorPhoto} />
         <div>
@@ -526,20 +723,71 @@ function FeedPost({ post, me, likes, comments }) {
             {timeAgo(post.createdAt)}
           </small>
         </div>
-        {canDelete && (
+        {me && !isOwn && (
+          <button
+            type="button"
+            className={`uf-follow${isFollowing ? " is-following" : ""}`}
+            onClick={onToggleFollow}
+            aria-pressed={isFollowing}
+          >
+            {isFollowing ? "Following" : "Follow"}
+          </button>
+        )}
+        {me && (
           <div className="uf-menu">
             <button
               type="button"
               aria-label="Post options"
-              onClick={() => setMenuOpen((open) => !open)}
+              aria-expanded={menuOpen}
+              onClick={() => {
+                setMenuOpen((open) => !open);
+                setReporting(false);
+              }}
             >
               ⋯
             </button>
             {menuOpen && (
               <div className="uf-menu-pop">
-                <button type="button" onClick={deletePost}>
-                  🗑 Delete post
-                </button>
+                {reporting ? (
+                  <>
+                    <span className="uf-menu-label">
+                      Why are you reporting this?
+                    </span>
+                    {REPORT_REASONS.map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className="is-neutral"
+                        onClick={() => reportPost(value)}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className="is-neutral"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        sharePostLink();
+                      }}
+                    >
+                      ↗ Share post
+                    </button>
+                    {!isOwn && (
+                      <button type="button" onClick={() => setReporting(true)}>
+                        ⚑ Report post
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button type="button" onClick={deletePost}>
+                        🗑 Delete post
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -576,12 +824,35 @@ function FeedPost({ post, me, likes, comments }) {
         >
           💬
         </button>
+        <button
+          type="button"
+          className="uf-share"
+          aria-label="Share post"
+          onClick={sharePostLink}
+        >
+          ↗
+        </button>
+        {toast && (
+          <span className="uf-toast" role="status">
+            {toast}
+          </span>
+        )}
       </div>
 
       <div className="uf-body">
         <strong className="uf-likes">
           {likeCount} {likeCount === 1 ? "like" : "likes"}
         </strong>
+
+        {post.game && (
+          <button
+            type="button"
+            className="uf-game-tag"
+            onClick={() => onOpenGame?.(post.game)}
+          >
+            🎮 {post.game}
+          </button>
+        )}
 
         {post.caption && (
           <p className="uf-caption">

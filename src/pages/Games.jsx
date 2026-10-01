@@ -62,6 +62,8 @@ import {
   getGameDetails,
   matchesHomeCategory,
 } from "./games/utils/gameInfo.js";
+import { onAuthStateChanged } from "firebase/auth";
+import { checkGameAlerts, setGameAlert } from "../utils/gameAlerts.js";
 import {
   extractYouTubeId,
   getBestLocalImage,
@@ -123,6 +125,7 @@ function Games() {
       marketplace: "marketplace",
       cafe: "cafe",
     };
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the open section follows the ?view= URL (nav links only change the URL).
     setActiveView(viewToActiveView[view] || "home");
     // AppTopNav/AppBottomNav switch sections purely by navigating (no
     // local setters to call), so this is the one place that needs to
@@ -143,6 +146,7 @@ function Games() {
     if (navigationEntry?.type === "reload") {
       const reloadView = searchParams.get("view");
       if (reloadView === "clubs") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- on a browser reload, reset to the section the URL names (runs once).
         setActiveView("clubs");
         setSpacesSection("clubs");
       } else if (reloadView === "spaces") {
@@ -255,7 +259,10 @@ function Games() {
   const [automaticGames, setAutomaticGames] = useState([]);
   const [automaticGamesLoading, setAutomaticGamesLoading] = useState(true);
   const [automaticGamesError, setAutomaticGamesError] = useState("");
-  const [catalogueImageMap, setCatalogueImageMap] = useState({});
+  // Seeded from the shared RAWG poster cache, so found posters show at once.
+  const [catalogueImageMap, setCatalogueImageMap] = useState(() =>
+    readPosterImageCache(),
+  );
   const [trailerMediaMap, setTrailerMediaMap] = useState({});
   const [upcomingGames, setUpcomingGames] = useState([]);
   const [upcomingGamesLoading, setUpcomingGamesLoading] = useState(true);
@@ -391,6 +398,7 @@ function Games() {
   ======================================================= */
   useEffect(() => {
     if (!auth.currentUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- signed out: there is no profile to subscribe to.
       setUserAge(null);
       setAgeLoading(false);
       return undefined;
@@ -844,6 +852,7 @@ function Games() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- load the news feed on mount, then refresh it every 10 minutes.
     fetchLiveGamingNews();
 
     const interval = window.setInterval(fetchLiveGamingNews, 10 * 60 * 1000);
@@ -852,6 +861,22 @@ function Games() {
   }, []);
 
   const newsItems = liveNews.length ? liveNews : currentGamingNews;
+  // Café / shop / club results in the navbar search open their section,
+  // pre-filtered to the picked item.
+  const openSearchResult = (type, item) => {
+    setSearch("");
+    const q = encodeURIComponent(item.title);
+    if (type === "cafes") {
+      navigate(`/games?view=cafe&q=${q}`);
+    } else if (type === "products") {
+      navigate(`/games?view=marketplace&type=${item.type}&q=${q}`);
+    } else if (type === "clubs") {
+      navigate("/games?view=clubs");
+      setClubSearch(item.title);
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const openClub = (clubId) => {
     setSelectedClubId(clubId);
     setShowCreateClub(false);
@@ -1126,9 +1151,6 @@ function Games() {
     // every game the local catalogue has no image for, which was adding to
     // the request volume that kept tripping RAWG's rate limit.
     const cachedImages = readPosterImageCache();
-    if (Object.keys(cachedImages).length) {
-      setCatalogueImageMap((prev) => ({ ...cachedImages, ...prev }));
-    }
 
     const missingGames = completeGameCatalogue.filter(
       (game) => game?.name && !getCatalogueImage(game),
@@ -1457,16 +1479,14 @@ function Games() {
     return () => window.clearInterval(timer);
   }, [heroGames.length]);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- restart the hero carousel when the filters change.
     setHeroIndex(0);
   }, [activeCategory, search]);
   /* =======================================================
        LOAD GAME REVIEWS LIVE
     ======================================================= */
   useEffect(() => {
-    if (!selectedGame) {
-      setReviewCounts(emptyCounts);
-      return undefined;
-    }
+    if (!selectedGame) return undefined;
     const gameId = createGameId(selectedGame.name);
     const reviewsRef = ref(db, `gameReviews/${gameId}`);
 
@@ -1549,7 +1569,11 @@ function Games() {
         );
       },
     );
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      // Closing or switching games clears the meter.
+      setReviewCounts(emptyCounts);
+    };
     // Keyed on the name, not the object: opening a trailer replaces
     // selectedGame with a copy, which used to tear down and rebuild this
     // subscription — and reset the composer — for the same game.
@@ -1576,8 +1600,34 @@ function Games() {
   };
   const toggleWatched = () => {
     if (!selectedGame) return;
+    const wasMarked = watchedGames.includes(selectedGame.name);
     toggleSavedList("gamingverse_watched", selectedGame.name, setWatchedGames);
+
+    // Upcoming games: "Mark as Interested" also sets a release alert.
+    const uid = auth.currentUser?.uid;
+    const releaseDate =
+      selectedGame.releaseDate || getGameDetails(selectedGame.name).releaseDate;
+    if (uid) {
+      setGameAlert(uid, selectedGame.name, releaseDate, !wasMarked)
+        .then((saved) => {
+          if (saved) {
+            setReviewMessage(
+              `🔔 We'll notify you the day before ${selectedGame.name} releases and on release day.`,
+            );
+          }
+        })
+        .catch((error) => console.warn("Release alert not saved:", error));
+    }
   };
+
+  // Release alerts: check once the signed-in user is known.
+  useEffect(
+    () =>
+      onAuthStateChanged(auth, (currentUser) => {
+        if (currentUser) checkGameAlerts(currentUser.uid);
+      }),
+    [],
+  );
   const toggleCollection = () => {
     if (!selectedGame) return;
     toggleSavedList(
@@ -1678,6 +1728,7 @@ function Games() {
 
     if (!targetGame) return;
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- open the game named in the ?openGame= deep link once its data has loaded.
     setActiveView("home");
     setActiveCategory("All");
     setSearch("");
@@ -2280,6 +2331,7 @@ function Games() {
         notificationTab={notificationTab}
         notifications={notifications}
         openDetails={openDetails}
+        openSearchResult={openSearchResult}
         profileMenuRef={profileMenuRef}
         search={search}
         searchInputRef={searchInputRef}
@@ -2439,8 +2491,17 @@ function Games() {
       {/* ===================================================
             MARKETPLACE / CAFÉ — SAME GAMES PAGE VIEW
         =================================================== */}
-      {activeView === "marketplace" && <Marketplace embedded />}
-      {activeView === "cafe" && <Cafe embedded />}
+      {/* key: a new ?q= / ?type= from the search box starts the section
+          fresh with that search filled in. */}
+      {activeView === "marketplace" && (
+        <Marketplace
+          embedded
+          key={`${searchParams.get("type") || ""}|${searchParams.get("q") || ""}`}
+        />
+      )}
+      {activeView === "cafe" && (
+        <Cafe embedded key={searchParams.get("q") || ""} />
+      )}
 
       {/* ===================================================
             FOOTER

@@ -4,8 +4,9 @@ import "./ImageUploadButton.css";
 
 /* =========================================================
    IMAGE UPLOAD BUTTON
-   A file-picker button that uploads to Firebase Storage and
-   hands the resulting URL(s) back to the caller. The caller
+   A file-picker button that turns the picked photo(s) into
+   compressed image data URLs (see utils/imageData.js) and hands
+   them back to the caller. The caller
    still owns the form field — this only replaces "paste a
    URL" with "pick a file" as the way to fill it.
 ========================================================= */
@@ -15,7 +16,6 @@ export default function ImageUploadButton({
   multiple = false,
   onError,
   onUploaded,
-  pathPrefix,
 }) {
   const inputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
@@ -28,12 +28,14 @@ export default function ImageUploadButton({
     setUploading(true);
     try {
       const urls = await Promise.all(
-        files.map((file) => uploadImageFile(file, pathPrefix)),
+        files.map((file) => uploadImageFile(file)),
       );
       onUploaded(multiple ? urls : urls[0]);
     } catch (error) {
       console.error("Image upload error:", error);
-      onError?.("Could not upload the image. Please try again.");
+      onError?.(
+        error?.message || "Could not upload the image. Please try again.",
+      );
     } finally {
       setUploading(false);
     }

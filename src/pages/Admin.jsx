@@ -17,6 +17,8 @@ import { completeGameCatalogue } from "./games/utils/catalogue.js";
 import { lookupMissingPosters } from "./games/utils/posterLookup.js";
 import AdminActivityChart from "./admin/AdminActivityChart.jsx";
 import AdminPostsView from "./admin/AdminPostsView.jsx";
+import AdminFeedReports from "./admin/AdminFeedReports.jsx";
+import AdminInsights from "./admin/AdminInsights.jsx";
 import NotificationBell from "../components/NotificationBell.jsx";
 import PurchaseRequestList from "../components/PurchaseRequestList.jsx";
 import usePurchaseRequests from "../utils/usePurchaseRequests.js";
@@ -720,6 +722,7 @@ export default function Admin() {
             </div>
           </section>
           <AdminActivityChart days={activityDays} />
+          <AdminInsights reviews={reviews} bookings={bookings} />
         </main>
       )}
 
@@ -957,11 +960,20 @@ export default function Admin() {
       )}
 
       {section === "posts" && (
-        <AdminPostsView
-          bannedUids={new Set(users.filter((u) => u.isBanned).map((u) => u.uid))}
-          onBan={(uid) => setBanned(uid, true)}
-          onMessage={setMessage}
-        />
+        <>
+          <main className="admin-main gv-page-enter admin-feed-reports-wrap">
+            <AdminFeedReports
+              bannedUids={new Set(users.filter((u) => u.isBanned).map((u) => u.uid))}
+              onBan={(uid) => setBanned(uid, true)}
+              onMessage={setMessage}
+            />
+          </main>
+          <AdminPostsView
+            bannedUids={new Set(users.filter((u) => u.isBanned).map((u) => u.uid))}
+            onBan={(uid) => setBanned(uid, true)}
+            onMessage={setMessage}
+          />
+        </>
       )}
 
       {section === "cafes" && (

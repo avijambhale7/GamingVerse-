@@ -9,6 +9,7 @@ import { formatGameName } from "../utils/gameImages.js";
 import AppTopNav from "../../../components/AppTopNav.jsx";
 import AppBottomNav from "../../../components/AppBottomNav.jsx";
 import ProfileTickets from "./ProfileTickets.jsx";
+import ProfileStats from "./ProfileStats.jsx";
 import GVLogoMark from "../../../components/GVLogoMark.jsx";
 import useRemotePosters from "../utils/useRemotePosters.js";
 
@@ -198,9 +199,27 @@ export default function ProfileView({
             >
               🎫 <span>Tickets</span>
             </button>
+
+            <button
+              className={
+                activeTab === "stats" ? "profile-tab active" : "profile-tab"
+              }
+              type="button"
+              onClick={() => setActiveTab("stats")}
+            >
+              📊 <span>Stats</span>
+            </button>
           </div>
 
-          {activeTab === "tickets" ? (
+          {activeTab === "stats" ? (
+            <ProfileStats
+              uid={user?.uid}
+              reviews={myReviews}
+              collectionGames={collectionGames}
+              playedGames={playedGames}
+              followersCount={(socialLists?.followers || []).length}
+            />
+          ) : activeTab === "tickets" ? (
             <ProfileTickets navigate={navigate} uid={user?.uid} />
           ) : activeTab === "reviews" ? (
             <>
@@ -618,7 +637,17 @@ export default function ProfileView({
 
             <div className="social-modal-list">
               {socialLoading ? (
-                <div className="social-modal-empty">Loading...</div>
+                <div className="social-skeleton" aria-label="Loading" aria-busy="true">
+                  {[0, 1, 2, 3].map((i) => (
+                    <div className="skeleton-row" key={i}>
+                      <div className="skeleton-block skeleton-avatar" />
+                      <div className="skeleton-row-lines">
+                        <div className="skeleton-bar skeleton-line" />
+                        <div className="skeleton-bar skeleton-line short" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : socialMembers.length === 0 ? (
                 <div className="social-modal-empty">
                   {socialModal === "followers"

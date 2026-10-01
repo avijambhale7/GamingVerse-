@@ -1,0 +1,231 @@
+/* =========================================================
+   CAFÉ MAP (views/CafeMap.jsx) + café reviews
+========================================================= */
+
+.gv-cafe-map-wrap {
+  display: grid;
+  gap: 10px;
+}
+.gv-cafe-map {
+  height: min(62vh, 520px);
+  min-height: 320px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  overflow: hidden;
+  background: #111117;
+}
+.gv-cafe-map-note {
+  margin: 0;
+  color: #9a9aa4;
+  font-size: 13px;
+}
+
+/* map pins */
+.gv-map-pin {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 6px;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #ec4899, #a855f7 60%, #6366f1);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font: 800 12px/1 system-ui, sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.gv-map-pin span {
+  font-size: 14px;
+}
+
+/* list / map + near me controls */
+.cafe-view-toggle {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.3);
+}
+.cafe-view-toggle button,
+.cafe-near-btn {
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #c4c4cc;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.cafe-view-toggle button.active {
+  background: linear-gradient(120deg, #ec4899, #a855f7);
+  color: #fff;
+}
+.cafe-near-btn {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.cafe-near-btn.active {
+  border-color: rgba(236, 72, 153, 0.6);
+  color: #f9a8d4;
+}
+
+.cafe-distance {
+  color: #f9a8d4;
+  font-weight: 700;
+}
+
+/* ratings */
+.cafe-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #fbbf24;
+  font-weight: 800;
+}
+.cafe-rating small {
+  color: #9a9aa4;
+  font-weight: 600;
+}
+
+.cafe-reviews {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.cafe-reviews h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 17px;
+}
+.cafe-review {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+.cafe-review header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.cafe-review strong {
+  color: #fff;
+  font-size: 14px;
+}
+.cafe-review p {
+  margin: 0;
+  color: #c4c4cc;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.cafe-stars {
+  color: #fbbf24;
+  letter-spacing: 1px;
+}
+
+/* rate a visit */
+.cafe-rate-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(4, 4, 8, 0.72);
+  backdrop-filter: blur(6px);
+}
+.cafe-rate-modal {
+  display: grid;
+  gap: 12px;
+  width: min(420px, 100%);
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  background: #121218;
+}
+.cafe-rate-modal h3 {
+  margin: 0;
+}
+.cafe-rate-modal p {
+  margin: 0;
+  color: #9a9aa4;
+  font-size: 14px;
+}
+.cafe-star-picker {
+  display: flex;
+  gap: 4px;
+}
+.cafe-star-picker button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #4a4a55;
+  font-size: 34px;
+  line-height: 1;
+  cursor: pointer;
+}
+.cafe-star-picker button.on {
+  color: #fbbf24;
+}
+.cafe-star-picker button:focus-visible {
+  outline: 2px solid #f9a8d4;
+  border-radius: 6px;
+}
+.cafe-rate-modal textarea {
+  min-height: 90px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font: inherit;
+  resize: vertical;
+}
+.cafe-rate-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.cafe-rate-actions button {
+  padding: 10px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: transparent;
+  color: #e6e1f2;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.cafe-rate-actions button.primary {
+  border-color: transparent;
+  background: linear-gradient(120deg, #ec4899, #a855f7);
+  color: #fff;
+}
+.cafe-rate-actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.rate-visit-btn {
+  padding: 8px 14px;
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  border-radius: 999px;
+  background: rgba(251, 191, 36, 0.12);
+  color: #fcd34d;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.rated-pill {
+  color: #fbbf24;
+  font-size: 13px;
+  font-weight: 800;
+}

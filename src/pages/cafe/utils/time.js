@@ -53,3 +53,10 @@ export function localISO(d) {
   const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
   return local.toISOString().slice(0, 10);
 }
+
+/* Current time in ms, for timestamps set in event handlers. */
+export const nowMs = () => Date.now();
+
+/* Id for a booking saved on this device before it reaches Firebase. */
+export const makeLocalBookingId = () =>
+  `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;

@@ -5,7 +5,7 @@
 ========================================================= */
 
 .profile-page .profile-tabs {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .profile-tickets {
@@ -169,7 +169,8 @@
 
 @media (max-width: 640px) {
   .profile-page .profile-tab {
-    font-size: 14px;
+    font-size: 12.5px;
+    padding-inline: 4px;
   }
   .profile-ticket {
     grid-template-columns: 1fr 88px;
@@ -177,4 +178,13 @@
   .profile-ticket-main {
     padding: 16px;
   }
+}
+
+/* loading skeleton */
+.profile-ticket-skeleton {
+  --t: 120, 120, 132;
+}
+.profile-ticket-skeleton .profile-ticket-main {
+  gap: 10px;
+  min-height: 118px;
 }

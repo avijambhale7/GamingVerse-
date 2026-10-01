@@ -426,3 +426,173 @@ button.uf-composer:hover:not(:disabled) {
     border-radius: 16px;
   }
 }
+
+/* ---------- loading skeleton ---------- */
+
+.uf-skel-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.uf-skel-lines {
+  flex: 1;
+  display: grid;
+  gap: 8px;
+}
+.uf-skel-media {
+  height: 340px;
+  border-radius: 0;
+}
+.uf-skel-body {
+  padding: 14px 16px 18px;
+}
+
+/* ---------- For you / Following tabs ---------- */
+
+.uf-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.35);
+}
+.uf-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #9a9aa4;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.uf-tabs button small {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+}
+.uf-tabs button.is-active {
+  color: #fff;
+  background: linear-gradient(120deg, #ec4899, #a855f7 55%, #6366f1);
+}
+.uf-tabs button:focus-visible {
+  outline: 2px solid #f9a8d4;
+  outline-offset: 2px;
+}
+
+/* ---------- follow button ---------- */
+
+.uf-follow {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #ec4899, #a855f7);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.uf-follow.is-following {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: #d4d4dc;
+}
+
+/* ---------- menu extras ---------- */
+
+.uf-menu-pop {
+  display: grid;
+  min-width: 200px;
+}
+.uf-menu-pop button {
+  text-align: left;
+}
+.uf-menu-pop button.is-neutral {
+  color: #e6e1f2;
+}
+.uf-menu-pop button.is-neutral:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.uf-menu-label {
+  padding: 8px 14px 4px;
+  color: #8a8a94;
+  font-size: 12px;
+}
+
+/* ---------- share + toast ---------- */
+
+.uf-actions {
+  position: relative;
+  align-items: center;
+}
+.uf-actions .uf-share {
+  font-size: 22px;
+}
+.uf-toast {
+  margin-left: auto;
+  margin-right: 8px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(168, 85, 247, 0.2);
+  color: #e9d5ff;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+/* ---------- game tag ---------- */
+
+.uf-game-picker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.35);
+}
+.uf-game-picker:focus-within {
+  border-color: #ec4899;
+  box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.14);
+}
+.uf-game-picker input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  outline: none;
+}
+.uf-game-tag {
+  width: fit-content;
+  padding: 4px 12px;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: 999px;
+  background: rgba(168, 85, 247, 0.12);
+  color: #e9d5ff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.uf-game-tag:hover {
+  background: rgba(168, 85, 247, 0.22);
+}
+
+/* A post opened from a shared link. */
+.uf-post.is-highlighted {
+  border-color: rgba(236, 72, 153, 0.6);
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.18);
+}

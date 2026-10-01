@@ -17,7 +17,7 @@ import {
   normalizeCafe,
 } from "./cafe/utils/cafeModel.js";
 import { decodeTicket } from "./cafe/utils/ticket.js";
-import { todayISO } from "./cafe/utils/time.js";
+import { nowMs, todayISO } from "./cafe/utils/time.js";
 import {
   bookingSeats,
   releaseSeats,
@@ -647,11 +647,11 @@ export default function OwnerDashboard() {
         ref(db, `cafeBookings/${booking.customerId}/${booking.id}`),
         {
           status: nextStatus,
-          ownerUpdatedAt: Date.now(),
+          ownerUpdatedAt: nowMs(),
           ownerId: user.uid,
-          ...(nextStatus === "Confirmed" ? { confirmedAt: Date.now() } : {}),
-          ...(nextStatus === "Rejected" ? { rejectedAt: Date.now() } : {}),
-          ...(nextStatus === "Completed" ? { completedAt: Date.now() } : {}),
+          ...(nextStatus === "Confirmed" ? { confirmedAt: nowMs() } : {}),
+          ...(nextStatus === "Rejected" ? { rejectedAt: nowMs() } : {}),
+          ...(nextStatus === "Completed" ? { completedAt: nowMs() } : {}),
         },
       );
 
