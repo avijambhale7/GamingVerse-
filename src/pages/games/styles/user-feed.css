@@ -596,3 +596,18 @@ button.uf-composer:hover:not(:disabled) {
   border-color: rgba(236, 72, 153, 0.6);
   box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.18);
 }
+
+.uf-load-more {
+  justify-self: center;
+  padding: 11px 22px;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: 999px;
+  background: rgba(168, 85, 247, 0.1);
+  color: #e9d5ff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.uf-load-more:hover {
+  background: rgba(168, 85, 247, 0.2);
+}

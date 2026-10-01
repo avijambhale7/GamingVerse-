@@ -477,6 +477,7 @@ export default function HomeView({
                             <button
                               className="quick-play"
                               type="button"
+                              aria-label={`Open ${game.name}`}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 openDetails(game);

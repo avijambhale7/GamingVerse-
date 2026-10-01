@@ -38,15 +38,18 @@ import {
   notifyUser,
 } from "../../../utils/notify.js";
 import { compressImageToDataUrl } from "../../../utils/imageData.js";
+import useEscapeKey from "../../../utils/useEscapeKey.js";
 import { completeGameCatalogue } from "../utils/catalogue.js";
 import "../styles/user-feed.css";
 import "../../../components/PageSkeleton.css";
 
 const MAX_CAPTION = 2200;
 const MAX_COMMENT = 500;
-const FEED_SIZE = 50;
-// Must stay under the imageData limit in database.rules.json.
-const MAX_IMAGE_CHARS = 560000;
+// Posts load 10 at a time ("Load more" adds 10) — each carries its photo.
+const PAGE_SIZE = 10;
+// Must stay under the imageData limit in database.rules.json (600000).
+// ~300 KB keeps photos sharp at feed size while loading quickly.
+const MAX_IMAGE_CHARS = 300000;
 const REPORT_REASONS = [
   ["spam", "Spam"],
   ["offensive", "Offensive or hateful"],
@@ -111,8 +114,7 @@ function Avatar({ name, photo, size = 38 }) {
 export default function UserFeed({ onOpenGame }) {
   const [me, setMe] = useState(null);
   const [posts, setPosts] = useState([]);
-  const [likes, setLikes] = useState({});
-  const [comments, setComments] = useState({});
+  const [limit, setLimit] = useState(PAGE_SIZE);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   // Set as soon as Firebase restores the session; the feed listeners
@@ -182,11 +184,7 @@ export default function UserFeed({ onOpenGame }) {
       setLoading(false);
     };
     const stopPosts = onValue(
-      query(
-        ref(db, "posts"),
-        orderByChild("createdAt"),
-        limitToLast(FEED_SIZE),
-      ),
+      query(ref(db, "posts"), orderByChild("createdAt"), limitToLast(limit)),
       (snap) => {
         const list = [];
         snap.forEach((child) => {
@@ -197,38 +195,17 @@ export default function UserFeed({ onOpenGame }) {
       },
       onReadError,
     );
-    const stopLikes = onValue(
-      ref(db, "postLikes"),
-      (snap) => setLikes(snap.val() || {}),
-      onReadError,
-    );
-    const stopComments = onValue(
-      ref(db, "postComments"),
-      (snap) => {
-        const byPost = {};
-        Object.entries(snap.val() || {}).forEach(([postId, items]) => {
-          byPost[postId] = Object.entries(items || {})
-            .map(([id, value]) => ({ id, ...value }))
-            .sort(
-              (a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0),
-            );
-        });
-        setComments(byPost);
-      },
-      onReadError,
-    );
-    // Follows are optional extras: a failure here shouldn't hide the feed.
-    const stopFollows = onValue(
+    return () => stopPosts();
+  }, [authUid, limit]);
+
+  // Follows are optional extras: a failure here shouldn't hide the feed.
+  useEffect(() => {
+    if (!authUid) return undefined;
+    return onValue(
       ref(db, `follows/${authUid}`),
       (snap) => setFollowing(snap.val() || {}),
       (err) => console.warn("Follows load error:", err),
     );
-    return () => {
-      stopPosts();
-      stopLikes();
-      stopComments();
-      stopFollows();
-    };
   }, [authUid]);
 
   useEffect(() => {
@@ -269,6 +246,7 @@ export default function UserFeed({ onOpenGame }) {
       }
     } catch (err) {
       console.error("Follow error:", err);
+      setError("Couldn't update who you follow. Please try again.");
     }
   }
 
@@ -537,14 +515,21 @@ export default function UserFeed({ onOpenGame }) {
               key={post.id}
               post={post}
               me={me}
-              likes={likes[post.id] || {}}
-              comments={comments[post.id] || []}
               isFollowing={Boolean(following[post.uid])}
               onToggleFollow={() => toggleFollow(post)}
               onOpenGame={(name) => onOpenGame?.(findGame(name))}
               highlighted={post.id === targetPostId}
             />
           ))}
+          {posts.length >= limit && (
+            <button
+              type="button"
+              className="uf-load-more"
+              onClick={() => setLimit((current) => current + PAGE_SIZE)}
+            >
+              Load more posts
+            </button>
+          )}
         </div>
       )}
     </main>
@@ -554,13 +539,13 @@ export default function UserFeed({ onOpenGame }) {
 function FeedPost({
   post,
   me,
-  likes,
-  comments,
   isFollowing,
   onToggleFollow,
   onOpenGame,
   highlighted,
 }) {
+  const [likes, setLikes] = useState({});
+  const [comments, setComments] = useState([]);
   const [showAll, setShowAll] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [commentText, setCommentText] = useState("");
@@ -570,6 +555,30 @@ function FeedPost({
   const [reporting, setReporting] = useState(false);
   const [toast, setToast] = useState("");
   const commentInputRef = useRef(null);
+  useEscapeKey(() => setMenuOpen(false), menuOpen);
+
+  // Only this post's likes and comments — not the whole site's.
+  useEffect(() => {
+    const stopLikes = onValue(
+      ref(db, `postLikes/${post.id}`),
+      (snap) => setLikes(snap.val() || {}),
+      (err) => console.warn("Likes load error:", err),
+    );
+    const stopComments = onValue(
+      ref(db, `postComments/${post.id}`),
+      (snap) =>
+        setComments(
+          Object.entries(snap.val() || {})
+            .map(([id, value]) => ({ id, ...value }))
+            .sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0)),
+        ),
+      (err) => console.warn("Comments load error:", err),
+    );
+    return () => {
+      stopLikes();
+      stopComments();
+    };
+  }, [post.id]);
 
   const likeCount = Object.keys(likes).length;
   const liked = Boolean(me && likes[me.uid]);
@@ -645,6 +654,7 @@ function FeedPost({
       }
     } catch (err) {
       console.error("Like error:", err);
+      flash("Couldn't save your like");
     }
   }
 
@@ -677,6 +687,7 @@ function FeedPost({
       }
     } catch (err) {
       console.error("Comment error:", err);
+      flash("Couldn't post your comment");
     } finally {
       setSending(false);
     }
@@ -687,6 +698,7 @@ function FeedPost({
       await remove(ref(db, `postComments/${post.id}/${commentId}`));
     } catch (err) {
       console.error("Delete comment error:", err);
+      flash("Couldn't delete the comment");
     }
   }
 

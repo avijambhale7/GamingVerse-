@@ -196,6 +196,9 @@ export default function ProductCatalogue({
 
           <button
             className="wishlist-button"
+            type="button"
+            aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+            aria-pressed={wished}
             onClick={(e) => {
               e.stopPropagation();
               toggleWishlist(product);

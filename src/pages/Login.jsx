@@ -20,6 +20,7 @@ import { isValidPhone, normalizePhone } from "../utils/purchaseRequests.js";
 import {
   USERNAME_RULE_TEXT,
   claimUsername,
+  releaseUsername,
   isUsernameAvailable,
   isValidUsername,
   normalizeUsername,
@@ -259,16 +260,22 @@ function Login() {
         await claimUsername(handle, result.user.uid);
       }
 
-      await set(ref(db, `users/${result.user.uid}`), {
-        firstName: signupName.trim().split(" ")[0] || signupName.trim(),
-        lastName: signupName.trim().split(" ").slice(1).join(" "),
-        username: handle,
-        email: signupEmail.trim(),
-        phone: normalizePhone(signupPhone),
-        dob: signupDob,
-        age: signupAge,
-        createdAt: Date.now(),
-      });
+      try {
+        await set(ref(db, `users/${result.user.uid}`), {
+          firstName: signupName.trim().split(" ")[0] || signupName.trim(),
+          lastName: signupName.trim().split(" ").slice(1).join(" "),
+          username: handle,
+          email: signupEmail.trim(),
+          phone: normalizePhone(signupPhone),
+          dob: signupDob,
+          age: signupAge,
+          createdAt: Date.now(),
+        });
+      } catch (profileError) {
+        // Don't leave the handle reserved by a profile that wasn't saved.
+        await releaseUsername(handle, result.user.uid).catch(() => {});
+        throw profileError;
+      }
 
       notify("Account created successfully!", "success");
 

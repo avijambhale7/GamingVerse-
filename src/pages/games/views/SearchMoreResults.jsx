@@ -7,7 +7,7 @@
 ========================================================= */
 
 import { useEffect, useMemo, useState } from "react";
-import { get, ref } from "firebase/database";
+import { equalTo, get, orderByChild, query, ref } from "firebase/database";
 import { db } from "../../../firebase";
 import { normalizeCafe } from "../../cafe/utils/cafeModel.js";
 
@@ -17,11 +17,17 @@ let loading = null;
 function loadIndex() {
   if (cache) return Promise.resolve(cache);
   if (!loading) {
-    const read = (path) =>
-      get(ref(db, path))
+    const read = (target) =>
+      get(typeof target === "string" ? ref(db, target) : target)
         .then((snap) => snap.val() || {})
         .catch(() => ({}));
-    loading = Promise.all([read("cafes"), read("products"), read("clubs")]).then(
+    // Only approved cafés are readable (database rules).
+    const approvedCafes = query(
+      ref(db, "cafes"),
+      orderByChild("status"),
+      equalTo("approved"),
+    );
+    loading = Promise.all([read(approvedCafes), read("products"), read("clubs")]).then(
       ([cafes, products, clubs]) => {
         cache = {
           // Customers only ever see admin-approved cafés.

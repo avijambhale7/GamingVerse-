@@ -20,7 +20,6 @@ import {
   query,
   ref,
   remove,
-  runTransaction,
   serverTimestamp,
   set,
   update,
@@ -40,8 +39,9 @@ import TrailerModal from "./games/views/TrailerModal.jsx";
 import UpcomingsView from "./games/views/UpcomingsView.jsx";
 
 import { gameAgeRatings } from "./games/data/ageRatings.js";
-import { getClubInterestMeta } from "./games/data/clubs.js";
-import { currentGamingNews } from "./games/data/news.js";
+
+import useGamingNews from "./games/hooks/useGamingNews.js";
+import useGamingClubs from "./games/hooks/useGamingClubs.js";
 import { emptyCounts } from "./games/data/reviewOptions.js";
 import {
   calculateAgeFromDob,
@@ -274,22 +274,39 @@ function Games() {
   // just admin-added ones, since it's keyed by normalised name rather
   // than a record id.
   const [hiddenGames, setHiddenGames] = useState({});
-  // Gaming Clubs, their membership and chat all live in Firebase now, so
-  // two users actually see the same clubs instead of each browser holding
-  // its own private copy in localStorage.
-  const [gamingClubs, setGamingClubs] = useState([]);
-  const [selectedClubId, setSelectedClubId] = useState(null);
-  const [joinedClubIds, setJoinedClubIds] = useState([]);
-  const [clubInterest, setClubInterest] = useState("All");
-  const [clubSearch, setClubSearch] = useState("");
-  const [showCreateClub, setShowCreateClub] = useState(false);
-  const [newClubName, setNewClubName] = useState("");
-  const [newClubInterest, setNewClubInterest] = useState("Action");
-  const [newClubDescription, setNewClubDescription] = useState("");
-  const [clubPost, setClubPost] = useState("");
-  const [communityTalkPost, setCommunityTalkPost] = useState("");
-  const [communityTalks, setCommunityTalks] = useState([]);
-  const [clubDiscussions, setClubDiscussions] = useState([]);
+  // Gaming Clubs + Community Talks (state, live data and actions).
+  const {
+    gamingClubs,
+    selectedClubId,
+    setSelectedClubId,
+    joinedClubIds,
+    clubInterest,
+    setClubInterest,
+    clubSearch,
+    setClubSearch,
+    showCreateClub,
+    setShowCreateClub,
+    newClubName,
+    setNewClubName,
+    newClubInterest,
+    setNewClubInterest,
+    newClubDescription,
+    setNewClubDescription,
+    clubPost,
+    setClubPost,
+    communityTalkPost,
+    setCommunityTalkPost,
+    communityTalks,
+    clubDiscussions,
+    openClub,
+    toggleClubMembership,
+    leaveClub,
+    closeClub,
+    createGamingClub,
+    postClubDiscussion,
+    postCommunityTalk,
+    filteredGamingClubs,
+  } = useGamingClubs();
 
   useEffect(() => {
     const unsubscribe = onValue(
@@ -320,78 +337,6 @@ function Games() {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = onValue(
-      ref(db, "clubs"),
-      (snapshot) => {
-        const data = snapshot.val() || {};
-        const next = Object.entries(data).map(([id, club]) => ({
-          id,
-          ...club,
-        }));
-        next.sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
-        setGamingClubs(next);
-      },
-      (error) => console.error("Gaming clubs listener error:", error),
-    );
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    // Games.jsx only ever mounts while ProtectedRoute has an authenticated
-    // user; logging out unmounts it, so there's no user-less case to
-    // reset for here — joinedClubIds already starts at [].
-    if (!auth.currentUser) return undefined;
-    const unsubscribe = onValue(
-      ref(db, `userClubs/${auth.currentUser.uid}`),
-      (snapshot) => {
-        const data = snapshot.val() || {};
-        setJoinedClubIds(Object.keys(data));
-      },
-      (error) => console.error("Joined clubs listener error:", error),
-    );
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    const talksQuery = query(ref(db, "communityTalks"), limitToLast(50));
-    const unsubscribe = onValue(
-      talksQuery,
-      (snapshot) => {
-        const data = snapshot.val() || {};
-        const next = Object.entries(data).map(([id, talk]) => ({
-          id,
-          ...talk,
-        }));
-        // Chat order: oldest first, newest at the bottom.
-        next.sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
-        setCommunityTalks(next);
-      },
-      (error) => console.error("Community talks listener error:", error),
-    );
-    return () => unsubscribe();
-  }, []);
-
-  // Only the open club's discussion thread is fetched — with real clubs
-  // there's no reason to pull every club's chat history up front.
-  useEffect(() => {
-    if (!selectedClubId) return undefined;
-    const unsubscribe = onValue(
-      ref(db, `clubDiscussions/${selectedClubId}`),
-      (snapshot) => {
-        const data = snapshot.val() || {};
-        const next = Object.entries(data).map(([id, discussion]) => ({
-          id,
-          ...discussion,
-        }));
-        // Chat order: oldest first, newest at the bottom.
-        next.sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
-        setClubDiscussions(next);
-      },
-      (error) => console.error("Club discussion listener error:", error),
-    );
-    return () => unsubscribe();
-  }, [selectedClubId]);
 
   /* =======================================================
        LOAD USER AGE FROM FIREBASE
@@ -746,121 +691,15 @@ function Games() {
     };
   }, []);
 
-  /* =======================================================
-       LIVE GAMING NEWS
-       Uses Google News RSS through rss2json.
-       No API key is required in the React app.
-    ======================================================= */
-  const [liveNews, setLiveNews] = useState([]);
-  const [newsLoading, setNewsLoading] = useState(false);
-  const [newsUpdatedAt, setNewsUpdatedAt] = useState(null);
-  const [newsError, setNewsError] = useState("");
-
-  const cleanNewsText = (value = "") =>
-    String(value)
-      .replace(/<[^>]*>/g, "")
-      .replace(/&amp;/g, "&")
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/\s+/g, " ")
-      .trim();
-
-  const fetchLiveGamingNews = async () => {
-    try {
-      setNewsLoading(true);
-      setNewsError("");
-
-      const googleNewsRss =
-        "https://news.google.com/rss/search?q=gaming+OR+videogames+OR+PlayStation+OR+Xbox+OR+Nintendo+OR+PC+gaming+when%3A1d&hl=en-IN&gl=IN&ceid=IN:en";
-
-      const endpoint = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(googleNewsRss)}`;
-
-      const response = await fetch(endpoint, {
-        method: "GET",
-        cache: "no-store",
-      });
-
-      if (!response.ok) {
-        throw new Error(`Live news request failed (${response.status})`);
-      }
-
-      const data = await response.json();
-
-      if (data.status !== "ok" || !Array.isArray(data.items)) {
-        throw new Error(data.message || "Live news feed returned no items.");
-      }
-
-      const articles = data.items
-        .filter((item) => item?.title && item?.link)
-        .slice(0, 8)
-        .map((item, index) => {
-          const rawTitle = cleanNewsText(item.title);
-          const titleParts = rawTitle.split(" - ");
-          const source =
-            item.author?.trim() ||
-            (titleParts.length > 1
-              ? titleParts[titleParts.length - 1]
-              : "Gaming News");
-
-          const title =
-            titleParts.length > 1
-              ? titleParts.slice(0, -1).join(" - ")
-              : rawTitle;
-
-          return {
-            id: `live-${item.guid || item.link || index}`,
-            source,
-            time: item.pubDate
-              ? new Date(item.pubDate).toLocaleString([], {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
-              : "Recently",
-            tag: "LIVE",
-            title,
-            summary:
-              cleanNewsText(item.description || item.content) ||
-              "Latest gaming news and industry updates.",
-            url: item.link,
-            image:
-              item.thumbnail ||
-              item.enclosure?.thumbnail ||
-              item.enclosure?.link ||
-              "",
-            imageGame: "",
-          };
-        });
-
-      if (!articles.length) {
-        throw new Error("No gaming stories found in the live feed.");
-      }
-
-      setLiveNews(articles);
-      setNewsUpdatedAt(new Date());
-      setNewsError("");
-    } catch (error) {
-      console.error("Live gaming news error:", error);
-      setNewsError("Live refresh failed. Showing saved news.");
-    } finally {
-      setNewsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- load the news feed on mount, then refresh it every 10 minutes.
-    fetchLiveGamingNews();
-
-    const interval = window.setInterval(fetchLiveGamingNews, 10 * 60 * 1000);
-
-    return () => window.clearInterval(interval);
-  }, []);
-
-  const newsItems = liveNews.length ? liveNews : currentGamingNews;
+  // Live gaming news (fetched + refreshed by the hook).
+  const {
+    fetchLiveGamingNews,
+    liveNews,
+    newsError,
+    newsItems,
+    newsLoading,
+    newsUpdatedAt,
+  } = useGamingNews();
   // Café / shop / club results in the navbar search open their section,
   // pre-filtered to the picked item.
   const openSearchResult = (type, item) => {
@@ -877,137 +716,6 @@ function Games() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const openClub = (clubId) => {
-    setSelectedClubId(clubId);
-    setShowCreateClub(false);
-    setClubPost("");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const toggleClubMembership = async (clubId) => {
-    // The card's Joined button is an OPEN action. Leaving a club is only
-    // possible from inside the opened club, so it can never close by accident.
-    if (joinedClubIds.includes(clubId)) {
-      openClub(clubId);
-      return;
-    }
-    if (!auth.currentUser) return;
-    const uid = auth.currentUser.uid;
-    try {
-      await runTransaction(ref(db, `clubs/${clubId}/memberCount`), (current) =>
-        Math.max(0, Number(current) || 0) + 1,
-      );
-      await set(ref(db, `userClubs/${uid}/${clubId}`), true);
-    } catch (error) {
-      console.error("Join club error:", error);
-    }
-    openClub(clubId);
-  };
-
-  const leaveClub = async (clubId) => {
-    if (!auth.currentUser) return;
-    const uid = auth.currentUser.uid;
-    try {
-      await runTransaction(ref(db, `clubs/${clubId}/memberCount`), (current) =>
-        Math.max(0, (Number(current) || 0) - 1),
-      );
-      await remove(ref(db, `userClubs/${uid}/${clubId}`));
-    } catch (error) {
-      console.error("Leave club error:", error);
-    }
-    closeClub();
-  };
-
-  const closeClub = () => {
-    setSelectedClubId(null);
-    setClubDiscussions([]);
-  };
-
-  const createGamingClub = async () => {
-    const name = newClubName.trim();
-    const description =
-      newClubDescription.trim() ||
-      `A GamingVerse community for ${newClubInterest} gamers.`;
-
-    if (!name || !auth.currentUser) return;
-
-    const uid = auth.currentUser.uid;
-    try {
-      const clubRef = push(ref(db, "clubs"));
-      await set(clubRef, {
-        name,
-        interest: newClubInterest,
-        description,
-        accent: getClubInterestMeta(newClubInterest).color,
-        ownerUid: uid,
-        memberCount: 1,
-        createdAt: serverTimestamp(),
-      });
-      await set(ref(db, `userClubs/${uid}/${clubRef.key}`), true);
-      setSelectedClubId(clubRef.key);
-    } catch (error) {
-      console.error("Create club error:", error);
-    }
-
-    setNewClubName("");
-    setNewClubInterest("Action");
-    setNewClubDescription("");
-    setShowCreateClub(false);
-  };
-
-  const postClubDiscussion = async () => {
-    const text = clubPost.trim();
-    if (!text || !selectedClubId || !auth.currentUser) return;
-
-    try {
-      await push(ref(db, `clubDiscussions/${selectedClubId}`), {
-        title: text,
-        author:
-          auth.currentUser.displayName ||
-          auth.currentUser.email?.split("@")[0] ||
-          "Gamer",
-        authorUid: auth.currentUser.uid,
-        createdAt: serverTimestamp(),
-      });
-      setClubPost("");
-    } catch (error) {
-      console.error("Post club discussion error:", error);
-    }
-  };
-
-  const postCommunityTalk = async () => {
-    const text = communityTalkPost.trim();
-    if (!text || !auth.currentUser) return;
-
-    try {
-      await push(ref(db, "communityTalks"), {
-        title: text,
-        author:
-          auth.currentUser.displayName ||
-          auth.currentUser.email?.split("@")[0] ||
-          "Gamer",
-        authorUid: auth.currentUser.uid,
-        createdAt: serverTimestamp(),
-      });
-      setCommunityTalkPost("");
-    } catch (error) {
-      console.error("Post community talk error:", error);
-    }
-  };
-
-  const filteredGamingClubs = useMemo(() => {
-    const searchText = clubSearch.trim().toLowerCase();
-
-    return gamingClubs.filter((club) => {
-      const matchesInterest =
-        clubInterest === "All" || club.interest === clubInterest;
-      const matchesSearch =
-        !searchText ||
-        club.name.toLowerCase().includes(searchText) ||
-        club.description.toLowerCase().includes(searchText);
-      return matchesInterest && matchesSearch;
-    });
-  }, [gamingClubs, clubInterest, clubSearch]);
 
   /* =======================================================
        CLOSE PROFILE / NOTIFICATIONS ON OUTSIDE CLICK
@@ -2124,6 +1832,9 @@ function Games() {
     try {
       setReviewLoading(true);
       await remove(ref(db, `gameReviews/${gameId}/${auth.currentUser.uid}`));
+      remove(ref(db, `userReviews/${auth.currentUser.uid}/${gameId}`)).catch(
+        () => {},
+      );
       setComposerVerdict("");
       setReviewText("");
       seededVerdictForRef.current = "";
@@ -2255,6 +1966,10 @@ function Games() {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
+      // Index for the profile, so it only loads this user's reviews.
+      set(ref(db, `userReviews/${userId}/${gameId}`), true).catch((error) =>
+        console.warn("Review index not saved:", error),
+      );
       if (!silent) setReviewMessage("✓ Your verdict has been saved.");
       return true;
     } catch (error) {

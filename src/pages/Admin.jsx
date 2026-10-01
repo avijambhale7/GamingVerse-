@@ -3,7 +3,7 @@ import "./Admin.css";
 import "../styles/dashboard-polish.css";
 import "../styles/dashboard-colors.css";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { get, onValue, push, ref, remove, set } from "firebase/database";
+import { get, onValue, push, ref, remove, set, update } from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
 import PageSkeleton from "../components/PageSkeleton.jsx";
@@ -108,6 +108,36 @@ export default function Admin() {
   // down), merged on top of the cache read at mount so the browse list's
   // placeholders fill in live instead of only on the next page load.
   const [resolvedPosterImages, setResolvedPosterImages] = useState({});
+
+  // Café owners see bookings through cafeBookingIndex/{cafeId}. Bookings
+  // made before that index existed are added here in one go (customers'
+  // own visits to the Café page also add theirs).
+  const [rebuildingIndex, setRebuildingIndex] = useState(false);
+  const rebuildBookingIndex = async () => {
+    setRebuildingIndex(true);
+    try {
+      const all = (await get(ref(db, "cafeBookings"))).val() || {};
+      const updates = {};
+      Object.entries(all).forEach(([customerId, list]) => {
+        Object.entries(list || {}).forEach(([bookingId, booking]) => {
+          if (booking?.cafeId) {
+            updates[`cafeBookingIndex/${booking.cafeId}/${bookingId}`] = {
+              customerId,
+            };
+          }
+        });
+      });
+      if (Object.keys(updates).length) await update(ref(db), updates);
+      setMessage(
+        `Booking index rebuilt: ${Object.keys(updates).length} bookings indexed.`,
+      );
+    } catch (error) {
+      console.error("Rebuild booking index error:", error);
+      setMessage("Could not rebuild the booking index.");
+    } finally {
+      setRebuildingIndex(false);
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -720,6 +750,15 @@ export default function Admin() {
               <h2>Activity, last 14 days</h2>
               <p>Signups, café bookings and marketplace requests, by day.</p>
             </div>
+            <button
+              type="button"
+              className="admin-index-btn"
+              onClick={rebuildBookingIndex}
+              disabled={rebuildingIndex}
+              title="Lets café owners see bookings made before the booking index existed"
+            >
+              {rebuildingIndex ? "Rebuilding…" : "↻ Rebuild booking index"}
+            </button>
           </section>
           <AdminActivityChart days={activityDays} />
           <AdminInsights reviews={reviews} bookings={bookings} />

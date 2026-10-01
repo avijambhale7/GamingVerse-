@@ -6,6 +6,7 @@ import { auth, db } from "./firebase";
 import { BANNED_NOTICE_KEY } from "./utils/ban.js";
 import ErrorBoundary from "./ErrorBoundary.jsx";
 import PhoneGate from "./components/PhoneGate.jsx";
+import PageTitle from "./components/PageTitle.jsx";
 
 // Only Login is needed for the very first paint. Everything else loads
 // on demand, so a fresh visit doesn't pay for the marketplace, café,
@@ -103,6 +104,7 @@ function App() {
     <ErrorBoundary>
       {user && <PhoneGate user={user} />}
       <BrowserRouter>
+        <PageTitle />
         <Routes>
           {/* =================================================
               HOME / ROOT

@@ -10,12 +10,14 @@ import {
   toYouTubeEmbedUrl,
 } from "../utils/media.js";
 import { getGameDetails } from "../utils/gameInfo.js";
+import useEscapeKey from "../../../utils/useEscapeKey.js";
 
 export default function TrailerModal({
   closeTrailer,
   selectedGame,
   showTrailer,
 }) {
+  useEscapeKey(closeTrailer, Boolean(showTrailer && selectedGame));
   // With no known video, open a YouTube search instead of doing nothing.
   const openOnYouTube = () => {
     const id = extractYouTubeId(selectedGame?.trailerUrl || "");

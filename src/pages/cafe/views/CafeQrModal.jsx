@@ -9,9 +9,11 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { encodeTicket } from "../utils/ticket.js";
+import useEscapeKey from "../../../utils/useEscapeKey.js";
 
 export default function CafeQrModal({ booking, uid, onClose }) {
   const [dataUrl, setDataUrl] = useState("");
+  useEscapeKey(onClose);
 
   useEffect(() => {
     let cancelled = false;
@@ -31,8 +33,18 @@ export default function CafeQrModal({ booking, uid, onClose }) {
 
   return (
     <div className="cafe-qr-backdrop" onClick={onClose}>
-      <div className="cafe-qr-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="cafe-qr-close" type="button" onClick={onClose}>
+      <div
+        className="cafe-qr-modal"
+        role="dialog"
+        aria-label={`${booking.cafeName} ticket`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          className="cafe-qr-close"
+          type="button"
+          onClick={onClose}
+          aria-label="Close ticket"
+        >
           ×
         </button>
         <h3>{booking.cafeName}</h3>

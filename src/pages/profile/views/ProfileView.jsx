@@ -12,6 +12,7 @@ import ProfileTickets from "./ProfileTickets.jsx";
 import ProfileStats from "./ProfileStats.jsx";
 import GVLogoMark from "../../../components/GVLogoMark.jsx";
 import useRemotePosters from "../utils/useRemotePosters.js";
+import useEscapeKey from "../../../utils/useEscapeKey.js";
 
 export default function ProfileView({
   activeTab,
@@ -46,6 +47,8 @@ export default function ProfileView({
 }) {
   // Reviewed/collected games found through RAWG search have no bundled
   // artwork; this fills their posters in from RAWG.
+  useEscapeKey(() => setSocialModal(null), Boolean(socialModal));
+
   const posterFor = useRemotePosters([
     ...filteredReviews.map((review) => review.rawGameName || review.gameName),
     ...collectionGames,

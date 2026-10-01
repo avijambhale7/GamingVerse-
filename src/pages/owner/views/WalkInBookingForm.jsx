@@ -8,12 +8,12 @@
 ========================================================= */
 
 import { useState } from "react";
-import { push, ref, set } from "firebase/database";
-import { db } from "../../../firebase";
+import { createBooking } from "../../cafe/utils/bookingWrites.js";
 import { getTimeSlots, localISO } from "../../cafe/utils/time.js";
 import { isDateBlocked } from "../../cafe/utils/cafeModel.js";
 import {
   MAX_SEATS_PER_BOOKING,
+  releaseSeats,
   reserveSeats,
 } from "../../cafe/utils/slots.js";
 import {
@@ -74,7 +74,8 @@ export default function WalkInBookingForm({ cafes, ownerUid, onDone }) {
 
       const pricePerHour = Number(cafe.pricePerHour) || 0;
       const now = Date.now();
-      await set(push(ref(db, `cafeBookings/${ownerUid}`)), {
+      // Booking + café index in one write; if it fails, free the seats.
+      await createBooking(ownerUid, {
         walkIn: true,
         cafeId: cafe.id,
         cafeName: cafe.name,
@@ -92,6 +93,9 @@ export default function WalkInBookingForm({ cafes, ownerUid, onDone }) {
         ownerId: ownerUid,
         createdAt: now,
         confirmedAt: now,
+      }).catch(async (writeError) => {
+        await releaseSeats(cafe.id, date, time, seats).catch(() => {});
+        throw writeError;
       });
 
       onDone(`Walk-in booked: ${name.trim()} • ${time} • ${seats} seat(s).`);

@@ -6,7 +6,10 @@
    Delivers an existing in-app notification as a web push via
    Firebase Cloud Messaging. Safe to expose because it only sends
    what is already in the database, only when the caller is the
-   notification's author (fromUid), and only once (pushedAt).
+   notification's author (fromUid), at most 20 times a minute per
+   caller, and only once: a notification is claimed while sending
+   (pushSendingAt) and marked pushedAt only after FCM accepts it,
+   so a failed send can be retried.
 
    Environment (Vercel → Settings → Environment Variables):
      FIREBASE_SERVICE_ACCOUNT  – the service-account JSON (one line)
@@ -23,7 +26,27 @@ const DEFAULT_DB_URL = "https://gamingverse-26e57-default-rtdb.firebaseio.com";
 const LINKS = {
   "GamingVerse Market": "/games?view=marketplace",
   "GamingVerse Café": "/games?view=cafe",
+  "GamingVerse Feed": "/games?view=spaces",
+  "GamingVerse Release": "/games?view=upcomings",
 };
+
+const RATE_LIMIT = 20; // pushes per caller…
+const RATE_WINDOW_MS = 60 * 1000; // …per minute
+const CLAIM_MS = 60 * 1000; // a stuck "sending" claim expires after this
+const MAX_TOKENS_PER_USER = 10;
+
+// pushRateLimits/{uid} is server-only (no client rule grants access).
+async function withinRateLimit(db, uid) {
+  const result = await db.ref(`pushRateLimits/${uid}`).transaction((current) => {
+    const now = Date.now();
+    if (!current || now - Number(current.windowStart || 0) > RATE_WINDOW_MS) {
+      return { windowStart: now, count: 1 };
+    }
+    if (Number(current.count || 0) >= RATE_LIMIT) return; // abort: over limit
+    return { ...current, count: Number(current.count || 0) + 1 };
+  });
+  return result.committed;
+}
 
 function adminApp() {
   if (!getApps().length) {
@@ -82,18 +105,42 @@ export default async function handler(req, res) {
   if (note.fromUid !== caller.uid) return res.status(403).json({ error: "Not your notification" });
   if (note.pushedAt) return res.status(200).json({ sent: 0, skipped: "already pushed" });
 
-  // Claim it first so a retry can't push the same notification twice.
-  await noteRef.update({ pushedAt: Date.now() });
+  if (!(await withinRateLimit(db, caller.uid))) {
+    return res.status(429).json({ error: "Too many push requests, slow down" });
+  }
+
+  // Claim it atomically so two requests can't both send it. The claim is
+  // released if sending fails, and expires if a request dies mid-send.
+  const stamp = Date.now();
+  const claim = await noteRef.transaction((current) => {
+    // The first run can see null (nothing cached yet); returning it makes
+    // Firebase retry with the real value instead of giving up.
+    if (current === null) return current;
+    if (current.pushedAt) return; // already sent
+    if (current.pushSendingAt && stamp - current.pushSendingAt < CLAIM_MS) return;
+    return { ...current, pushSendingAt: stamp };
+  });
+  const claimedByUs =
+    claim.committed && claim.snapshot.child("pushSendingAt").val() === stamp;
+  if (!claimedByUs) {
+    return res.status(200).json({ sent: 0, skipped: "already being sent" });
+  }
+  const markSent = () => noteRef.update({ pushedAt: Date.now(), pushSendingAt: null });
+  const releaseClaim = () => noteRef.update({ pushSendingAt: null });
 
   const targets = recipients.filter((uid) => uid !== caller.uid);
   const entries = [];
   for (const uid of targets) {
     const tokens = (await db.ref(`pushTokens/${uid}`).get()).val() || {};
-    for (const [key, value] of Object.entries(tokens)) {
-      if (value?.token) entries.push({ uid, key, token: value.token });
-    }
+    Object.entries(tokens)
+      .filter(([, value]) => value?.token)
+      .slice(0, MAX_TOKENS_PER_USER)
+      .forEach(([key, value]) => entries.push({ uid, key, token: value.token }));
   }
-  if (!entries.length) return res.status(200).json({ sent: 0 });
+  if (!entries.length) {
+    await markSent(); // nobody has push turned on: nothing to retry
+    return res.status(200).json({ sent: 0 });
+  }
 
   const title = note.title || "GamingVerse";
   const link = LINKS[title] || "/games";
@@ -111,8 +158,12 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     console.error("FCM send failed:", error);
+    await releaseClaim().catch(() => {}); // let a later request retry
     return res.status(502).json({ error: "Push service error" });
   }
+
+  // Only now is it really sent.
+  await markSent();
 
   // Forget tokens for uninstalled / expired browsers.
   const stale = [];

@@ -1,7 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./OwnerDashboard.css";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { get, onValue, push, ref, remove, set, update } from "firebase/database";
+import {
+  equalTo,
+  get,
+  onValue,
+  orderByChild,
+  push,
+  query,
+  ref,
+  remove,
+  set,
+  update,
+} from "firebase/database";
 import { useNavigate } from "react-router-dom";
 import { auth, db } from "../firebase";
 import PageSkeleton from "../components/PageSkeleton.jsx";
@@ -24,7 +35,7 @@ import {
   reserveSeats,
 } from "./cafe/utils/slots.js";
 import WalkInBookingForm from "./owner/views/WalkInBookingForm.jsx";
-import jsQR from "jsqr";
+import useOwnerBookings from "./owner/useOwnerBookings.js";
 
 const OWNER_ROLES = new Set([
   "owner",
@@ -114,9 +125,7 @@ export default function OwnerDashboard() {
   const [profile, setProfile] = useState({});
   const [loading, setLoading] = useState(true);
   const [section, setSection] = useState("overview");
-  const [bookings, setBookings] = useState([]);
   const [products, setProducts] = useState([]);
-  const [ownedCafeIds, setOwnedCafeIds] = useState([]);
   const [savingProduct, setSavingProduct] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [productForm, setProductForm] = useState(EMPTY_PRODUCT);
@@ -166,15 +175,6 @@ export default function OwnerDashboard() {
         }
         setRole(nextRole);
         setProfile(data);
-        const rawOwnedCafeIds = data.ownedCafeIds;
-        const normalizedOwnedCafeIds = Array.isArray(rawOwnedCafeIds)
-          ? rawOwnedCafeIds.filter(Boolean)
-          : rawOwnedCafeIds && typeof rawOwnedCafeIds === "object"
-            ? Object.entries(rawOwnedCafeIds)
-                .filter(([, enabled]) => enabled === true)
-                .map(([cafeId]) => cafeId)
-            : [];
-        setOwnedCafeIds(normalizedOwnedCafeIds);
         if (nextRole === "cafe_owner") setSection("cafe");
         if (nextRole === "shop_owner" || nextRole === "accessory_owner")
           setSection("accessories");
@@ -216,48 +216,16 @@ export default function OwnerDashboard() {
   }, [canAccessories]);
 
 
-  useEffect(() => {
-    if (!canCafe) return undefined;
-    const bookingsRef = ref(db, "cafeBookings");
-    const unsubscribe = onValue(
-      bookingsRef,
-      (snapshot) => {
-        const data = snapshot.val() || {};
-        const flattened = [];
-        Object.entries(data).forEach(([customerId, customerBookings]) => {
-          Object.entries(customerBookings || {}).forEach(([id, booking]) => {
-            const cafeAllowed =
-              role === "owner" ||
-              !ownedCafeIds.length ||
-              ownedCafeIds.includes(booking.cafeId);
-            if (!cafeAllowed) return;
-            flattened.push({
-              id,
-              customerId,
-              ...booking,
-            });
-          });
-        });
-        flattened.sort(
-          (a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0),
-        );
-        setBookings(flattened);
-      },
-      (error) => {
-        console.error("Owner booking listener error:", error);
-        setMessage("Could not load café bookings. Check Firebase permissions.");
-      },
-    );
-    return () => unsubscribe();
-  }, [canCafe, role, ownedCafeIds]);
 
   // Every café an owner can manage lives at cafes/{id} — there is no seed
   // directory to pick from any more. A "owner" (site-wide business owner)
   // sees every café; a cafe_owner only sees the ones they created.
   useEffect(() => {
-    if (!canCafe) return undefined;
+    if (!canCafe || !user) return undefined;
     const unsubscribe = onValue(
-      ref(db, "cafes"),
+      role === "owner"
+        ? ref(db, "cafes")
+        : query(ref(db, "cafes"), orderByChild("ownerUid"), equalTo(user.uid)),
       (snapshot) => {
         const data = snapshot.val() || {};
         const next = Object.entries(data)
@@ -272,14 +240,30 @@ export default function OwnerDashboard() {
       },
     );
     return () => unsubscribe();
-  }, [canCafe]);
+  }, [canCafe, role, user]);
 
+  // A café belongs to whoever is its ownerUid (set when it was created).
   const editableCafes = useMemo(() => {
     if (!canCafe) return [];
     return role === "owner"
       ? allCafes
-      : allCafes.filter((c) => ownedCafeIds.includes(c.id));
-  }, [canCafe, role, ownedCafeIds, allCafes]);
+      : allCafes.filter((c) => c.ownerUid === user?.uid);
+  }, [canCafe, role, allCafes, user]);
+  const editableCafeIds = useMemo(
+    () => editableCafes.map((c) => c.id),
+    [editableCafes],
+  );
+
+  const onBookingsError = useCallback((error) => {
+    console.error("Owner booking listener error:", error);
+    setMessage("Could not load café bookings. Check Firebase permissions.");
+  }, []);
+  const bookings = useOwnerBookings({
+    enabled: canCafe,
+    superOwner: role === "owner",
+    cafeIds: editableCafeIds,
+    onError: onBookingsError,
+  });
 
   const effectiveCafeId = activeCafeId || editableCafes[0]?.id || "";
 
@@ -324,10 +308,8 @@ export default function OwnerDashboard() {
       const newCafeRef = push(ref(db, "cafes"));
       const newCafeId = newCafeRef.key;
 
-      // ownedCafeIds must be set before the café doc write, since the
-      // café's own write rule checks that this account already owns it.
-      await set(ref(db, `users/${user.uid}/ownedCafeIds/${newCafeId}`), true);
-
+      // Ownership is the café's ownerUid; the rules only accept the
+      // ownedCafeIds shortcut once the café exists with this ownerUid.
       await set(newCafeRef, {
         name: newCafeForm.name.trim(),
         address: newCafeForm.address.trim(),
@@ -340,7 +322,7 @@ export default function OwnerDashboard() {
         createdAt: Date.now(),
       });
 
-      setOwnedCafeIds((prev) => [...prev, newCafeId]);
+      await set(ref(db, `users/${user.uid}/ownedCafeIds/${newCafeId}`), true);
       setActiveCafeId(newCafeId);
       setNewCafeForm(EMPTY_NEW_CAFE);
       setMessage(
@@ -499,7 +481,7 @@ export default function OwnerDashboard() {
         ...snap.val(),
       };
       const cafeAllowed =
-        role === "owner" || ownedCafeIds.includes(booking.cafeId);
+        role === "owner" || editableCafeIds.includes(booking.cafeId);
       if (!cafeAllowed) {
         setScanResult({
           ok: false,
@@ -544,10 +526,20 @@ export default function OwnerDashboard() {
     let cancelled = false;
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d", { willReadFrequently: true });
+    // The QR decoder is only downloaded when the scanner is opened.
+    let jsQR = null;
+    import("jsqr")
+      .then((module) => {
+        jsQR = module.default;
+      })
+      .catch((error) => {
+        console.error("QR decoder failed to load:", error);
+        setScanError("Could not load the QR scanner. Check your connection.");
+      });
 
     const tick = () => {
       const video = videoRef.current;
-      if (video && video.readyState === video.HAVE_ENOUGH_DATA) {
+      if (jsQR && video && video.readyState === video.HAVE_ENOUGH_DATA) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -619,12 +611,12 @@ export default function OwnerDashboard() {
       // Move the slot's seat counter by this booking's seat count. The
       // owner can always re-occupy (no capacity check) — they may be
       // overriding on purpose, e.g. re-confirming a rejected request.
-      if (
+      const movesSeats =
         wasOccupied !== willBeOccupied &&
         booking.cafeId &&
         booking.date &&
-        booking.time
-      ) {
+        booking.time;
+      if (movesSeats) {
         if (willBeOccupied) {
           await reserveSeats(
             booking.cafeId,
@@ -643,17 +635,28 @@ export default function OwnerDashboard() {
         }
       }
 
-      await update(
-        ref(db, `cafeBookings/${booking.customerId}/${booking.id}`),
-        {
-          status: nextStatus,
-          ownerUpdatedAt: nowMs(),
-          ownerId: user.uid,
-          ...(nextStatus === "Confirmed" ? { confirmedAt: nowMs() } : {}),
-          ...(nextStatus === "Rejected" ? { rejectedAt: nowMs() } : {}),
-          ...(nextStatus === "Completed" ? { completedAt: nowMs() } : {}),
-        },
-      );
+      try {
+        await update(
+          ref(db, `cafeBookings/${booking.customerId}/${booking.id}`),
+          {
+            status: nextStatus,
+            ownerUpdatedAt: nowMs(),
+            ownerId: user.uid,
+            ...(nextStatus === "Confirmed" ? { confirmedAt: nowMs() } : {}),
+            ...(nextStatus === "Rejected" ? { rejectedAt: nowMs() } : {}),
+            ...(nextStatus === "Completed" ? { completedAt: nowMs() } : {}),
+          },
+        );
+      } catch (saveError) {
+        // Undo the seat move so the slot matches the unchanged booking.
+        if (movesSeats) {
+          const undo = willBeOccupied
+            ? releaseSeats(booking.cafeId, booking.date, booking.time, bookingSeats(booking))
+            : reserveSeats(booking.cafeId, booking.date, booking.time, bookingSeats(booking), Infinity);
+          await undo.catch(() => {});
+        }
+        throw saveError;
+      }
 
       setMessage(
         `${booking.customerName || "Customer"}'s ${booking.time || ""} booking is now ${nextStatus}.`,

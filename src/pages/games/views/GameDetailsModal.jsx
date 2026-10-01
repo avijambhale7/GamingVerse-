@@ -5,6 +5,7 @@
 ========================================================= */
 
 import { useEffect, useRef, useState } from "react";
+import useEscapeKey from "../../../utils/useEscapeKey.js";
 import { auth } from "../../../firebase";
 import {
   extractYouTubeId,
@@ -98,6 +99,7 @@ export default function GameDetailsModal({
   watchLaterGames,
   watchedGames,
 }) {
+  useEscapeKey(closeDetails, Boolean(selectedGame && showDetails));
   // The headline number is the leading verdict's own share, not an
   // aggregate "positive votes" score — a 50/50 Skip/Timepass split
   // reads as 50% Skip (red), not 0%, matching the Moctale-style meter

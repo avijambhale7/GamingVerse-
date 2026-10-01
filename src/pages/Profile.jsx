@@ -193,54 +193,91 @@ function Profile() {
     return () => unsubscribe();
   }, [navigate]);
 
-  // This account's written reviews, read from the same gameReviews node the
-  // GamingVerse Meter counts. They used to come from localStorage, which
-  // meant a review only existed in the browser that wrote it.
+  // This account's reviews. userReviews/{uid} lists the games this user
+  // reviewed, so only those reviews are fetched — not every review on the
+  // site. Reviews written before that index existed are indexed once
+  // (the "_indexed" flag), and if the index can't be read (rules not yet
+  // published) it falls back to scanning gameReviews as before.
   useEffect(() => {
-    // Nothing to subscribe to until auth resolves; the list already starts
-    // empty, and signing out navigates away from this page.
     const uid = user?.uid;
     if (!uid) return undefined;
+    let active = true;
 
-    return onValue(
-      ref(db, "gameReviews"),
-      (snapshot) => {
-        const data = snapshot.val() || {};
-        const reviews = [];
+    const toReview = (gameId, mine) => {
+      // A verdict alone (no written text) is still a review.
+      if (!mine?.review) return null;
+      const storedGameName = mine.gameName || gameId;
+      return {
+        id: gameId,
+        gameId,
+        gameName: formatGameName(storedGameName),
+        rawGameName: storedGameName,
+        gameImage: getGameImage(storedGameName) || mine.gameImage || "",
+        userName: mine.userName || "Gamer",
+        initials: mine.initials || "G",
+        verdict: mine.review,
+        text: String(mine.text || "").trim(),
+        createdAt: Number(mine.updatedAt || mine.createdAt) || 0,
+        likes: Object.keys(mine.likes || {}).length,
+      };
+    };
+    const publish = (reviews) => {
+      if (!active) return;
+      setMyReviews(
+        reviews.filter(Boolean).sort((a, b) => b.createdAt - a.createdAt),
+      );
+    };
+    const scanAll = async () => {
+      const all = (await get(ref(db, "gameReviews"))).val() || {};
+      return Object.entries(all).map(([gameId, entries]) =>
+        toReview(gameId, entries?.[uid]),
+      );
+    };
 
-        Object.entries(data).forEach(([gameId, gameEntries]) => {
-          const mine = gameEntries?.[uid];
-          const text = String(mine?.text || "").trim();
-          // A verdict alone (no written text) is still a review — it was
-          // being silently dropped here, so voting Skip/Timepass/Go For
-          // It/Perfection without typing anything never showed up on the
-          // profile at all.
-          if (!mine?.review) return;
-
-          const storedGameName = mine.gameName || gameId;
-          reviews.push({
-            id: gameId,
-            gameId,
-            gameName: formatGameName(storedGameName),
-            rawGameName: storedGameName,
-            gameImage: getGameImage(storedGameName) || mine.gameImage || "",
-            userName: mine.userName || "Gamer",
-            initials: mine.initials || "G",
-            verdict: mine.review,
-            text,
-            createdAt: Number(mine.updatedAt || mine.createdAt) || 0,
-            likes: Object.keys(mine.likes || {}).length,
-          });
-        });
-
-        reviews.sort((a, b) => b.createdAt - a.createdAt);
-        setMyReviews(reviews);
+    const stop = onValue(
+      ref(db, `userReviews/${uid}`),
+      async (snapshot) => {
+        try {
+          if (!snapshot.child("_indexed").exists()) {
+            // One-time backfill of older reviews into the index; the
+            // listener then fires again with the complete list.
+            const reviews = await scanAll();
+            const updates = { [`userReviews/${uid}/_indexed`]: true };
+            reviews.forEach((review) => {
+              if (review) updates[`userReviews/${uid}/${review.gameId}`] = true;
+            });
+            await update(ref(db), updates);
+            return;
+          }
+          const gameIds = Object.keys(snapshot.val() || {}).filter(
+            (key) => !key.startsWith("_"),
+          );
+          const reviews = await Promise.all(
+            gameIds.map((gameId) =>
+              get(ref(db, `gameReviews/${gameId}/${uid}`))
+                .then((snap) => toReview(gameId, snap.val()))
+                .catch(() => null),
+            ),
+          );
+          publish(reviews);
+        } catch (error) {
+          console.error("Could not load your reviews:", error);
+        }
       },
-      (error) => {
-        console.error("Could not load your reviews:", error);
-        setMyReviews([]);
+      async (error) => {
+        console.warn("Review index unavailable, scanning instead:", error);
+        try {
+          publish(await scanAll());
+        } catch (scanError) {
+          console.error("Could not load your reviews:", scanError);
+          publish([]);
+        }
       },
     );
+    return () => {
+      active = false;
+      stop();
+    };
   }, [user?.uid]);
 
   useEffect(() => {
@@ -622,6 +659,11 @@ function Profile() {
       }, 900);
     } catch (error) {
       console.error("Profile save error:", error);
+      // The new username was reserved before saving; give it back so it
+      // isn't left claimed by a profile that never switched to it.
+      if (finalUsername !== previousUsername) {
+        releaseUsername(finalUsername, user.uid).catch(() => {});
+      }
       setMessage(error.message || "Failed to save profile.");
     } finally {
       setSaving(false);

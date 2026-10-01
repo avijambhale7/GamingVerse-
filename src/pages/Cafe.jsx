@@ -1,6 +1,15 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { get, onValue, push, ref, remove, set } from "firebase/database";
+import {
+  equalTo,
+  get,
+  onValue,
+  orderByChild,
+  query,
+  ref,
+  remove,
+  set,
+} from "firebase/database";
 import { auth, db } from "../firebase";
 import PageSkeleton from "../components/PageSkeleton.jsx";
 import "./Cafe.css";
@@ -30,7 +39,6 @@ import {
   stationLabel,
 } from "./cafe/utils/slots.js";
 import CafeQrModal from "./cafe/views/CafeQrModal.jsx";
-import CafeMap from "./cafe/views/CafeMap.jsx";
 import {
   CafeReviewList,
   RateVisitModal,
@@ -41,6 +49,14 @@ import useCafeCoords from "./cafe/utils/useCafeCoords.js";
 import { distanceKm, formatKm } from "./cafe/utils/geo.js";
 import "./cafe/styles/cafe-map.css";
 import { NOTIFY_TITLES, notifyUser } from "../utils/notify.js";
+import {
+  createBooking,
+  deleteBooking,
+  indexBookings,
+} from "./cafe/utils/bookingWrites.js";
+
+// The map library (Leaflet) only downloads when someone opens Map view.
+const CafeMap = lazy(() => import("./cafe/views/CafeMap.jsx"));
 
 export default function Cafe() {
   const [user, setUser] = useState(null);
@@ -65,6 +81,8 @@ export default function Cafe() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const messageTimerRef = useRef(null);
+  // Older bookings get their café index entry once per session.
+  const indexedRef = useRef(false);
   // List / map view, "Near me" location, café reviews.
   const [viewMode, setViewMode] = useState("list");
   const [userLocation, setUserLocation] = useState(null);
@@ -86,7 +104,8 @@ export default function Cafe() {
   // café's details stay live-updated wherever it's shown.
   useEffect(() => {
     const unsubscribe = onValue(
-      ref(db, "cafes"),
+      // Customers can only read approved cafés (database rules).
+      query(ref(db, "cafes"), orderByChild("status"), equalTo("approved")),
       (snapshot) => {
         const data = snapshot.val() || {};
         const next = Object.entries(data)
@@ -151,6 +170,13 @@ export default function Cafe() {
           ].sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
 
           setBookings(merged);
+
+          if (!indexedRef.current && firebaseBookings.length) {
+            indexedRef.current = true;
+            indexBookings(currentUser.uid, firebaseBookings).catch((error) =>
+              console.warn("Booking index update failed:", error),
+            );
+          }
         },
         (error) => {
           console.error("Cafe bookings realtime listener error:", error);
@@ -438,7 +464,7 @@ export default function Cafe() {
       customerName:
         user.displayName || user.email?.split("@")[0] || "GamingVerse User",
       customerEmail: user.email || "",
-      customerPhone: user.phoneNumber || "",
+      customerPhone: "",
       createdAt: currentTimeMs(),
     };
 
@@ -463,16 +489,40 @@ export default function Cafe() {
           return;
         }
 
-        const bookingRef = push(ref(db, `cafeBookings/${user.uid}`));
+        // The account phone (users/{uid}/phone) — email sign-ins have no
+        // phoneNumber on the Firebase user.
+        let customerPhone = "";
+        try {
+          customerPhone = String(
+            (await get(ref(db, `users/${user.uid}/phone`))).val() || "",
+          );
+        } catch {
+          customerPhone = "";
+        }
 
-        await set(bookingRef, {
-          ...bookingBase,
-          localId,
-        });
+        let bookingId;
+        try {
+          bookingId = await createBooking(user.uid, {
+            ...bookingBase,
+            customerPhone,
+            localId,
+          });
+        } catch (writeError) {
+          // The seats were taken above; hand them back so the slot
+          // doesn't stay "occupied" by a booking that was never saved.
+          await releaseSeats(
+            selectedCafe.id,
+            selectedDate,
+            selectedTime,
+            seatCount,
+          ).catch(() => {});
+          throw writeError;
+        }
 
         const firebaseBooking = {
-          id: bookingRef.key,
+          id: bookingId,
           ...bookingBase,
+          customerPhone,
         };
 
         setBookings((prev) => [firebaseBooking, ...prev]);
@@ -556,6 +606,8 @@ export default function Cafe() {
         const occupied = ["Pending", "Confirmed"].includes(
           String(booking.status || ""),
         );
+        // Booking first: if this fails, nothing else changes.
+        await deleteBooking(user.uid, booking);
         if (occupied) {
           await releaseSeats(
             booking.cafeId,
@@ -564,8 +616,6 @@ export default function Cafe() {
             bookingSeats(booking),
           );
         }
-
-        await remove(ref(db, `cafeBookings/${user.uid}/${booking.id}`));
 
         const cafe = cafes.find((c) => c.id === booking.cafeId);
         notifyUser(
@@ -1097,12 +1147,14 @@ export default function Cafe() {
               </div>
             </div>
             {viewMode === "map" ? (
-              <CafeMap
-                cafes={filteredCafes}
-                coords={cafeCoords}
-                userLocation={userLocation}
-                onSelect={selectCafe}
-              />
+              <Suspense fallback={<div className="gv-cafe-map" />}>
+                <CafeMap
+                  cafes={filteredCafes}
+                  coords={cafeCoords}
+                  userLocation={userLocation}
+                  onSelect={selectCafe}
+                />
+              </Suspense>
             ) : (
             <div className="cafe-grid">
               {filteredCafes.map((cafe) => (

@@ -650,3 +650,20 @@
     height: 80px;
   }
 }
+
+.admin-index-btn {
+  align-self: center;
+  padding: 9px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: transparent;
+  color: #e6e1f2;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.admin-index-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}

@@ -11,6 +11,7 @@ import { useState } from "react";
 import { ref, serverTimestamp, set } from "firebase/database";
 import { db } from "../../../firebase";
 import { stars } from "../utils/reviews.js";
+import useEscapeKey from "../../../utils/useEscapeKey.js";
 
 export function RatingBadge({ summary }) {
   if (!summary) return null;
@@ -56,6 +57,7 @@ export function RateVisitModal({ booking, user, existing, onClose, onDone }) {
   const [text, setText] = useState(existing?.text || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  useEscapeKey(onClose);
 
   async function submit() {
     if (!rating || saving) return;
