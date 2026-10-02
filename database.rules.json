@@ -361,6 +361,7 @@
     },
 
     "cafeSlots": {
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'owner')",
       "$cafeId": {
         ".read": "auth != null && (root.child('cafes').child($cafeId).child('ownerUid').val() === auth.uid || (root.child('users').child(auth.uid).child('role').val() === 'admin' || root.child('users').child(auth.uid).child('role').val() === 'owner'))",
         "$date": {
