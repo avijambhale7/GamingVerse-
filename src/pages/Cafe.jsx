@@ -473,13 +473,14 @@ export default function Cafe() {
       let savedToFirebase = false;
 
       try {
-        // The account phone (users/{uid}/phone) — email sign-ins have no
-        // phoneNumber on the Firebase user.
+        // Name and phone come from the account (users/{uid}); the database
+        // rules reject a booking whose details don't match it.
         let customerPhone = "";
+        let customerName = bookingBase.customerName;
         try {
-          customerPhone = String(
-            (await get(ref(db, `users/${user.uid}/phone`))).val() || "",
-          );
+          const account = (await get(ref(db, `users/${user.uid}`))).val() || {};
+          customerPhone = String(account.phone || "");
+          if (account.username) customerName = String(account.username);
         } catch {
           customerPhone = "";
         }
@@ -489,7 +490,7 @@ export default function Cafe() {
         try {
           bookingId = await createBooking(
             user.uid,
-            { ...bookingBase, customerPhone, localId },
+            { ...bookingBase, customerName, customerPhone, localId },
             { capacity: totalSeats },
           );
         } catch (writeError) {
@@ -507,6 +508,7 @@ export default function Cafe() {
         const firebaseBooking = {
           id: bookingId,
           ...bookingBase,
+          customerName,
           customerPhone,
         };
 

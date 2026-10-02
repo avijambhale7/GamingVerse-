@@ -32,6 +32,7 @@ import { nowMs, todayISO } from "./cafe/utils/time.js";
 import WalkInBookingForm from "./owner/views/WalkInBookingForm.jsx";
 import useOwnerBookings from "./owner/useOwnerBookings.js";
 import { changeBookingStatus } from "./cafe/utils/bookingWrites.js";
+import { getSellerName } from "../utils/profileName.js";
 
 const OWNER_ROLES = new Set([
   "owner",
@@ -659,8 +660,8 @@ export default function OwnerDashboard() {
 
     setSavingProduct(true);
     try {
-      const sellerName =
-        user.displayName || user.email?.split("@")[0] || "GamingVerse Seller";
+      // Must match the seller's profile name (checked by the database).
+      const sellerName = await getSellerName(user.uid);
       const productData = {
         productType: "accessory",
         accessoryType: productForm.category,

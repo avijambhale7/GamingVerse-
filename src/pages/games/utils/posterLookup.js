@@ -7,7 +7,7 @@
    read and write the same gamingverse_poster_image_cache_v1
    localStorage cache.
 ========================================================= */
-import { RAWG_API_KEY } from "./rawg.js";
+import { RAWG_ENABLED } from "./rawg.js";
 import {
   containsBlockedGameTerm,
   localImageSimilarity,
@@ -87,12 +87,12 @@ function chooseBestRawgResult(results, game) {
 
 /* Searches RAWG for one game's poster. Returns { gameKey, image } or null. */
 async function lookupGameImage(game) {
-  if (!RAWG_API_KEY) return null;
+  if (!RAWG_ENABLED) return null;
 
   for (const candidate of getSearchCandidates(game)) {
     try {
       const endpoint =
-        `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_API_KEY)}` +
+        `/api/rawg?path=games` +
         `&search=${encodeURIComponent(candidate)}` +
         `&page_size=10` +
         `&search_precise=true`;

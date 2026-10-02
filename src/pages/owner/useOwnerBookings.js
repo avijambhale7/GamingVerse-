@@ -9,8 +9,10 @@
    Returns bookings newest first, each with id + customerId.
 ========================================================= */
 import { useEffect, useMemo, useState } from "react";
-import { onValue, ref } from "firebase/database";
+import { limitToLast, onValue, query, ref } from "firebase/database";
 import { db } from "../../firebase";
+
+const RECENT_LIMIT = 200;
 
 export default function useOwnerBookings({ enabled, superOwner, cafeIds, onError }) {
   const [byKey, setByKey] = useState({});
@@ -49,7 +51,8 @@ export default function useOwnerBookings({ enabled, superOwner, cafeIds, onError
       const stops = new Map();
       perCafe.set(cafeId, stops);
       return onValue(
-        ref(db, `cafeBookingIndex/${cafeId}`),
+        // Booking ids are time-ordered: the 200 most recent per café.
+        query(ref(db, `cafeBookingIndex/${cafeId}`), limitToLast(RECENT_LIMIT)),
         (snapshot) => {
           const live = new Set();
           Object.entries(snapshot.val() || {}).forEach(([id, entry]) => {

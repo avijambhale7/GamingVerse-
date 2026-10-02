@@ -12,6 +12,7 @@ import {
 } from "firebase/database";
 
 import { auth, db } from "../firebase";
+import { getSellerName } from "../utils/profileName.js";
 import PageSkeleton from "../components/PageSkeleton.jsx";
 import "./Marketplace.css";
 
@@ -258,6 +259,8 @@ export default function Marketplace({ embedded = false }) {
     }
 
     try {
+      // Must match the seller's profile name (checked by the database).
+      const sellerName = await getSellerName(user.uid);
       const productData = {
         name: sellerForm.name.trim(),
 
@@ -277,8 +280,7 @@ export default function Marketplace({ embedded = false }) {
 
         sellerId: user.uid,
 
-        sellerName:
-          user.displayName || user.email?.split("@")[0] || "GamingVerse Seller",
+        sellerName,
 
         rating: 0,
         status: "active",

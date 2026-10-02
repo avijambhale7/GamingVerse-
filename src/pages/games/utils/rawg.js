@@ -2,45 +2,17 @@
    AUTOMATIC GAME CATALOGUE (RAWG)
    RAWG supplies the live PC + PlayStation + Xbox game data behind
    "Latest PC & Console Games" and "Upcoming Games".
-   (Redeploy trigger: forces a clean Vercel build to pick up the
-   newly-added VITE_RAWG_API_KEY environment variable.)
 
-   WHERE TO PUT YOUR API KEY
-   Get one free at https://rawg.io/apidocs, then either:
-
-   1. Preferred — create a file named `.env.local` next to
-      package.json containing exactly:
-
-          VITE_RAWG_API_KEY=your_key_here
-
-      then stop and restart `npm run dev`. Vite only reads env
-      files at startup, so a running server will not pick it up.
-      `.env.local` is git-ignored, so the key stays out of the repo.
-
-   2. Quick demo alternative — paste it into FALLBACK_RAWG_API_KEY
-      below. Note this ships the key inside the browser bundle and
-      commits it to git history, so anyone can read and use it.
+   The browser never sees the API key: every request goes to our own
+   /api/rawg (api/rawg.js), which adds the key on the server and lets
+   Vercel cache the answer. The key is the VITE_RAWG_API_KEY (or
+   RAWG_API_KEY) environment variable — in Vercel for the live site,
+   and in .env.local for `npm run dev`.
 ========================================================= */
 import { containsBlockedGameTerm } from "./text.js";
 
-const FALLBACK_RAWG_API_KEY = "";
-
-const configuredKey = String(
-  import.meta.env.VITE_RAWG_API_KEY || FALLBACK_RAWG_API_KEY || "",
-).trim();
-
-/* This key was hardcoded in earlier versions of GamingVerse and has since
-   used up its monthly quota for good - RAWG answers every request with
-   401 "The monthly API limit reached". That 401 carries no CORS headers,
-   so the browser hides the status and fetch() just reports "Failed to
-   fetch", which looks like the network is down. Recognising the key here
-   turns that dead end into an instruction. */
-const EXHAUSTED_DEMO_KEYS = new Set(["96ce35c844ec40458f1b56cc62037d3c"]);
-
-export const RAWG_KEY_IS_EXHAUSTED_DEMO = EXHAUSTED_DEMO_KEYS.has(configuredKey);
-
-/* Reported as unset so every `!RAWG_API_KEY` guard skips the doomed calls. */
-export const RAWG_API_KEY = RAWG_KEY_IS_EXHAUSTED_DEMO ? "" : configuredKey;
+/* RAWG calls are always routed through the server proxy. */
+export const RAWG_ENABLED = true;
 
 const RAWG_ALLOWED_PLATFORM_SLUGS = new Set([
   "pc",

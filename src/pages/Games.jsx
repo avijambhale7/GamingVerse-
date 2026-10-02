@@ -78,8 +78,7 @@ import {
 } from "./games/utils/trailerSearch.js";
 import {
   mapRawgGame,
-  RAWG_API_KEY,
-  RAWG_KEY_IS_EXHAUSTED_DEMO,
+  RAWG_ENABLED,
   rawgGameHasAllowedPlatform,
   rawgGameIsSafe,
 } from "./games/utils/rawg.js";
@@ -377,10 +376,8 @@ function Games() {
     let cancelled = false;
 
     const fetchAutomaticGames = async () => {
-      if (!RAWG_API_KEY) {
-        const reason = RAWG_KEY_IS_EXHAUSTED_DEMO
-          ? "That RAWG key has used up its monthly limit. Get your own free key at rawg.io/apidocs, put it in .env.local as VITE_RAWG_API_KEY, then restart the dev server."
-          : "No RAWG API key found. Add VITE_RAWG_API_KEY to .env.local, then restart the dev server. See src/pages/games/utils/rawg.js.";
+      if (!RAWG_ENABLED) {
+        const reason = "Live game data is turned off.";
 
         setAutomaticGames([]);
         setUpcomingGames([]);
@@ -469,7 +466,7 @@ function Games() {
           page += 1
         ) {
           const endpoint =
-            `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_API_KEY)}` +
+            `/api/rawg?path=games` +
             `&ordering=-rating` +
             `&page_size=${PAGE_SIZE}` +
             `&page=${page}`;
@@ -573,7 +570,7 @@ function Games() {
           page += 1
         ) {
           const upcomingEndpoint =
-            `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_API_KEY)}` +
+            `/api/rawg?path=games` +
             `&dates=${todayValue},${futureDateValue}` +
             `&ordering=released` +
             `&page_size=${PAGE_SIZE}` +
@@ -850,7 +847,7 @@ function Games() {
   // own game browser, so a poster only ever needs to be found once and
   // both pages read/write the same localStorage cache.
   useEffect(() => {
-    if (automaticGamesLoading || !RAWG_API_KEY) return undefined;
+    if (automaticGamesLoading || !RAWG_ENABLED) return undefined;
 
     let cancelled = false;
 
@@ -881,7 +878,7 @@ function Games() {
   // Load a trailer media source for the game details page.
   // Prefer a RAWG playable clip, then use a verified YouTube trailer.
   useEffect(() => {
-    if (!showDetails || !selectedGame?.name || !RAWG_API_KEY) return undefined;
+    if (!showDetails || !selectedGame?.name || !RAWG_ENABLED) return undefined;
 
     const gameName = String(selectedGame.name).trim();
     const key = normalizeTrailerGameName(gameName);
@@ -913,7 +910,7 @@ function Games() {
       try {
         for (const candidate of uniqueCandidates) {
           const endpoint =
-            `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_API_KEY)}` +
+            `/api/rawg?path=games` +
             `&search=${encodeURIComponent(candidate)}&page_size=10&search_precise=true`;
           const response = await fetch(endpoint, { cache: "no-store" });
           if (!response.ok) continue;
@@ -942,7 +939,7 @@ function Games() {
 
         if (best?.id && !clipUrl) {
           const detailResponse = await fetch(
-            `https://api.rawg.io/api/games/${best.id}?key=${encodeURIComponent(RAWG_API_KEY)}`,
+            `/api/rawg?path=games/${best.id}`,
             { cache: "no-store" },
           );
 
@@ -1539,7 +1536,7 @@ function Games() {
       return;
     }
 
-    if (!RAWG_API_KEY) {
+    if (!RAWG_ENABLED) {
       setSelectedGame((current) => ({
         ...(current || game),
         trailerType: "search",
@@ -1581,7 +1578,7 @@ function Games() {
 
       for (const candidate of uniqueCandidates) {
         const endpoint =
-          `https://api.rawg.io/api/games?key=${encodeURIComponent(RAWG_API_KEY)}` +
+          `/api/rawg?path=games` +
           `&search=${encodeURIComponent(candidate)}` +
           `&page_size=10` +
           `&search_precise=true`;
@@ -1615,9 +1612,7 @@ function Games() {
         !best?.clip?.clips?.["320"]
       ) {
         const detailResponse = await fetchWithTimeout(
-          `https://api.rawg.io/api/games/${best.id}?key=${encodeURIComponent(
-            RAWG_API_KEY,
-          )}`,
+          `/api/rawg?path=games/${best.id}`,
           { method: "GET", cache: "no-store" },
         );
 
@@ -1650,9 +1645,7 @@ function Games() {
       } else if (best?.id) {
         try {
           const moviesResponse = await fetchWithTimeout(
-            `https://api.rawg.io/api/games/${best.id}/movies?key=${encodeURIComponent(
-              RAWG_API_KEY,
-            )}`,
+            `/api/rawg?path=games/${best.id}/movies`,
             { method: "GET", cache: "no-store" },
           );
 
