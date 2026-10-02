@@ -7,6 +7,7 @@
 
 import { ACCESSORY_CATEGORIES, MARKET_TABS } from "../data/catalog.js";
 import { money } from "../utils/format.js";
+import ProductImage from "./ProductImage.jsx";
 
 export default function ProductCatalogue({
   openRequest,
@@ -177,20 +178,10 @@ export default function ProductCatalogue({
           onClick={() => openProduct(product)}
         >
           <div className="poster-image">
-            {product.image ? (
-              <img
-                src={product.image}
-                alt={product.name}
-                onError={(event) => {
-                  event.currentTarget.style.display = "none";
-                  event.currentTarget.parentElement.classList.add(
-                    "image-fallback-active",
-                  );
-                }}
-              />
-            ) : (
-              <span>🎮</span>
-            )}
+            <ProductImage
+              product={product}
+              isGame={product.productType !== "accessory"}
+            />
           </div>
           <div className="poster-scrim" />
 
@@ -226,7 +217,6 @@ export default function ProductCatalogue({
     }
 
     const stock = Number(product.stock) || 0;
-    const stockState = stock === 0 ? "out" : stock <= 5 ? "low" : "ok";
 
     return (
       <div
@@ -235,20 +225,10 @@ export default function ProductCatalogue({
         onClick={() => openProduct(product)}
       >
         <div className="product-image">
-          {product.image ? (
-            <img
-              src={product.image}
-              alt={product.name}
-              onError={(event) => {
-                event.currentTarget.style.display = "none";
-                event.currentTarget.parentElement.classList.add(
-                  "image-fallback-active",
-                );
-              }}
-            />
-          ) : (
-            <span>🎮</span>
-          )}
+          <ProductImage
+            product={product}
+            isGame={product.productType !== "accessory"}
+          />
 
           <button
             className={`wishlist-button${wished ? " is-wished" : ""}`}
@@ -262,13 +242,6 @@ export default function ProductCatalogue({
           </button>
 
           <span className="condition-badge">{product.condition}</span>
-          <span className={`stock-badge is-${stockState}`}>
-            {stockState === "out"
-              ? "Out of stock"
-              : stockState === "low"
-                ? `Only ${stock} left`
-                : "In stock"}
-          </span>
         </div>
 
         <div className="product-content">
@@ -423,11 +396,11 @@ export default function ProductCatalogue({
 
         <div className="detail-grid">
           <div className="detail-image">
-            {selectedProduct.image ? (
-              <img src={selectedProduct.image} alt={selectedProduct.name} />
-            ) : (
-              <span>🎮</span>
-            )}
+            <ProductImage
+              key={selectedProduct.id}
+              product={selectedProduct}
+              isGame={selectedProduct.productType !== "accessory"}
+            />
           </div>
 
           <div className="detail-info">

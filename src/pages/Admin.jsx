@@ -17,6 +17,7 @@ import { completeGameCatalogue } from "./games/utils/catalogue.js";
 import { lookupMissingPosters } from "./games/utils/posterLookup.js";
 import AdminActivityChart from "./admin/AdminActivityChart.jsx";
 import AdminPostsView from "./admin/AdminPostsView.jsx";
+import AdminFeedView from "./admin/AdminFeedView.jsx";
 import AdminFeedReports from "./admin/AdminFeedReports.jsx";
 import AdminInsights from "./admin/AdminInsights.jsx";
 import NotificationBell from "../components/NotificationBell.jsx";
@@ -24,6 +25,7 @@ import PurchaseRequestList from "../components/PurchaseRequestList.jsx";
 import usePurchaseRequests from "../utils/usePurchaseRequests.js";
 import { REQUEST_STATUS } from "../utils/purchaseRequests.js";
 import { notifyUser } from "../utils/notify.js";
+import ProductImage from "./marketplace/views/ProductImage.jsx";
 
 // Module scope, evaluated once at page load — not a render-time call, so
 // the activity chart's "last 14 days" window doesn't need Date.now() (an
@@ -707,6 +709,7 @@ export default function Admin() {
           "users",
           "reviews",
           "listings",
+          "feed",
           "posts",
           "cafes",
           "games",
@@ -730,8 +733,10 @@ export default function Admin() {
                     ? "💬 Reviews"
                     : item === "listings"
                       ? "🛒 Listings"
+                      : item === "feed"
+                        ? "📸 Feed"
                       : item === "posts"
-                        ? "💬 Posts"
+                        ? "🗨️ Discussions"
                       : item === "cafes"
                         ? `☕ Cafés${
                             cafes.filter((c) => c.status === "pending").length
@@ -1056,7 +1061,7 @@ export default function Admin() {
                 {products.map((p) => (
                   <article key={p.id} className="admin-listing-row">
                     <div className="admin-listing-thumb">
-                      {p.image ? <img src={p.image} alt="" /> : <span>🎮</span>}
+                      <ProductImage product={p} isGame={p.productType !== "accessory"} alt="" />
                     </div>
                     <div className="admin-review-info">
                       <strong>{p.name}</strong>
@@ -1082,7 +1087,7 @@ export default function Admin() {
         </main>
       )}
 
-      {section === "posts" && (
+      {section === "feed" && (
         <>
           <main className="admin-main gv-page-enter admin-feed-reports-wrap">
             <AdminFeedReports
@@ -1091,12 +1096,20 @@ export default function Admin() {
               onMessage={setMessage}
             />
           </main>
-          <AdminPostsView
+          <AdminFeedView
             bannedUids={new Set(users.filter((u) => u.isBanned).map((u) => u.uid))}
             onBan={(uid) => setBanned(uid, true)}
             onMessage={setMessage}
           />
         </>
+      )}
+
+      {section === "posts" && (
+        <AdminPostsView
+          bannedUids={new Set(users.filter((u) => u.isBanned).map((u) => u.uid))}
+          onBan={(uid) => setBanned(uid, true)}
+          onMessage={setMessage}
+        />
       )}
 
       {section === "cafes" && (

@@ -7,6 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { money } from "../utils/format.js";
+import ProductImage from "./ProductImage.jsx";
 import {
   createPurchaseRequest,
   formatPhone,
@@ -71,7 +72,11 @@ export default function RequestModal({ product, onClose, onSent }) {
 
         <div className="request-modal-product">
           <div className="request-modal-thumb">
-            {product.image ? <img src={product.image} alt="" /> : <span>🎮</span>}
+            <ProductImage
+              product={product}
+              isGame={product.productType !== "accessory"}
+              alt=""
+            />
           </div>
           <div>
             <small>Sold by {product.sellerName || "GamingVerse Seller"}</small>

@@ -31,13 +31,30 @@ function getImageKey(path = "") {
   return normalizeGameKey(fileName);
 }
 
-const profileGameImages = Object.entries(profileAllImages).map(
-  ([path, image]) => ({
-    path,
-    image,
-    key: getImageKey(path),
-  }),
-);
+// "GTA_V_Poster.webp" -> "gtav": the game's name without the words
+// that only describe the artwork.
+const ART_WORDS = /(poster|horizontal|cover|banner|artwork|art|wallpaper|4k|hd)+$/;
+const baseKeyOf = (key) => key.replace(ART_WORDS, "") || key;
+
+const profileGameImages = Object.entries(profileAllImages)
+  .map(([path, image]) => {
+    const key = getImageKey(path);
+    return {
+      path,
+      image,
+      key,
+      base: baseKeyOf(key),
+      isPoster: /\/posters\//i.test(path),
+    };
+  })
+  // Portrait posters first, so a game with both gets its poster.
+  .sort((a, b) => Number(b.isPoster) - Number(a.isPoster));
+
+// Exact game-name match only — "gtav" must not pick "gtavi".
+function exactBaseMatch(keys) {
+  const wanted = keys.filter(Boolean);
+  return profileGameImages.find((item) => wanted.includes(item.base));
+}
 
 const gameAliases = {
   blackmythwukong: ["blackmythwukong", "blackmyth", "wukong"],
@@ -49,6 +66,8 @@ const gameAliases = {
   ],
   gtav: ["gtav", "grandtheftautov", "gta5"],
   gtavi: ["gtavi", "grandtheftautovi", "gta6"],
+  gta5: ["gtav"],
+  gta6: ["gtavi"],
   cyberpunk2077: ["cyberpunk2077", "cyberpunk"],
   rdr2: ["rdr2", "reddeadredemption2"],
   reddeadredemption2: ["rdr2", "reddeadredemption2"],
@@ -129,6 +148,15 @@ export function getGameImage(gameName = "") {
   // 1. Exact filename match.
   const exact = profileGameImages.find((item) => item.key === key);
   if (exact) return exact.image;
+
+  // 1b. Exact game name (ignoring "poster", "horizontal"…), including
+  // known aliases, before any partial matching.
+  const exactName = exactBaseMatch([
+    key,
+    ...(gameAliases[key] || []),
+    ...(canonicalGameAliases[gameName.trim().toLowerCase()] || []),
+  ]);
+  if (exactName) return exactName.image;
 
   // 2. Known aliases.
   const aliases = gameAliases[key] || [];
