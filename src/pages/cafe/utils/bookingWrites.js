@@ -6,14 +6,18 @@
    the seats held in that hour (owner/admin only), mirrored as a
    plain number in cafeAvailability/... for everyone to read.
 
-   All three change in ONE atomic write. The database rules only
-   accept a seat change that names the booking it belongs to
-   (lastCustomer / lastBooking) and moves the count by exactly
-   that booking's seats — so seats can't be faked, and a booking
-   can't exist without its seats (or vice versa).
-
-   If someone else changed the same slot a moment earlier the
-   write is rejected; it is retried with the fresh count.
+   How a change is saved (compare-and-set, enforced by the rules):
+   1. read the booking and the seat count,
+   2. work out the new count,
+   3. write booking + slot + public count in ONE multi-path update.
+   The rules accept step 3 only if the new count equals the count
+   stored *at that moment* plus/minus this booking's seats, and the
+   slot write names the booking being changed (lastCustomer /
+   lastBooking — set on every write, so it is always "this booking",
+   never "the newest booking"). If anyone changed the booking or the
+   slot between 1 and 3, the write is refused and we start again
+   from step 1 with fresh data. Two people can never both win with
+   the same stale count.
 ========================================================= */
 import { get, push, ref, update } from "firebase/database";
 import { db } from "../../../firebase";
@@ -23,6 +27,7 @@ const OCCUPYING = new Set(["Pending", "Confirmed"]);
 const heldSeats = (booking) =>
   booking && OCCUPYING.has(String(booking.status || "")) ? bookingSeats(booking) : 0;
 const slotSuffix = (b) => `${b.cafeId}/${b.date}/${slotKey(b.time)}`;
+const ATTEMPTS = 5;
 
 export class SlotFullError extends Error {
   constructor() {
@@ -31,18 +36,23 @@ export class SlotFullError extends Error {
   }
 }
 
-/* Writes the booking change (before → after) plus its seat change. */
-async function commit({ customerUid, bookingId, before, after, extra = {}, capacity = Infinity }) {
-  const target = after || before;
-  const delta = heldSeats(after) - heldSeats(before);
+/* One compare-and-set attempt loop.
+   `load()` returns the booking as stored now (null if none);
+   `change(before)` returns { after, extra } or null to stop. */
+async function commit({ customerUid, bookingId, load, change, capacity = Infinity }) {
   let lastError;
-  for (let attempt = 0; attempt < 4; attempt += 1) {
+  for (let attempt = 0; attempt < ATTEMPTS; attempt += 1) {
+    const before = await load();
+    const plan = change(before);
+    if (!plan) return;
+    const { after, extra = {} } = plan;
+    const delta = heldSeats(after) - heldSeats(before);
     const updates = {
       [`cafeBookings/${customerUid}/${bookingId}`]: after || null,
       ...extra,
     };
     if (delta !== 0) {
-      const suffix = slotSuffix(target);
+      const suffix = slotSuffix(after || before);
       const current = Number(
         (await get(ref(db, `cafeAvailability/${suffix}`))).val() || 0,
       );
@@ -61,12 +71,16 @@ async function commit({ customerUid, bookingId, before, after, extra = {}, capac
       await update(ref(db), updates);
       return;
     } catch (error) {
-      lastError = error;
-      if (delta === 0) break; // no seat race to retry
+      lastError = error; // stale booking or count — reload and retry
     }
   }
   throw lastError;
 }
+
+const loadBooking = (customerUid, bookingId) => async () => {
+  const snap = await get(ref(db, `cafeBookings/${customerUid}/${bookingId}`));
+  return snap.exists() ? snap.val() : null;
+};
 
 /* New booking + index + seats. Returns the booking id.
    `capacity` is the café's seat count (owners pass Infinity). */
@@ -75,39 +89,53 @@ export async function createBooking(customerUid, booking, { capacity = Infinity 
   await commit({
     customerUid,
     bookingId,
-    before: null,
-    after: booking,
     capacity,
-    extra: {
-      [`cafeBookingIndex/${booking.cafeId}/${bookingId}`]: { customerId: customerUid },
-    },
+    load: async () => null,
+    change: () => ({
+      after: booking,
+      extra: {
+        [`cafeBookingIndex/${booking.cafeId}/${bookingId}`]: { customerId: customerUid },
+      },
+    }),
   });
   return bookingId;
 }
 
-/* Cancels: removes the booking + index and frees its seats, together. */
+/* Cancels: removes the booking + index and frees its seats, together.
+   The booking is re-read on every attempt, so a change made in the
+   meantime (e.g. the owner rejected it) is taken into account. */
 export async function deleteBooking(customerUid, booking) {
-  const snap = await get(ref(db, `cafeBookings/${customerUid}/${booking.id}`));
-  if (!snap.exists()) return;
-  const before = snap.val();
   await commit({
     customerUid,
     bookingId: booking.id,
-    before,
-    after: null,
-    extra: before.cafeId
-      ? { [`cafeBookingIndex/${before.cafeId}/${booking.id}`]: null }
-      : {},
+    load: loadBooking(customerUid, booking.id),
+    change: (before) =>
+      before && {
+        after: null,
+        extra: before.cafeId
+          ? { [`cafeBookingIndex/${before.cafeId}/${booking.id}`]: null }
+          : {},
+      },
   });
 }
 
 /* Owner status change (Confirmed / Rejected / Completed / Cancelled):
    the booking and its seats move together. Owners may overbook. */
 export async function changeBookingStatus(customerUid, bookingId, changes) {
-  const snap = await get(ref(db, `cafeBookings/${customerUid}/${bookingId}`));
-  if (!snap.exists()) throw new Error("This booking no longer exists.");
-  const before = snap.val();
-  await commit({ customerUid, bookingId, before, after: { ...before, ...changes } });
+  let missing = false;
+  await commit({
+    customerUid,
+    bookingId,
+    load: loadBooking(customerUid, bookingId),
+    change: (before) => {
+      if (!before) {
+        missing = true;
+        return null;
+      }
+      return { after: { ...before, ...changes } };
+    },
+  });
+  if (missing) throw new Error("This booking no longer exists.");
 }
 
 /* Adds index entries for bookings saved before the index existed.
