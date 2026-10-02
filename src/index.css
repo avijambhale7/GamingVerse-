@@ -45,3 +45,19 @@ body {
 
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Names that open a profile (feed, comments, follower lists) */
+.gv-user-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.gv-user-link:hover strong,
+.gv-user-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

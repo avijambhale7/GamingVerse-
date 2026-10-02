@@ -87,6 +87,20 @@
       }
     },
 
+    "publicProfiles": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && ((auth.uid === $uid && root.child('users').child(auth.uid).child('isBanned').val() !== true) || (!newData.exists() && root.child('users').child(auth.uid).child('role').val() === 'admin'))",
+        ".validate": "newData.hasChildren(['name', 'updatedAt'])",
+        "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 80" },
+        "handle": { ".validate": "newData.isString() && (newData.val() === '' || newData.val() === root.child('users').child($uid).child('username').val())" },
+        "bio": { ".validate": "newData.isString() && newData.val().length <= 300" },
+        "photo": { ".validate": "newData.isString() && newData.val().length <= 130000 && (newData.val() === '' || newData.val().beginsWith('https://') || newData.val().beginsWith('data:image/'))" },
+        "updatedAt": { ".validate": "newData.val() === now" },
+        "$other": { ".validate": false }
+      }
+    },
+
     "usernameTaken": {
       ".read": true,
       "$handle": {
@@ -219,7 +233,7 @@
 
     "userReviews": {
       "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
+        ".read": "auth != null",
         "$gameId": {
           ".write": "auth != null && auth.uid === $uid",
           ".validate": "newData.val() === true"

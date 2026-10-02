@@ -9,6 +9,7 @@ import "./Profile.css";
 
 import { formatGameName, getGameImage } from "./profile/utils/gameImages.js";
 import { normalizeSocialList } from "./profile/utils/social.js";
+import { syncPublicProfile } from "../utils/publicProfile.js";
 
 import EditProfileView from "./profile/views/EditProfileView.jsx";
 import OwnerEditView from "./profile/views/OwnerEditView.jsx";
@@ -55,7 +56,7 @@ function Profile() {
   const [myReviews, setMyReviews] = useState([]);
   const [activeTab, setActiveTab] = useState(() => {
     const tab = new URLSearchParams(window.location.search).get("tab");
-    return ["collections", "tickets", "stats"].includes(tab) ? tab : "reviews";
+    return ["collections", "tickets"].includes(tab) ? tab : "reviews";
   });
   const [filter, setFilter] = useState("all");
   const [reviewViewMode, setReviewViewMode] = useState("list");
@@ -132,6 +133,7 @@ function Profile() {
 
         const loadedRole = String(data.role || "").toLowerCase();
         setAccountRole(loadedRole);
+        syncPublicProfile(currentUser.uid, data, currentUser);
 
         setProfile({
           firstName: data.firstName || firstName,
@@ -362,27 +364,28 @@ function Profile() {
           const uid = item.uid || item.userId || item.id || "";
           let data = item;
 
-          // Entries from the Follow button already carry name + handle;
-          // other users' profiles are private, so only look up the rest.
-          if (
-            uid &&
-            !item.username &&
-            !item.displayName &&
-            !item.firstName &&
-            !item.name
-          ) {
+          // users/{uid} is private: use the person's public card
+          // (current name + photo), falling back to the follow entry.
+          if (uid) {
             try {
-              const snapshot = await get(ref(db, `users/${uid}`));
-              if (snapshot.exists()) data = { ...item, ...snapshot.val() };
+              const card = (await get(ref(db, `publicProfiles/${uid}`))).val();
+              if (card?.name) {
+                data = {
+                  ...item,
+                  name: card.name,
+                  handle: card.handle || item.handle,
+                  photoURL: card.photo || "",
+                };
+              }
             } catch (error) {
-              console.error("Could not load social profile:", error);
+              console.warn("Could not load social profile:", error);
             }
           }
 
           const displayName =
+            data.name ||
             data.displayName ||
             `${data.firstName || ""} ${data.lastName || ""}`.trim() ||
-            data.name ||
             data.username ||
             "GamingVerse User";
           const username =
@@ -642,6 +645,7 @@ function Profile() {
       });
 
       await update(ref(db, `users/${user.uid}`), updatedData);
+      syncPublicProfile(user.uid, updatedData, user);
 
       if (previousUsername && previousUsername !== finalUsername) {
         releaseUsername(previousUsername, user.uid).catch((error) =>

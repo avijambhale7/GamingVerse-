@@ -9,10 +9,10 @@ import { formatGameName } from "../utils/gameImages.js";
 import AppTopNav from "../../../components/AppTopNav.jsx";
 import AppBottomNav from "../../../components/AppBottomNav.jsx";
 import ProfileTickets from "./ProfileTickets.jsx";
-import ProfileStats from "./ProfileStats.jsx";
 import GVLogoMark from "../../../components/GVLogoMark.jsx";
 import useRemotePosters from "../utils/useRemotePosters.js";
 import useEscapeKey from "../../../utils/useEscapeKey.js";
+import { userPath } from "../../../utils/publicProfile.js";
 
 export default function ProfileView({
   activeTab,
@@ -178,7 +178,7 @@ export default function ProfileView({
               type="button"
               onClick={() => setActiveTab("reviews")}
             >
-              ✎ <span>Reviews</span>
+              ✍️ <span>Reviews</span>
             </button>
 
             <button
@@ -190,7 +190,7 @@ export default function ProfileView({
               type="button"
               onClick={() => setActiveTab("collections")}
             >
-              ▱ <span>Collections</span>
+              🎮 <span>Collections</span>
             </button>
 
             <button
@@ -202,27 +202,9 @@ export default function ProfileView({
             >
               🎫 <span>Tickets</span>
             </button>
-
-            <button
-              className={
-                activeTab === "stats" ? "profile-tab active" : "profile-tab"
-              }
-              type="button"
-              onClick={() => setActiveTab("stats")}
-            >
-              📊 <span>Stats</span>
-            </button>
           </div>
 
-          {activeTab === "stats" ? (
-            <ProfileStats
-              uid={user?.uid}
-              reviews={myReviews}
-              collectionGames={collectionGames}
-              playedGames={playedGames}
-              followersCount={(socialLists?.followers || []).length}
-            />
-          ) : activeTab === "tickets" ? (
+          {activeTab === "tickets" ? (
             <ProfileTickets navigate={navigate} uid={user?.uid} />
           ) : activeTab === "reviews" ? (
             <>
@@ -403,7 +385,16 @@ export default function ProfileView({
                         <p className="my-review-text">{review.text}</p>
                       ) : (
                         <p className="my-review-text my-review-text-empty">
-                          No written comment — verdict only.
+                          <span className="my-review-empty-icon" aria-hidden="true">
+                            ✍️
+                          </span>
+                          <span>
+                            <strong>Verdict only</strong>
+                            <small>Tap to add your thoughts</small>
+                          </span>
+                          <span className="my-review-empty-arrow" aria-hidden="true">
+                            →
+                          </span>
                         </p>
                       )}
 
@@ -659,9 +650,12 @@ export default function ProfileView({
                 </div>
               ) : (
                 socialMembers.map((member, index) => (
-                  <div
-                    className="social-user-row"
+                  <button
+                    type="button"
+                    className="social-user-row is-link"
                     key={member.uid || `${member.username}-${index}`}
+                    disabled={!member.uid}
+                    onClick={() => member.uid && navigate(userPath(member.uid))}
                   >
                     <div className="social-user-avatar">
                       {member.photoURL ? (
@@ -676,7 +670,8 @@ export default function ProfileView({
                       <strong>{member.displayName}</strong>
                       <span>@{member.username}</span>
                     </div>
-                  </div>
+                    <span className="social-user-go" aria-hidden="true">›</span>
+                  </button>
                 ))
               )}
             </div>

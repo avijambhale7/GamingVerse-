@@ -83,6 +83,33 @@
   background: rgba(255, 255, 255, 0.035);
 }
 
+/* Rows open that gamer's profile */
+.social-user-row.is-link {
+  width: 100%;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.social-user-row.is-link:hover {
+  background: rgba(168, 85, 247, 0.08);
+}
+.social-user-row.is-link:disabled {
+  cursor: default;
+}
+.social-user-go {
+  margin-left: auto;
+  color: #8b8ba0;
+  font-size: 22px;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+.social-user-row.is-link:hover .social-user-go {
+  color: #c4b5fd;
+  transform: translateX(3px);
+}
+
 .social-user-avatar {
   width: 37px;
   height: 37px;

@@ -192,15 +192,28 @@
 /* ---------- tabs ---------- */
 
 .profile-page .profile-tabs {
+  gap: 6px;
   height: 58px;
   padding: 5px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.4);
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0)),
+    rgba(0, 0, 0, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 .profile-page .profile-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
   border-radius: 999px;
   font-size: 16px;
+  line-height: 1;
+  letter-spacing: 0.01em;
+}
+.profile-page .profile-tab span {
+  line-height: 1;
 }
 .profile-page .profile-tab.active {
   background: linear-gradient(120deg, #ec4899, #a855f7 55%, #6366f1);
@@ -333,6 +346,56 @@
 .profile-page .my-review-text {
   font-size: 15px;
   line-height: 1.6;
+}
+.profile-page .my-review-text-empty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 16px;
+  padding: 10px 14px;
+  border: 1px dashed rgba(var(--pf-violet), 0.35);
+  border-radius: 14px;
+  background: rgba(var(--pf-violet), 0.06);
+  color: #a1a1b5;
+  font-style: normal;
+  white-space: normal;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.profile-page .my-review-empty-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(var(--pf-violet), 0.16);
+  font-size: 16px;
+}
+.profile-page .my-review-text-empty strong,
+.profile-page .my-review-text-empty small {
+  display: block;
+  line-height: 1.35;
+}
+.profile-page .my-review-text-empty strong {
+  color: #e4e4f0;
+  font-size: 14px;
+  font-weight: 700;
+}
+.profile-page .my-review-text-empty small {
+  color: #8b8ba0;
+  font-size: 12.5px;
+}
+.profile-page .my-review-empty-arrow {
+  margin-left: auto;
+  color: rgba(var(--pf-violet), 0.9);
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+.profile-page .my-review-card:hover .my-review-text-empty {
+  border-color: rgba(var(--pf-violet), 0.6);
+  background: rgba(var(--pf-violet), 0.1);
+}
+.profile-page .my-review-card:hover .my-review-empty-arrow {
+  transform: translateX(4px);
 }
 .profile-page .my-review-footer span {
   padding: 4px 10px;

@@ -18,6 +18,7 @@ const Marketplace = lazy(() => import("./pages/Marketplace"));
 const OwnerDashboard = lazy(() => import("./pages/OwnerDashboard"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Profile = lazy(() => import("./pages/Profile"));
+const UserProfile = lazy(() => import("./pages/UserProfile"));
 
 
 const PAGE_LOADING_STYLE = {
@@ -194,6 +195,18 @@ function App() {
             element={
               <ProtectedRoute user={user} loading={loading}>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* =================================================
+              ANOTHER GAMER'S PUBLIC PROFILE
+          ================================================= */}
+          <Route
+            path="/user/:uid"
+            element={
+              <ProtectedRoute user={user} loading={loading}>
+                <UserProfile />
               </ProtectedRoute>
             }
           />

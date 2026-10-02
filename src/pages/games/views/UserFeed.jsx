@@ -31,6 +31,7 @@ import {
   update,
 } from "firebase/database";
 import { onAuthStateChanged } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 import { auth, db } from "../../../firebase";
 import {
   NOTIFY_TITLES,
@@ -38,6 +39,7 @@ import {
   notifyUser,
 } from "../../../utils/notify.js";
 import { compressImageToDataUrl } from "../../../utils/imageData.js";
+import { syncPublicProfile, userPath } from "../../../utils/publicProfile.js";
 import useEscapeKey from "../../../utils/useEscapeKey.js";
 import { completeGameCatalogue } from "../utils/catalogue.js";
 import "../styles/user-feed.css";
@@ -160,6 +162,7 @@ export default function UserFeed({ onOpenGame }) {
           user.displayName ||
           user.email?.split("@")[0] ||
           "Gamer";
+        syncPublicProfile(user.uid, data, user);
         setMe({
           uid: user.uid,
           name,
@@ -555,6 +558,10 @@ function FeedPost({
   const [reporting, setReporting] = useState(false);
   const [toast, setToast] = useState("");
   const commentInputRef = useRef(null);
+  const navigate = useNavigate();
+  // Your own name opens your profile; anyone else's opens theirs.
+  const openUser = (uid) =>
+    uid && navigate(me && uid === me.uid ? "/profile" : userPath(uid));
   useEscapeKey(() => setMenuOpen(false), menuOpen);
 
   // Only this post's likes and comments — not the whole site's.
@@ -727,9 +734,22 @@ function FeedPost({
       id={`post-${post.id}`}
     >
       <header className="uf-post-head">
-        <Avatar name={post.authorName} photo={post.authorPhoto} />
+        <button
+          type="button"
+          className="gv-user-link uf-author-link"
+          onClick={() => openUser(post.uid)}
+          aria-label={`Open ${post.authorName || "this gamer"}'s profile`}
+        >
+          <Avatar name={post.authorName} photo={post.authorPhoto} />
+        </button>
         <div>
-          <strong>{post.authorName || "Gamer"}</strong>
+          <button
+            type="button"
+            className="gv-user-link"
+            onClick={() => openUser(post.uid)}
+          >
+            <strong>{post.authorName || "Gamer"}</strong>
+          </button>
           <small>
             {post.authorHandle ? `@${post.authorHandle} · ` : ""}
             {timeAgo(post.createdAt)}
@@ -868,7 +888,14 @@ function FeedPost({
 
         {post.caption && (
           <p className="uf-caption">
-            <strong>{authorLabel}</strong> {captionText}
+            <button
+              type="button"
+              className="gv-user-link"
+              onClick={() => openUser(post.uid)}
+            >
+              <strong>{authorLabel}</strong>
+            </button>{" "}
+            {captionText}
             {longCaption && !expanded && (
               <button type="button" onClick={() => setExpanded(true)}>
                 more
@@ -889,9 +916,15 @@ function FeedPost({
 
         {visibleComments.map((comment) => (
           <p className="uf-comment" key={comment.id}>
-            <strong>
-              {comment.authorHandle || comment.authorName || "gamer"}
-            </strong>{" "}
+            <button
+              type="button"
+              className="gv-user-link"
+              onClick={() => openUser(comment.uid)}
+            >
+              <strong>
+                {comment.authorHandle || comment.authorName || "gamer"}
+              </strong>
+            </button>{" "}
             {comment.text}
             {me &&
               (me.uid === comment.uid || me.uid === post.uid || me.isAdmin) && (
