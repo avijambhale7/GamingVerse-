@@ -110,9 +110,10 @@ export default function Admin() {
   // placeholders fill in live instead of only on the next page load.
   const [resolvedPosterImages, setResolvedPosterImages] = useState({});
 
-  // Café owners see bookings through cafeBookingIndex/{cafeId}. Bookings
-  // made before that index existed are added here in one go (customers'
-  // own visits to the Café page also add theirs).
+  // One-time sync of data saved before newer structures existed:
+  // - cafeBookingIndex: lets café owners see their older bookings
+  // - cafeAvailability: the public seat count, copied from cafeSlots
+  // - usernameTaken: the public "is this name free?" list
   const [rebuildingIndex, setRebuildingIndex] = useState(false);
   const rebuildBookingIndex = async () => {
     setRebuildingIndex(true);
@@ -128,9 +129,28 @@ export default function Admin() {
           }
         });
       });
+      const bookingCount = Object.keys(updates).length;
+
+      const slots = (await get(ref(db, "cafeSlots"))).val() || {};
+      let seatCount = 0;
+      Object.entries(slots).forEach(([cafeId, dates]) => {
+        Object.entries(dates || {}).forEach(([date, slotMap]) => {
+          Object.entries(slotMap || {}).forEach(([slot, value]) => {
+            updates[`cafeAvailability/${cafeId}/${date}/${slot}`] =
+              Math.max(0, Number(value?.booked) || 0);
+            seatCount += 1;
+          });
+        });
+      });
+
+      const handles = (await get(ref(db, "usernames"))).val() || {};
+      Object.keys(handles).forEach((handle) => {
+        updates[`usernameTaken/${handle}`] = true;
+      });
+
       if (Object.keys(updates).length) await update(ref(db), updates);
       setMessage(
-        `Booking index rebuilt: ${Object.keys(updates).length} bookings indexed.`,
+        `Synced: ${bookingCount} bookings, ${seatCount} seat counts, ${Object.keys(handles).length} usernames.`,
       );
     } catch (error) {
       console.error("Rebuild booking index error:", error);
@@ -782,9 +802,9 @@ export default function Admin() {
               className="admin-index-btn"
               onClick={rebuildBookingIndex}
               disabled={rebuildingIndex}
-              title="Lets café owners see bookings made before the booking index existed"
+              title="One-time copy of older bookings, seat counts and usernames into the newer lists"
             >
-              {rebuildingIndex ? "Rebuilding…" : "↻ Rebuild booking index"}
+              {rebuildingIndex ? "Syncing…" : "↻ Sync booking & username data"}
             </button>
           </section>
           <AdminActivityChart days={activityDays} />

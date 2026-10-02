@@ -338,7 +338,7 @@ export default function Cafe() {
               const snap = await get(
                 ref(
                   db,
-                  `cafeSlots/${selectedCafe.id}/${selectedDate}/${key}/booked`,
+                  `cafeAvailability/${selectedCafe.id}/${selectedDate}/${key}`,
                 ),
               );
               next[slot] = Math.min(

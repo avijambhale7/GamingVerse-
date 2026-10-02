@@ -50,8 +50,9 @@ export default async function handler(req, res) {
     const body = await upstream.text();
     res.setHeader("Content-Type", "application/json");
     if (upstream.ok) {
-      // Game data changes slowly: cache for an hour, serve stale while refreshing.
-      res.setHeader("Cache-Control", "public, s-maxage=3600, stale-while-revalidate=86400");
+      // Game data changes slowly: cache for 6 hours, serve stale for a
+      // day while refreshing — repeat catalogue loads cost RAWG nothing.
+      res.setHeader("Cache-Control", "public, s-maxage=21600, stale-while-revalidate=86400");
     }
     return res.status(upstream.status).send(body);
   } catch (error) {

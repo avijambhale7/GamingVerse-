@@ -3,7 +3,8 @@
    A booking lives at cafeBookings/{customerUid}/{bookingId};
    cafeBookingIndex/{cafeId}/{bookingId} lets the café's owner
    list it; cafeSlots/{cafeId}/{date}/{slotKey}.booked counts
-   the seats held in that hour.
+   the seats held in that hour (owner/admin only), mirrored as a
+   plain number in cafeAvailability/... for everyone to read.
 
    All three change in ONE atomic write. The database rules only
    accept a seat change that names the booking it belongs to
@@ -21,7 +22,7 @@ import { bookingSeats, slotKey } from "./slots.js";
 const OCCUPYING = new Set(["Pending", "Confirmed"]);
 const heldSeats = (booking) =>
   booking && OCCUPYING.has(String(booking.status || "")) ? bookingSeats(booking) : 0;
-const slotPath = (b) => `cafeSlots/${b.cafeId}/${b.date}/${slotKey(b.time)}`;
+const slotSuffix = (b) => `${b.cafeId}/${b.date}/${slotKey(b.time)}`;
 
 export class SlotFullError extends Error {
   constructor() {
@@ -41,16 +42,20 @@ async function commit({ customerUid, bookingId, before, after, extra = {}, capac
       ...extra,
     };
     if (delta !== 0) {
-      const path = slotPath(target);
-      const current = Number((await get(ref(db, `${path}/booked`))).val() || 0);
+      const suffix = slotSuffix(target);
+      const current = Number(
+        (await get(ref(db, `cafeAvailability/${suffix}`))).val() || 0,
+      );
       const next = Math.max(0, current + delta);
       if (delta > 0 && next > capacity) throw new SlotFullError();
-      updates[path] = {
+      updates[`cafeSlots/${suffix}`] = {
         booked: next,
         lastCustomer: customerUid,
         lastBooking: bookingId,
         updatedAt: Date.now(),
       };
+      // The public seat count must match (the rules check this).
+      updates[`cafeAvailability/${suffix}`] = next;
     }
     try {
       await update(ref(db), updates);
