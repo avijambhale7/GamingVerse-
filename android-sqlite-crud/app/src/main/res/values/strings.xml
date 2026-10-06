@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GamingVerse Library</string>
+
+    <string name="heading_add">Add a game</string>
+    <string name="heading_edit">Edit game</string>
+    <string name="heading_library">Library</string>
+
+    <string name="hint_title">Title *</string>
+    <string name="hint_genre">Genre</string>
+    <string name="hint_platform">Platform</string>
+    <string name="hint_price">Price</string>
+    <string name="hint_search">Search by title, genre or platform</string>
+    <string name="hint_list_actions">Tap a game to edit · long-press to delete</string>
+
+    <string name="btn_insert">Insert</string>
+    <string name="btn_update">Update</string>
+    <string name="btn_clear">Clear</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_delete">Delete</string>
+
+    <string name="error_title_required">Title is required</string>
+    <string name="error_price_invalid">Enter a valid number</string>
+
+    <string name="msg_inserted">Game inserted</string>
+    <string name="msg_insert_failed">Insert failed</string>
+    <string name="msg_updated">Game updated</string>
+    <string name="msg_update_failed">Update failed</string>
+    <string name="msg_deleted">Game deleted</string>
+    <string name="msg_delete_failed">Delete failed</string>
+
+    <string name="dialog_delete_title">Delete game?</string>
+    <string name="dialog_delete_message">\"%1$s\" will be removed from the database.</string>
+
+    <string name="empty_no_games">No games yet. Add one above.</string>
+    <string name="empty_no_results">No games match \"%1$s\".</string>
+</resources>
