@@ -41,7 +41,7 @@ export default function UpcomingsView({
                 <div className="automatic-games-message">
                   <span>⚠️</span>
                   <div>
-                    <strong>Upcoming games are unavailable.</strong>
+                    <strong>Upcoming games unavailable</strong>
                     <p>{upcomingGamesError}</p>
                   </div>
                 </div>

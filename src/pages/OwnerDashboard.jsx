@@ -33,6 +33,7 @@ import WalkInBookingForm from "./owner/views/WalkInBookingForm.jsx";
 import useOwnerBookings from "./owner/useOwnerBookings.js";
 import { changeBookingStatus } from "./cafe/utils/bookingWrites.js";
 import { getSellerName } from "../utils/profileName.js";
+import { mergePhotoList } from "../utils/photoList.js";
 
 const OWNER_ROLES = new Set([
   "owner",
@@ -82,6 +83,9 @@ const EMPTY_CAFE_OVERLAY = {
   website: "",
   mapUrl: "",
   about: "",
+  // Saved photos (uploads + links), shown as thumbnails…
+  photos: [],
+  // …and new links typed one per line, added on save.
   photosText: "",
   totalSeats: "",
   pricePerHour: "",
@@ -145,6 +149,8 @@ export default function OwnerDashboard() {
   });
   const [scanResult, setScanResult] = useState(null);
   const [scanError, setScanError] = useState("");
+  // Ticket code typed or pasted when the camera can't be used.
+  const [manualTicket, setManualTicket] = useState("");
   const videoRef = useRef(null);
   const scanFrameRef = useRef(null);
 
@@ -290,7 +296,8 @@ export default function OwnerDashboard() {
         website: cafe.website,
         mapUrl: cafe.mapUrl,
         about: cafe.about,
-        photosText: cafe.photos.join("\n"),
+        photos: cafe.photos,
+        photosText: "",
         totalSeats: cafe.totalSeats || "",
         pricePerHour: cafe.pricePerHour || "",
         specs: cafe.specs,
@@ -410,10 +417,10 @@ export default function OwnerDashboard() {
         website: cafeOverlayForm.website.trim(),
         mapUrl: cafeOverlayForm.mapUrl.trim(),
         about: cafeOverlayForm.about.trim(),
-        photos: cafeOverlayForm.photosText
-          .split("\n")
-          .map((line) => line.trim())
-          .filter(Boolean),
+        photos: mergePhotoList(
+          cafeOverlayForm.photos,
+          cafeOverlayForm.photosText,
+        ),
         totalSeats: Number(cafeOverlayForm.totalSeats) || 0,
         pricePerHour: Number(cafeOverlayForm.pricePerHour) || 0,
         specs: specsObject,
@@ -561,8 +568,14 @@ export default function OwnerDashboard() {
       scanFrameRef.current = requestAnimationFrame(tick);
     };
 
-    navigator.mediaDevices
-      ?.getUserMedia({ video: { facingMode: "environment" } })
+    // No camera API at all (no camera, or a non-HTTPS page) goes down the
+    // same "camera unavailable" path as a refused permission.
+    const cameraRequest = navigator.mediaDevices?.getUserMedia
+      ? navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "environment" },
+        })
+      : Promise.reject(new Error("Camera API not available"));
+    cameraRequest
       .then((stream) => {
         if (cancelled) {
           stream.getTracks().forEach((track) => track.stop());
@@ -576,7 +589,9 @@ export default function OwnerDashboard() {
       })
       .catch((error) => {
         console.error("Camera access error:", error);
-        setScanError("Could not access the camera. Check browser permissions.");
+        setScanError(
+          "Camera unavailable — allow camera access, or type the ticket code below.",
+        );
       });
 
     return () => {
@@ -1349,19 +1364,30 @@ export default function OwnerDashboard() {
                     />
                   </label>
 
-                  <label>
-                    Photos (one URL per line, or upload)
-                    <textarea
-                      rows="3"
-                      value={cafeOverlayForm.photosText}
-                      onChange={(e) =>
-                        setCafeOverlayForm((f) => ({
-                          ...f,
-                          photosText: e.target.value,
-                        }))
-                      }
-                      placeholder="https://..."
-                    />
+                  <div className="owner-photo-field">
+                    <span className="owner-photo-label">Photos</span>
+                    {cafeOverlayForm.photos.length > 0 && (
+                      <ul className="owner-photo-grid">
+                        {cafeOverlayForm.photos.map((photo, index) => (
+                          <li key={`${index}-${photo.slice(0, 40)}`}>
+                            <img src={photo} alt={`Café photo ${index + 1}`} />
+                            {index === 0 && <em>Cover</em>}
+                            <button
+                              type="button"
+                              aria-label={`Remove photo ${index + 1}`}
+                              onClick={() =>
+                                setCafeOverlayForm((f) => ({
+                                  ...f,
+                                  photos: f.photos.filter((_, i) => i !== index),
+                                }))
+                              }
+                            >
+                              ×
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     <ImageUploadButton
                       pathPrefix={`cafePhotos/${user.uid}`}
                       label="Upload Photos"
@@ -1369,14 +1395,26 @@ export default function OwnerDashboard() {
                       onUploaded={(urls) =>
                         setCafeOverlayForm((f) => ({
                           ...f,
-                          photosText: [f.photosText, ...urls]
-                            .filter(Boolean)
-                            .join("\n"),
+                          photos: mergePhotoList([...f.photos, ...urls]),
                         }))
                       }
                       onError={setMessage}
                     />
-                  </label>
+                    <label>
+                      Or add photo links (one per line)
+                      <textarea
+                        rows="2"
+                        value={cafeOverlayForm.photosText}
+                        onChange={(e) =>
+                          setCafeOverlayForm((f) => ({
+                            ...f,
+                            photosText: e.target.value,
+                          }))
+                        }
+                        placeholder="https://..."
+                      />
+                    </label>
+                  </div>
 
                   <div className="owner-form-two">
                     <label>
@@ -1595,12 +1633,48 @@ export default function OwnerDashboard() {
                 <p>Point the camera at a customer's booking QR code.</p>
               </div>
 
-              {!scanResult && (
+              {!scanResult && !scanError && (
                 <div className="owner-scanner-video-wrap">
                   <video ref={videoRef} muted playsInline />
                 </div>
               )}
-              {scanError && <div className="owner-scan-result error">{scanError}</div>}
+              {scanError && !scanResult && (
+                <div className="owner-scan-result error">{scanError}</div>
+              )}
+
+              {!scanResult && (
+                <form
+                  className="owner-manual-ticket"
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    if (!manualTicket.trim()) return;
+                    handleScan(manualTicket);
+                    setManualTicket("");
+                  }}
+                >
+                  <label htmlFor="owner-manual-ticket">
+                    {scanError
+                      ? "Type or paste the ticket code instead"
+                      : "No camera? Type or paste the ticket code"}
+                  </label>
+                  <div>
+                    <input
+                      id="owner-manual-ticket"
+                      type="text"
+                      value={manualTicket}
+                      onChange={(e) => setManualTicket(e.target.value)}
+                      placeholder="Code shown under the customer's QR"
+                      autoComplete="off"
+                      autoCapitalize="none"
+                      spellCheck={false}
+                      autoFocus={Boolean(scanError)}
+                    />
+                    <button type="submit" disabled={!manualTicket.trim()}>
+                      Check
+                    </button>
+                  </div>
+                </form>
+              )}
 
               {scanResult && (
                 <div

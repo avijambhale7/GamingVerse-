@@ -11,6 +11,7 @@
 
 import { useState } from "react";
 import { reviewOptions } from "../data/reviewOptions.js";
+import { authorLabel } from "../../../utils/authorLabel.js";
 
 const COMMENT_LIMIT = 500;
 
@@ -83,7 +84,7 @@ export default function ReviewCard({
           <div className="community-avatar">{review.initials}</div>
           <div>
             <strong>
-              @{review.userName}
+              {authorLabel(review)}
               {review.isMine && <em className="review-you-tag">You</em>}
             </strong>
             <span>{formatReviewAge(review.createdAt)}</span>
@@ -144,7 +145,7 @@ export default function ReviewCard({
                   </div>
                   <div className="review-comment-body">
                     <div className="review-comment-meta">
-                      <strong>@{comment.userName}</strong>
+                      <strong>{authorLabel(comment)}</strong>
                       <span>{formatReviewAge(comment.createdAt)}</span>
                       {(comment.userId === currentUserId || review.isMine) && (
                         <button

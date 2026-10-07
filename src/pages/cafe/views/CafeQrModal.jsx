@@ -13,11 +13,24 @@ import useEscapeKey from "../../../utils/useEscapeKey.js";
 
 export default function CafeQrModal({ booking, uid, onClose }) {
   const [dataUrl, setDataUrl] = useState("");
+  const [copied, setCopied] = useState(false);
   useEscapeKey(onClose);
+  // Typed in by the café owner when their camera can't scan the QR.
+  const ticketCode = encodeTicket(uid, booking.id);
+
+  const copyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(ticketCode);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
-    QRCode.toDataURL(encodeTicket(uid, booking.id), {
+    QRCode.toDataURL(ticketCode, {
       width: 240,
       margin: 1,
       color: { dark: "#0b0b10", light: "#f5f5f7" },
@@ -29,7 +42,7 @@ export default function CafeQrModal({ booking, uid, onClose }) {
     return () => {
       cancelled = true;
     };
-  }, [uid, booking.id]);
+  }, [ticketCode]);
 
   return (
     <div className="cafe-qr-backdrop" onClick={onClose}>
@@ -70,6 +83,17 @@ export default function CafeQrModal({ booking, uid, onClose }) {
             ? "This session is complete — the ticket has been used."
             : "Show this to the café owner at check-in."}
         </small>
+        {booking.status !== "Completed" && (
+          <div className="cafe-qr-code">
+            <span>Ticket code (if the QR won&apos;t scan)</span>
+            <div>
+              <code>{ticketCode}</code>
+              <button type="button" onClick={copyCode}>
+                {copied ? "Copied ✓" : "Copy"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

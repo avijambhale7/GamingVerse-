@@ -25,6 +25,7 @@ import RequestModal from "./marketplace/views/RequestModal.jsx";
 import RequestsView from "./marketplace/views/RequestsView.jsx";
 import ProductCatalogue from "./marketplace/views/ProductCatalogue.jsx";
 import SellerView from "./marketplace/views/SellerView.jsx";
+import { upsertById } from "../utils/listUtils.js";
 
 export default function Marketplace({ embedded = false }) {
   const routeNavigate = useRouterNavigate();
@@ -312,13 +313,10 @@ export default function Marketplace({ embedded = false }) {
 
         await set(newRef, newProduct);
 
-        setProducts((prev) => [
-          {
-            id: newRef.key,
-            ...newProduct,
-          },
-          ...prev,
-        ]);
+        // The products listener adds it too; replace rather than duplicate.
+        setProducts((prev) =>
+          upsertById(prev, { id: newRef.key, ...newProduct }),
+        );
 
         notify("Product added.");
       }

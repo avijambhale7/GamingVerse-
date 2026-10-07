@@ -6,7 +6,7 @@
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         ".write": "auth != null && auth.uid === $uid && data.child('isBanned').val() !== true",
-        ".validate": "newData.child('isBanned').val() === data.child('isBanned').val() || root.child('users').child(auth.uid).child('role').val() === 'admin'",
+        ".validate": "(newData.child('isBanned').val() === data.child('isBanned').val() || root.child('users').child(auth.uid).child('role').val() === 'admin') && (!data.child('dob').exists() || newData.child('dob').exists() || root.child('users').child(auth.uid).child('role').val() === 'admin') && (!data.child('age').exists() || newData.child('age').exists() || root.child('users').child(auth.uid).child('role').val() === 'admin')",
         "isBanned": {
           ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
           ".validate": "newData.isBoolean()"
@@ -26,6 +26,14 @@
         },
         "phone": {
           ".validate": "newData.isString() && newData.val().matches(/^[6-9][0-9]{9}$/)"
+        },
+        "dob": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+          ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/) && (!data.exists() || newData.val() === data.val() || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+        },
+        "age": {
+          ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+          ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 120 && (!data.exists() || newData.val() === data.val() || root.child('users').child(auth.uid).child('role').val() === 'admin')"
         }
       }
     },
@@ -47,6 +55,7 @@
           "gameImage": { ".validate": "newData.isString() && newData.val().beginsWith('https://') && newData.val().length <= 2048" },
           "text": { ".validate": "newData.isString() && newData.val().length <= 1000" },
           "userName": { ".validate": "newData.isString()" },
+          "userHandle": { ".validate": "newData.isString() && newData.val() === root.child('users').child(auth.uid).child('username').val()" },
           "initials": { ".validate": "newData.isString()" },
           "createdAt": { ".validate": true },
           "updatedAt": { ".validate": true },
@@ -64,6 +73,7 @@
               ".validate": "newData.hasChildren(['userId', 'text', 'createdAt'])",
               "userId": { ".validate": "newData.val() === auth.uid" },
               "userName": { ".validate": "newData.isString()" },
+              "userHandle": { ".validate": "newData.isString() && newData.val() === root.child('users').child(auth.uid).child('username').val()" },
               "initials": { ".validate": "newData.isString()" },
               "text": {
                 ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 500"

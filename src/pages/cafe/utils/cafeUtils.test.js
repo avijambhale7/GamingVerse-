@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { cachedCoords, distanceKm, formatKm } from "./geo.js";
 import { stars, summariseReviews } from "./reviews.js";
+import { decodeTicket, encodeTicket } from "./ticket.js";
 
 describe("cachedCoords (from a Google Maps link)", () => {
   it("reads @lat,lng links", () => {
@@ -62,5 +63,29 @@ describe("summariseReviews", () => {
   it("draws star strings", () => {
     expect(stars(4)).toBe("★★★★☆");
     expect(stars(4.6)).toBe("★★★★★");
+  });
+});
+
+describe("ticket codes (QR or typed by hand)", () => {
+  it("round-trips a ticket", () => {
+    expect(decodeTicket(encodeTicket("uid123", "-Nbooking"))).toEqual({
+      uid: "uid123",
+      bookingId: "-Nbooking",
+    });
+  });
+
+  it("ignores spaces and line breaks from typing or pasting", () => {
+    expect(decodeTicket("  uid123 | -Nbooking" + String.fromCharCode(10))).toEqual({
+      uid: "uid123",
+      bookingId: "-Nbooking",
+    });
+  });
+
+  it("rejects anything that isn't exactly uid|bookingId", () => {
+    expect(decodeTicket("")).toBeNull();
+    expect(decodeTicket("justone")).toBeNull();
+    expect(decodeTicket("a|")).toBeNull();
+    expect(decodeTicket("a|b|c")).toBeNull();
+    expect(decodeTicket(null)).toBeNull();
   });
 });

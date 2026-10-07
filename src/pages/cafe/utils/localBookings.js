@@ -11,7 +11,11 @@ function localBookingKey(uid) {
 export function loadLocalBookings(uid) {
   try {
     const data = JSON.parse(localStorage.getItem(localBookingKey(uid)) || "[]");
-    return Array.isArray(data) ? data : [];
+    // Device-only bookings get a stable id for list keys (older ones were
+    // saved without one). "local-" ids are never sent to the database.
+    return Array.isArray(data)
+      ? data.map((b) => (b?.id ? b : { ...b, id: `local-${b?.localId}` }))
+      : [];
   } catch {
     return [];
   }

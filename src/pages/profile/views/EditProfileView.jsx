@@ -13,6 +13,7 @@ export default function EditProfileView({
   photoFile,
   profile,
   profileAge,
+  dobLocked = false,
   saving,
   setIsEditing,
 }) {
@@ -167,7 +168,15 @@ export default function EditProfileView({
                   name="dob"
                   value={profile.dob}
                   onChange={handleEditChange}
+                  readOnly={dobLocked}
+                  disabled={dobLocked}
+                  aria-describedby={dobLocked ? "dob-locked-note" : undefined}
                 />
+                {dobLocked && (
+                  <small id="dob-locked-note">
+                    Contact support to change your date of birth.
+                  </small>
+                )}
               </div>
 
               <div className="edit-field full-field age-status-field">

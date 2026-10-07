@@ -408,6 +408,9 @@
 .prc-filters button.is-open {
   --k: 245, 179, 1;
 }
+.prc-filters button.is-approved {
+  --k: 56, 189, 248;
+}
 .prc-filters button.is-accepted {
   --k: 16, 185, 129;
 }
@@ -467,5 +470,51 @@
   .prc-steps li.current i,
   .prc-empty span {
     animation: none;
+  }
+}
+
+/* "Moved to Accepted · View" after an action moves a card to another tab */
+.prc-moved {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 10px 12px 10px 14px;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 14px;
+  background: rgba(16, 185, 129, 0.1);
+  color: #d1fae5;
+  font-size: 14px;
+  animation: prc-moved-in 0.2s ease;
+}
+.prc-moved > span {
+  flex: 1;
+}
+.prc-moved button {
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.prc-moved .prc-moved-close {
+  padding: 2px 9px;
+  border: 0;
+  background: none;
+  color: #a7f3d0;
+  font-size: 18px;
+}
+@keyframes prc-moved-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }

@@ -108,3 +108,20 @@ export function authErrorMessage(code, action = "login") {
     BY_ACTION[action]?.[code] || COMMON[code] || FALLBACK[action] || FALLBACK.login
   );
 }
+
+const ROLE_LABELS = {
+  admin: "Admin",
+  owner: "Owner",
+  cafe_owner: "Café owner",
+  shop_owner: "Shop owner",
+  accessory_owner: "Accessory seller",
+};
+
+// "cafe_owner" → "Café owner" (unknown roles are tidied up, not shown raw).
+export function roleLabel(role = "") {
+  const key = String(role || "").toLowerCase();
+  if (!key) return "";
+  if (ROLE_LABELS[key]) return ROLE_LABELS[key];
+  const words = key.replace(/_/g, " ");
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}

@@ -301,7 +301,7 @@ export default function HomeView({
                 <div className="automatic-games-message">
                   <span>⚠️</span>
                   <div>
-                    <strong>Automatic games are not connected yet.</strong>
+                    <strong>Latest games unavailable</strong>
                     <p>{automaticGamesError}</p>
                   </div>
                 </div>

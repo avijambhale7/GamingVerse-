@@ -93,6 +93,19 @@ export default function ProfileGate({ user }) {
     };
   }, [claimKey]);
 
+  // Accounts made with Google (or before email was stored) can lack
+  // users/{uid}/email — fill it in from the sign-in account, quietly.
+  const missingEmail =
+    user && profile.uid === user.uid && profile.data && profile.data.role !== "unknown"
+      ? !profile.data.email && Boolean(user.email)
+      : false;
+  useEffect(() => {
+    if (!missingEmail) return;
+    update(ref(db, `users/${user.uid}`), { email: user.email }).catch((error) =>
+      console.warn("Could not save account email:", error),
+    );
+  }, [missingEmail, user]);
+
   if (!data) return null;
   const role = String(data.role || "").toLowerCase();
   if (role === "admin" || role === "unknown") return null;
@@ -123,6 +136,7 @@ export default function ProfileGate({ user }) {
     setError("");
 
     const updates = {};
+    if (!data.email && user.email) updates.email = user.email;
     if (needsPhone) {
       if (!isValidPhone(values.phone)) {
         setError("Enter a valid 10-digit Indian mobile number.");

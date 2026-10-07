@@ -53,6 +53,8 @@ import {
   deleteBooking,
   indexBookings,
 } from "./cafe/utils/bookingWrites.js";
+import { upsertById } from "../utils/listUtils.js";
+import { plural } from "../utils/authorLabel.js";
 
 // The map library (Leaflet) only downloads when someone opens Map view.
 const CafeMap = lazy(() => import("./cafe/views/CafeMap.jsx"));
@@ -516,7 +518,8 @@ export default function Cafe() {
           customerPhone,
         };
 
-        setBookings((prev) => [firebaseBooking, ...prev]);
+        // The bookings listener adds it too; replace rather than duplicate.
+        setBookings((prev) => upsertById(prev, firebaseBooking));
         savedToFirebase = true;
 
         // Tell the café owner (in-app + push).
@@ -533,13 +536,14 @@ export default function Cafe() {
       }
 
       if (!savedToFirebase) {
+        const localBooking = { ...bookingBase, id: `local-${localId}` };
         const localBookings = loadLocalBookings(user.uid);
-        saveLocalBookings(user.uid, [bookingBase, ...localBookings]);
+        saveLocalBookings(user.uid, upsertById(localBookings, localBooking));
 
-        setBookings((prev) => [bookingBase, ...prev]);
+        setBookings((prev) => upsertById(prev, localBooking));
 
         notify(
-          "✓ Booking request saved on this device. Connect Firebase Database write access to sync across devices.",
+          "Booking saved on this device only — please check your internet connection and try again.",
         );
       } else {
         notify(
@@ -631,8 +635,9 @@ export default function Cafe() {
   };
 
   const cafeStats = {
+    // Every seat is a gaming station; setups (specs) only describe them.
     stations: cafes.reduce(
-      (sum, cafe) => sum + (cafe.specs.length || cafe.totalSeats || 0),
+      (sum, cafe) => sum + (Number(cafe.totalSeats) || cafe.specs.length || 0),
       0,
     ),
     fromPrice: cafes.length
@@ -686,7 +691,7 @@ export default function Cafe() {
               </div>
               <div>
                 <strong>{cafeStats.stations}</strong>
-                <small>Stations</small>
+                <small>{cafeStats.stations === 1 ? "Station" : "Stations"}</small>
               </div>
               <div>
                 <strong>
@@ -912,7 +917,7 @@ export default function Cafe() {
                   <span>
                     🕘 {selectedCafe.opening} – {selectedCafe.closing}
                   </span>
-                  <span>🎮 {totalSeats} gaming stations</span>
+                  <span>🎮 {plural(totalSeats, "gaming station")}</span>
                   <span>₹{selectedCafe.pricePerHour}/hr</span>
                 </div>
                 <div className="cafe-links">
@@ -1000,7 +1005,7 @@ export default function Cafe() {
                       <small>
                         {loadingSlots
                           ? "Checking availability..."
-                          : `${totalSeats} stations per slot`}
+                          : `${plural(totalSeats, "station")} per slot`}
                       </small>
                     </div>
                     {timeSlots.length === 0 && (

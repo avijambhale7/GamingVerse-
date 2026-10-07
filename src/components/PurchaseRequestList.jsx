@@ -8,30 +8,12 @@
 import { useState } from "react";
 import PurchaseRequestCard from "./PurchaseRequestCard.jsx";
 import usePurchaseRequests from "../utils/usePurchaseRequests.js";
-import { REQUEST_STATUS, isOpenRequest } from "../utils/purchaseRequests.js";
-
-const FILTERS = [
-  { id: "open", label: "Pending" },
-  { id: "accepted", label: "Accepted" },
-  { id: "closed", label: "Rejected / Cancelled" },
-  { id: "all", label: "All" },
-];
-
-function matches(request, filter, role) {
-  if (filter === "all") return true;
-  if (filter === "accepted") return request.status === REQUEST_STATUS.ACCEPTED;
-  if (filter === "open") {
-    // "Pending" means waiting on *this* role where that makes sense.
-    if (role === "admin") return request.status === REQUEST_STATUS.PENDING_ADMIN;
-    if (role === "seller")
-      return request.status === REQUEST_STATUS.PENDING_SELLER;
-    return isOpenRequest(request.status);
-  }
-  return (
-    !isOpenRequest(request.status) &&
-    request.status !== REQUEST_STATUS.ACCEPTED
-  );
-}
+import {
+  requestMatchesTab,
+  requestTabLabel,
+  requestTabOf,
+  requestTabsFor,
+} from "../utils/requestTabs.js";
 
 const EMPTY_TEXT = {
   buyer: "Open any product and tap “Request to Buy”.",
@@ -51,27 +33,63 @@ export default function PurchaseRequestList({
   const own = usePurchaseRequests(role, data ? "" : uid);
   const { requests, error } = data || own;
   const [filter, setFilter] = useState("open");
+  // The request this user just acted on. When its new status moves it out
+  // of the open tab, say where it went instead of letting it vanish.
+  const [actedId, setActedId] = useState("");
+  const tabs = requestTabsFor(role);
 
-  const visible = requests.filter((r) => matches(r, filter, role));
+  const visible = requests.filter((r) => requestMatchesTab(r, filter, role));
+
+  const acted = actedId ? requests.find((r) => r.id === actedId) : null;
+  const movedTo =
+    acted && filter !== "all" && !requestMatchesTab(acted, filter, role)
+      ? requestTabOf(acted, role)
+      : "";
+
+  const openTab = (tab) => {
+    setFilter(tab);
+    setActedId("");
+  };
 
   return (
     <div className="prc-wrap">
       <div className="prc-filters" role="tablist">
-        {FILTERS.map((item) => (
+        {tabs.map((item) => (
           <button
             key={item.id}
             type="button"
             role="tab"
             aria-selected={filter === item.id}
             className={`is-${item.id}${filter === item.id ? " active" : ""}`}
-            onClick={() => setFilter(item.id)}
+            onClick={() => openTab(item.id)}
           >
             <i aria-hidden="true" />
             {item.label}
-            <b>{requests.filter((r) => matches(r, item.id, role)).length}</b>
+            <b>
+              {requests.filter((r) => requestMatchesTab(r, item.id, role)).length}
+            </b>
           </button>
         ))}
       </div>
+
+      {movedTo && (
+        <div className="prc-moved" role="status">
+          <span>
+            ✓ Moved to <strong>{requestTabLabel(movedTo)}</strong>
+          </span>
+          <button type="button" onClick={() => openTab(movedTo)}>
+            View
+          </button>
+          <button
+            type="button"
+            className="prc-moved-close"
+            aria-label="Dismiss"
+            onClick={() => setActedId("")}
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {error ? (
         <div className="prc-empty">
@@ -107,6 +125,7 @@ export default function PurchaseRequestList({
               request={request}
               role={role}
               onMessage={onMessage}
+              onActed={() => setActedId(request.id)}
             />
           ))}
         </div>

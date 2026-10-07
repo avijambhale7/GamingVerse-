@@ -284,18 +284,18 @@ function UserProfilePage({ uid }) {
           <div className="profile-stats">
             <div>
               <strong>{posts.length}</strong>
-              <span>Posts</span>
+              <span>{posts.length === 1 ? "Post" : "Posts"}</span>
             </div>
             <div>
               <strong>{reviews.length}</strong>
-              <span>Reviews</span>
+              <span>{reviews.length === 1 ? "Review" : "Reviews"}</span>
             </div>
           </div>
 
           <div className="profile-social">
             <div className="profile-social-tile">
               <strong>{followerCount}</strong>
-              <span>Followers</span>
+              <span>{followerCount === 1 ? "Follower" : "Followers"}</span>
             </div>
             <div className="profile-social-tile">
               <strong>{followingCount}</strong>

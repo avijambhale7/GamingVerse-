@@ -53,7 +53,12 @@ function ContactLine({ label, name, phone }) {
   );
 }
 
-export default function PurchaseRequestCard({ request, role, onMessage }) {
+export default function PurchaseRequestCard({
+  request,
+  role,
+  onMessage,
+  onActed,
+}) {
   const [busy, setBusy] = useState(false);
   const [contacts, setContacts] = useState(null);
   const accepted = request.status === REQUEST_STATUS.ACCEPTED;
@@ -76,6 +81,7 @@ export default function PurchaseRequestCard({ request, role, onMessage }) {
     setBusy(true);
     try {
       await action();
+      onActed?.();
       onMessage?.(doneText);
     } catch (error) {
       console.error(error);

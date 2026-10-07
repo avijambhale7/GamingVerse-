@@ -5,6 +5,7 @@ import {
   authErrorMessage,
   homePathFor,
   isBusinessProfile,
+  roleLabel,
   isEmailIdentifier,
   returnPathFrom,
 } from "./authFlow.js";
@@ -136,5 +137,21 @@ describe("authErrorMessage", () => {
     expect(authErrorMessage("auth/x", "unknown-action")).toBe(
       "Login failed. Please try again.",
     );
+  });
+});
+
+describe("roleLabel", () => {
+  it("shows business roles in plain words", () => {
+    expect(roleLabel("cafe_owner")).toBe("Café owner");
+    expect(roleLabel("shop_owner")).toBe("Shop owner");
+    expect(roleLabel("accessory_owner")).toBe("Accessory seller");
+    expect(roleLabel("admin")).toBe("Admin");
+    expect(roleLabel("ADMIN")).toBe("Admin");
+  });
+
+  it("tidies unknown roles and handles empty ones", () => {
+    expect(roleLabel("game_master")).toBe("Game master");
+    expect(roleLabel("")).toBe("");
+    expect(roleLabel(undefined)).toBe("");
   });
 });

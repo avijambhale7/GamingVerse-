@@ -122,3 +122,90 @@
   color: #a19dab;
   font-size: 12px;
 }
+
+/* Ticket code under the QR, for owners whose camera can't scan it */
+.cafe-qr-code {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  text-align: left;
+}
+.cafe-qr-code > span {
+  color: #8b8b96;
+  font-size: 11px;
+  font-weight: 700;
+}
+.cafe-qr-code > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cafe-qr-code code {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 9px;
+  overflow-wrap: anywhere;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e9e6f2;
+  font-size: 11px;
+  user-select: all;
+}
+.cafe-qr-code button {
+  flex: 0 0 auto;
+  padding: 7px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* Owner: type or paste a ticket code (no camera / camera blocked) */
+.owner-manual-ticket {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+.owner-manual-ticket label {
+  color: #b9b6c4;
+  font-size: 13px;
+  font-weight: 700;
+}
+.owner-manual-ticket div {
+  display: flex;
+  gap: 8px;
+}
+.owner-manual-ticket input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+}
+.owner-manual-ticket input:focus {
+  outline: none;
+  border-color: rgba(168, 85, 247, 0.7);
+}
+.owner-manual-ticket button {
+  padding: 0 18px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(120deg, #a855f7, #6366f1);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.owner-manual-ticket button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -103,10 +103,18 @@ import {
   normalizePriorityGameName,
   normalizeTrailerGameName,
 } from "./games/utils/text.js";
+import { verdictName } from "../utils/authorLabel.js";
 
 /* =========================================================
    GAMES PAGE
 ========================================================= */
+// Shown to users when live game data (RAWG) can't be loaded; the
+// technical reason goes to the console only.
+const GAMES_UNAVAILABLE_MESSAGE =
+  "Couldn't load the latest games right now. Showing GamingVerse picks.";
+const UPCOMING_UNAVAILABLE_MESSAGE =
+  "Couldn't load upcoming games right now. Please try again later.";
+
 function Games() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -266,6 +274,9 @@ function Games() {
   const [communityReviews, setCommunityReviews] = useState([]);
   const [likedReviewIds, setLikedReviewIds] = useState([]);
   const [userAge, setUserAge] = useState(null);
+  // This account's @username (users/{uid}/username), saved with new
+  // reviews and comments so they show "@handle".
+  const [myHandle, setMyHandle] = useState("");
   const [ageLoading, setAgeLoading] = useState(true);
   const [automaticGames, setAutomaticGames] = useState([]);
   const [automaticGamesLoading, setAutomaticGamesLoading] = useState(true);
@@ -373,6 +384,7 @@ function Games() {
     const unsubscribe = onValue(userRef, (snapshot) => {
       const data = snapshot.val() || {};
       const calculatedAge = calculateAgeFromDob(data.dob);
+      setMyHandle(String(data.username || ""));
 
       setUserAge(
         calculatedAge !== null
@@ -397,14 +409,15 @@ function Games() {
 
     const fetchAutomaticGames = async () => {
       if (!RAWG_ENABLED) {
-        const reason = "Live game data is turned off.";
+        console.info("Live game data (RAWG) is turned off.");
+        const reason = GAMES_UNAVAILABLE_MESSAGE;
 
         setAutomaticGames([]);
         setUpcomingGames([]);
         setAutomaticGamesLoading(false);
         setUpcomingGamesLoading(false);
         setAutomaticGamesError(reason);
-        setUpcomingGamesError(reason);
+        setUpcomingGamesError(UPCOMING_UNAVAILABLE_MESSAGE);
         return;
       }
 
@@ -679,17 +692,11 @@ function Games() {
           const reason = /failed to fetch|networkerror|load failed/i.test(raw)
             ? "Could not reach RAWG. The API key may be invalid or out of quota, or the network is blocking api.rawg.io."
             : raw;
+          // Details are for developers (console); users get a plain line.
+          console.error("Live games unavailable:", reason);
 
-          setAutomaticGamesError(
-            `Automatic game refresh failed. Your saved GamingVerse games are still available.${
-              reason ? ` ${reason}` : ""
-            }`,
-          );
-          setUpcomingGamesError(
-            `Upcoming games could not be loaded right now.${
-              reason ? ` ${reason}` : ""
-            }`,
-          );
+          setAutomaticGamesError(GAMES_UNAVAILABLE_MESSAGE);
+          setUpcomingGamesError(UPCOMING_UNAVAILABLE_MESSAGE);
         }
       } finally {
         if (!cancelled) {
@@ -1260,6 +1267,7 @@ function Games() {
               id: commentId,
               userId: comment?.userId || "",
               userName: comment?.userName || "Gamer",
+              userHandle: comment?.userHandle || "",
               initials: comment?.initials || "G",
               text: String(comment?.text || ""),
               createdAt: Number(comment?.createdAt) || 0,
@@ -1273,6 +1281,7 @@ function Games() {
             id: userId,
             userId,
             userName: userReview.userName || "Gamer",
+            userHandle: userReview.userHandle || "",
             initials: userReview.initials || "G",
             verdict: userReview.review,
             text: String(userReview.text || "").trim(),
@@ -1315,30 +1324,41 @@ function Games() {
     // selectedGame with a copy, which used to tear down and rebuild this
     // subscription — and reset the composer — for the same game.
   }, [selectedGameName]);
-  const toggleSavedList = (listName, gameName, setList) => {
-    setList((current) => {
-      const next = current.includes(gameName)
-        ? current.filter((name) => name !== gameName)
-        : [...current, gameName];
+  // Works out the new list first, then updates state, saves and notifies
+  // once. (Doing the saving/notifying inside setList's updater could run
+  // it twice, because React may call updaters more than once.)
+  const toggleSavedList = (listName, gameName, list, setList) => {
+    const adding = !list.includes(gameName);
+    const next = adding
+      ? [...list, gameName]
+      : list.filter((name) => name !== gameName);
+    setList(next);
+    try {
       localStorage.setItem(listName, JSON.stringify(next));
-      addGamingVerseNotification(
-        next.includes(gameName) ? "GamingVerse" : "GamingVerse",
-        `${gameName} ${next.includes(gameName) ? "was added to" : "was removed from"} ${
-          listName === "gamingverse_watched"
-            ? "Watched"
-            : listName === "gamingverse_collections"
-              ? "Collections"
-              : "Play Later"
-        }.`,
-        "activity",
-      );
-      return next;
-    });
+    } catch {
+      // Storage full/unavailable — the list still updates for this visit.
+    }
+    addGamingVerseNotification(
+      "GamingVerse",
+      `${gameName} ${adding ? "was added to" : "was removed from"} ${
+        listName === "gamingverse_watched"
+          ? "Watched"
+          : listName === "gamingverse_collections"
+            ? "Collections"
+            : "Play Later"
+      }.`,
+      "activity",
+    );
   };
   const toggleWatched = () => {
     if (!selectedGame) return;
     const wasMarked = watchedGames.includes(selectedGame.name);
-    toggleSavedList("gamingverse_watched", selectedGame.name, setWatchedGames);
+    toggleSavedList(
+      "gamingverse_watched",
+      selectedGame.name,
+      watchedGames,
+      setWatchedGames,
+    );
 
     // Upcoming games: "Mark as Interested" also sets a release alert.
     const uid = auth.currentUser?.uid;
@@ -1370,6 +1390,7 @@ function Games() {
     toggleSavedList(
       "gamingverse_collections",
       selectedGame.name,
+      collectionGames,
       setCollectionGames,
     );
   };
@@ -1378,6 +1399,7 @@ function Games() {
     toggleSavedList(
       "gamingverse_watch_later",
       selectedGame.name,
+      watchLaterGames,
       setWatchLaterGames,
     );
   };
@@ -1833,7 +1855,7 @@ function Games() {
     if (!text) {
       addGamingVerseNotification(
         "GamingVerse Verdict",
-        `Your ${composerVerdict.replace("-", " ")} verdict for ${selectedGame.name} was saved.`,
+        `Your '${verdictName(composerVerdict)}' verdict for ${selectedGame.name} was saved.`,
         "activity",
       );
       return;
@@ -1843,7 +1865,7 @@ function Games() {
     setReviewMessage("✓ Review posted successfully.");
     addGamingVerseNotification(
       "GamingVerse Review",
-      `Your ${composerVerdict.replace("-", " ")} review for ${selectedGame.name} was posted.`,
+      `Your '${verdictName(composerVerdict)}' review for ${selectedGame.name} was posted.`,
       "activity",
     );
   };
@@ -1892,6 +1914,7 @@ function Games() {
       await push(ref(db, `gameReviews/${gameId}/${reviewId}/comments`), {
         userId: user.uid,
         userName: displayName,
+        ...(myHandle ? { userHandle: myHandle } : {}),
         initials: displayName.charAt(0).toUpperCase(),
         text: body.slice(0, 500),
         createdAt: Date.now(),
@@ -1982,6 +2005,7 @@ function Games() {
         gameName: selectedGame.name,
         userId,
         userName: displayName,
+        ...(myHandle ? { userHandle: myHandle } : {}),
         initials: displayName.charAt(0).toUpperCase(),
         review: reviewId,
         text: text || existing?.text || "",

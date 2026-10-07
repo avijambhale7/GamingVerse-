@@ -26,6 +26,7 @@ import usePurchaseRequests from "../utils/usePurchaseRequests.js";
 import { REQUEST_STATUS } from "../utils/purchaseRequests.js";
 import { notifyUser } from "../utils/notify.js";
 import ProductImage from "./marketplace/views/ProductImage.jsx";
+import { roleLabel } from "../utils/authFlow.js";
 
 // Module scope, evaluated once at page load — not a render-time call, so
 // the activity chart's "last 14 days" window doesn't need Date.now() (an
@@ -496,11 +497,6 @@ export default function Admin() {
   }, [users, bookings, purchaseRequests]);
 
   // Business signups request a role; an admin grants it here.
-  const ROLE_LABELS = {
-    cafe_owner: "Café owner",
-    shop_owner: "Shop owner",
-    accessory_owner: "Accessory seller",
-  };
   const pendingBusinesses = users.filter((u) => u.requestedRole && !u.role);
   const decideBusiness = async (account, approve) => {
     try {
@@ -511,7 +507,7 @@ export default function Admin() {
       notifyUser(
         account.uid,
         approve
-          ? `Your ${ROLE_LABELS[account.requestedRole] || "business"} account was approved. Your dashboard is ready.`
+          ? `Your ${roleLabel(account.requestedRole) || "business"} account was approved. Your dashboard is ready.`
           : "Your business account request was not approved. Contact GamingVerse support if you think this is a mistake.",
       );
       setMessage(approve ? "Business account approved." : "Business request declined.");
@@ -872,7 +868,7 @@ export default function Admin() {
                         account.email}
                     </strong>
                     <small>
-                      {ROLE_LABELS[account.requestedRole] || account.requestedRole} ·{" "}
+                      {roleLabel(account.requestedRole)} ·{" "}
                       {account.email}
                       {account.phone ? ` · ${account.phone}` : ""}
                     </small>
@@ -939,7 +935,7 @@ export default function Admin() {
                       <div className="admin-user-info">
                         <strong>{name}</strong>
                         <span>{u.email || "No email on file"}</span>
-                        {u.role && <small className="admin-role-tag">{u.role}</small>}
+                        {u.role && <small className="admin-role-tag">{roleLabel(u.role)}</small>}
                       </div>
                       <div className="admin-row-actions">
                         {u.isBanned ? (

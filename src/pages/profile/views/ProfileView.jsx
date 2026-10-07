@@ -129,7 +129,9 @@ export default function ProfileView({
               onClick={() => openSocialModal("followers")}
             >
               <strong>{socialLists.followers.length}</strong>
-              <span>Followers</span>
+              <span>
+                {socialLists.followers.length === 1 ? "Follower" : "Followers"}
+              </span>
             </button>
             <button
               type="button"

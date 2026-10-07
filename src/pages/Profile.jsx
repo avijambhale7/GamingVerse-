@@ -33,6 +33,10 @@ function Profile() {
   );
 
   const [accountRole, setAccountRole] = useState("");
+  // The date of birth already saved on the account. Once set it can't be
+  // changed here (the database rules only let admins change it), so age
+  // limits can't be bypassed by editing it.
+  const [savedDob, setSavedDob] = useState("");
 
   const [profile, setProfile] = useState({
     firstName: "",
@@ -133,6 +137,7 @@ function Profile() {
 
         const loadedRole = String(data.role || "").toLowerCase();
         setAccountRole(loadedRole);
+        setSavedDob(data.dob || "");
         syncPublicProfile(currentUser.uid, data, currentUser);
 
         setProfile({
@@ -628,8 +633,8 @@ function Profile() {
         firstName: profile.firstName.trim(),
         lastName: profile.lastName.trim(),
         username: finalUsername,
-        dob: profile.dob,
-        age,
+        // Date of birth can only be set once (see savedDob).
+        ...(savedDob ? {} : { dob: profile.dob, age }),
         bio: profile.bio.trim(),
         instagram: profile.instagram.trim(),
         twitter: profile.twitter.trim(),
@@ -653,7 +658,8 @@ function Profile() {
         );
       }
 
-      setProfile(updatedData);
+      setProfile({ ...profile, ...updatedData });
+      if (!savedDob) setSavedDob(profile.dob);
       setPhotoFile(null);
       setMessage("Profile saved successfully.");
 
@@ -715,6 +721,7 @@ function Profile() {
         photoFile={photoFile}
         profile={profile}
         profileAge={profileAge}
+        dobLocked={Boolean(savedDob)}
         saving={saving}
         setIsEditing={setIsEditing}
       />
