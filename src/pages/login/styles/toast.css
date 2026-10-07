@@ -8,7 +8,7 @@
 
 .login-toast {
   position: fixed;
-  top: 22px;
+  top: max(16px, env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
   z-index: 1200;
@@ -36,6 +36,7 @@
     0 0 30px rgba(150, 45, 255, 0.12);
 
   animation: gv-login-toast-in 0.25s ease;
+  cursor: pointer; /* tap to dismiss */
 }
 
 .login-toast-icon {
@@ -74,24 +75,12 @@
   }
 }
 
-/* Phones: the auth modals fill the screen and their ✕ sits at the
-   top, so the notice moves to the bottom where it covers nothing. */
+/* Phones: a pop-up starts 20px from the top (auth-modals.css) and its
+   ✕ ends 67px down, so the notice sits just below it — over the
+   pop-up's icon/title, never its ✕ or its buttons at the bottom. */
 @media (max-width: 500px) {
   .login-toast {
-    top: auto;
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    top: calc(72px + env(safe-area-inset-top, 0px));
     font-size: 12.5px;
-    animation-name: gv-login-toast-up;
-  }
-}
-
-@keyframes gv-login-toast-up {
-  from {
-    opacity: 0;
-    transform: translate(-50%, 12px);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, 0);
   }
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   INVALID_LOGIN_MESSAGE,
+  USERNAME_LOGIN_UNAVAILABLE_MESSAGE,
   authErrorMessage,
   homePathFor,
   isBusinessProfile,
@@ -87,6 +88,20 @@ describe("authErrorMessage", () => {
     ]) {
       expect(authErrorMessage(code, "login")).toBe(INVALID_LOGIN_MESSAGE);
     }
+  });
+
+  it("says when username login is unavailable instead of blaming the password", () => {
+    expect(authErrorMessage("app/username-login-unavailable", "login")).toBe(
+      "Username login isn't available right now. Please log in with your email instead.",
+    );
+    expect(USERNAME_LOGIN_UNAVAILABLE_MESSAGE).not.toBe(INVALID_LOGIN_MESSAGE);
+    // 401 and 429 keep their own messages.
+    expect(authErrorMessage("auth/invalid-credential", "login")).toBe(
+      INVALID_LOGIN_MESSAGE,
+    );
+    expect(authErrorMessage("auth/too-many-requests", "login")).toMatch(
+      /Too many attempts/,
+    );
   });
 
   it("maps the common codes to plain messages", () => {

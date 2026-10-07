@@ -46,6 +46,8 @@ export function isEmailIdentifier(value = "") {
 }
 
 export const INVALID_LOGIN_MESSAGE = "Invalid username/email or password.";
+export const USERNAME_LOGIN_UNAVAILABLE_MESSAGE =
+  "Username login isn't available right now. Please log in with your email instead.";
 
 const COMMON = {
   "auth/too-many-requests":
@@ -69,6 +71,9 @@ const BY_ACTION = {
     "auth/invalid-login-credentials": INVALID_LOGIN_MESSAGE,
     "auth/invalid-custom-token": INVALID_LOGIN_MESSAGE,
     "auth/invalid-email": INVALID_LOGIN_MESSAGE,
+    // /api/resolve-username isn't configured or failed (503 / 5xx) —
+    // not a wrong password, so don't say it is.
+    "app/username-login-unavailable": USERNAME_LOGIN_UNAVAILABLE_MESSAGE,
   },
   signup: {
     "auth/email-already-in-use": "This email is already registered. Log in instead.",

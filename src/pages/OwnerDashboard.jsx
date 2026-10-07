@@ -803,7 +803,7 @@ export default function OwnerDashboard() {
               ? "Overview"
               : item === "cafe"
                 ? "☕ Café Bookings"
-                : "🖱 Accessories Shop"}
+                : "🎧 Accessories Shop"}
           </button>
         ))}
       </nav>
@@ -827,7 +827,7 @@ export default function OwnerDashboard() {
               <small>{pendingBookings.length} active</small>
             </article>
             <article>
-              <i className="dp-stat-icon" aria-hidden="true">🖱</i>
+              <i className="dp-stat-icon" aria-hidden="true">🎧</i>
               <span>Accessories</span>
               <strong>{products.length}</strong>
               <small>live products</small>
@@ -865,7 +865,7 @@ export default function OwnerDashboard() {
               className="owner-module-card"
               onClick={() => setSection("accessories")}
             >
-              <span className="owner-module-icon">🖱</span>
+              <span className="owner-module-icon">🎧</span>
               <h2>Manage Accessories</h2>
               <p>
                 Add computer and gaming accessories, update stock, remove
@@ -1659,7 +1659,7 @@ export default function OwnerDashboard() {
               <div>
                 <strong>{products.length}</strong>
                 <span>
-                  <i aria-hidden="true">🖱</i> Products
+                  <i aria-hidden="true">🎧</i> Products
                 </span>
               </div>
               <div>
@@ -1702,7 +1702,7 @@ export default function OwnerDashboard() {
                   {productForm.image ? (
                     <img src={productForm.image} alt="" />
                   ) : (
-                    <span aria-hidden="true">🖱</span>
+                    <span aria-hidden="true">🎧</span>
                   )}
                   <em>Live preview</em>
                 </div>
@@ -1834,7 +1834,7 @@ export default function OwnerDashboard() {
               </div>
               {products.length === 0 ? (
                 <div className="owner-empty small">
-                  <span>🖱</span>
+                  <span>🎧</span>
                   <strong>No accessories yet</strong>
                   <p>Add your first computer or gaming accessory.</p>
                 </div>
@@ -1855,7 +1855,7 @@ export default function OwnerDashboard() {
                         {product.image ? (
                           <img src={product.image} alt="" />
                         ) : (
-                          <span aria-hidden="true">🖱</span>
+                          <span aria-hidden="true">🎧</span>
                         )}
                         <em className={`dp-stock-badge is-${stockState}`}>
                           {stockState === "out"

@@ -16,10 +16,15 @@
 
   display: flex;
 
-  align-items: center;
+  /* margin: auto on the modal centres it, but unlike align-items:
+     center it never pushes a tall form (sign-up on a phone) above
+     the screen where it can't be scrolled to. */
+  align-items: flex-start;
   justify-content: center;
 
   padding: 20px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 
   background: rgba(0, 0, 0, 0.75);
 
@@ -28,6 +33,8 @@
 
 .auth-modal {
   position: relative;
+
+  margin: auto;
 
   width: 100%;
 

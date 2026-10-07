@@ -82,10 +82,37 @@ async function usernameSignInToken(handle, password) {
     throw authError("auth/network-request-failed");
   }
   if (response.status === 429) throw authError("auth/too-many-requests");
+  // 503 = the server isn't set up for username login; 5xx = it failed.
+  // Neither means the password is wrong, so say so.
+  if (response.status >= 500) {
+    throw authError("app/username-login-unavailable");
+  }
   const body = await response.json().catch(() => ({}));
   if (!response.ok || !body.token) throw authError("auth/invalid-credential");
   return body.token;
 }
+
+// localStorage can throw (private mode, blocked storage) — never let
+// that break the login page.
+function readStorage(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStorage(key, value) {
+  try {
+    if (value === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, value);
+  } catch {
+    /* storage unavailable — the choice just isn't remembered */
+  }
+}
+
+const REMEMBER_ME_KEY = "gamingVerseRememberMe";
+const REMEMBERED_EMAIL_KEY = "gamingVerseEmail";
 
 // Reserve a handle; if someone grabbed it in the last few seconds,
 // fall back to handle + 3 digits rather than failing the signup.
@@ -109,12 +136,18 @@ function Login({ user = null, authLoading = false }) {
   // Seed from the remembered address on the first render so the field does
   // not flash empty before the effect runs.
   const [email, setEmail] = useState(
-    () => localStorage.getItem("gamingVerseEmail") || "",
+    () => readStorage(REMEMBERED_EMAIL_KEY) || "",
   );
   const [password, setPassword] = useState("");
+  // Ticked unless the user un-ticked it before: an unticked box keeps the
+  // session in this tab only, so new tabs and reopened browsers log out.
   const [rememberMe, setRememberMe] = useState(
-    () => Boolean(localStorage.getItem("gamingVerseEmail")),
+    () => readStorage(REMEMBER_ME_KEY) !== "0",
   );
+  const changeRememberMe = (checked) => {
+    setRememberMe(checked);
+    writeStorage(REMEMBER_ME_KEY, checked ? "1" : "0");
+  };
   const [showPassword, setShowPassword] = useState(false);
 
   const [modal, setModal] = useState(null);
@@ -229,11 +262,7 @@ function Login({ user = null, authLoading = false }) {
 
       if (await rejectIfBanned(cred.user.uid)) return;
 
-      if (rememberMe) {
-        localStorage.setItem("gamingVerseEmail", identifier);
-      } else {
-        localStorage.removeItem("gamingVerseEmail");
-      }
+      writeStorage(REMEMBERED_EMAIL_KEY, rememberMe ? identifier : null);
 
       signedIn = true;
       await finishSignIn(cred.user.uid, "Login successful!");
@@ -561,7 +590,12 @@ function Login({ user = null, authLoading = false }) {
   return (
     <div className="login-page">
       {notice && (
-        <div className={`login-toast ${notice.type}`} role="status">
+        <div
+          className={`login-toast ${notice.type}`}
+          role="status"
+          title="Tap to dismiss"
+          onClick={() => setNotice(null)}
+        >
           <span className="login-toast-icon">
             {notice.type === "success"
               ? "✓"
@@ -667,7 +701,7 @@ function Login({ user = null, authLoading = false }) {
               <input
                 type="checkbox"
                 checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
+                onChange={(e) => changeRememberMe(e.target.checked)}
               />
               <span>Remember me</span>
             </label>
@@ -876,7 +910,7 @@ function Login({ user = null, authLoading = false }) {
                   className={ownerSignupRole === "shop_owner" ? "active" : ""}
                   onClick={() => setOwnerSignupRole("shop_owner")}
                 >
-                  🖱 Accessories Shop
+                  🎧 Accessories Shop
                 </button>
               </div>
 

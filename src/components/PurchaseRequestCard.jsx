@@ -99,7 +99,7 @@ export default function PurchaseRequestCard({ request, role, onMessage }) {
           <img src={request.productImage} alt="" />
         ) : (
           <span aria-hidden="true">
-            {request.productType === "accessory" ? "🖱" : "🎮"}
+            {request.productType === "accessory" ? "🎧" : "🎮"}
           </span>
         )}
       </div>
