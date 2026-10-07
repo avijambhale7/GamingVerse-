@@ -68,3 +68,21 @@ export function initialRequestTab(requests = [], role) {
   const known = requestTabsFor(role).some((item) => item.id === tab);
   return known && list.some((r) => requestMatchesTab(r, tab, role)) ? tab : "all";
 }
+
+const SELLER_ROLES = new Set(["owner", "cafe_owner", "shop_owner", "accessory_owner"]);
+
+// Requests waiting on the admin whose seller is an approved business
+// account (not just requested, not banned) — what "Approve all" may
+// approve in one go. `users` is a list of { uid, role, isBanned }.
+export function bulkApprovableRequests(requests = [], users = []) {
+  const byUid = new Map((Array.isArray(users) ? users : []).map((u) => [u.uid, u]));
+  return (Array.isArray(requests) ? requests : []).filter((request) => {
+    if (request?.status !== "pending_admin") return false;
+    const seller = byUid.get(request.sellerId);
+    return Boolean(
+      seller &&
+        SELLER_ROLES.has(String(seller.role || "").toLowerCase()) &&
+        seller.isBanned !== true,
+    );
+  });
+}

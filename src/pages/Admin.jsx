@@ -23,13 +23,16 @@ import AdminInsights from "./admin/AdminInsights.jsx";
 import NotificationBell from "../components/NotificationBell.jsx";
 import PurchaseRequestList from "../components/PurchaseRequestList.jsx";
 import usePurchaseRequests from "../utils/usePurchaseRequests.js";
-import { REQUEST_STATUS } from "../utils/purchaseRequests.js";
+import { REQUEST_STATUS, adminDecide } from "../utils/purchaseRequests.js";
+import { bulkApprovableRequests } from "../utils/requestTabs.js";
 import { notifyUser } from "../utils/notify.js";
 import ProductImage from "./marketplace/views/ProductImage.jsx";
 import { roleLabel } from "../utils/authFlow.js";
 import AdminBirthDate from "./admin/AdminBirthDate.jsx";
 import AdminAttention from "./admin/AdminAttention.jsx";
 import { countOpenReports } from "../utils/purchaseReports.js";
+import { oldestTime } from "../utils/systemStatus.js";
+import AdminSystemStatus from "./admin/AdminSystemStatus.jsx";
 
 // Module scope, evaluated once at page load — not a render-time call, so
 // the activity chart's "last 14 days" window doesn't need Date.now() (an
@@ -368,6 +371,37 @@ export default function Admin() {
   const pendingRequestCount = purchaseRequests.filter(
     (request) => request.status === REQUEST_STATUS.PENDING_ADMIN,
   ).length;
+
+  // "Approve all": pending requests whose seller is an approved business.
+  const bulkApprovable = bulkApprovableRequests(purchaseRequests, users);
+  const [bulkApproving, setBulkApproving] = useState(false);
+  const approveAllRequests = async () => {
+    const list = bulkApprovable;
+    if (!list.length) return;
+    if (
+      !window.confirm(
+        `Approve ${list.length} purchase request${list.length === 1 ? "" : "s"} from approved sellers? Each one is sent to its seller.`,
+      )
+    ) {
+      return;
+    }
+    setBulkApproving(true);
+    let approved = 0;
+    for (const request of list) {
+      try {
+        await adminDecide(request, true);
+        approved += 1;
+      } catch (error) {
+        console.error("Approve all error:", error);
+      }
+    }
+    setBulkApproving(false);
+    setMessage(
+      approved === list.length
+        ? `Approved ${approved} request${approved === 1 ? "" : "s"}.`
+        : `Approved ${approved} of ${list.length} — the rest couldn't be approved, try again.`,
+    );
+  };
 
   const filteredUsers = useMemo(() => {
     const q = userSearch.trim().toLowerCase();
@@ -777,6 +811,7 @@ export default function Admin() {
                 icon: "💼",
                 label: "Business accounts to approve",
                 count: pendingBusinesses.length,
+                oldest: oldestTime(pendingBusinesses),
                 section: "users",
               },
               {
@@ -784,6 +819,7 @@ export default function Admin() {
                 icon: "☕",
                 label: "Cafés to review",
                 count: cafes.filter((c) => c.status === "pending").length,
+                oldest: oldestTime(cafes.filter((c) => c.status === "pending")),
                 section: "cafes",
               },
               {
@@ -791,6 +827,11 @@ export default function Admin() {
                 icon: "📨",
                 label: "Purchase requests to approve",
                 count: pendingRequestCount,
+                oldest: oldestTime(
+                  purchaseRequests.filter(
+                    (r) => r.status === REQUEST_STATUS.PENDING_ADMIN,
+                  ),
+                ),
                 section: "requests",
               },
               {
@@ -798,11 +839,18 @@ export default function Admin() {
                 icon: "⚑",
                 label: "Open deal problem reports",
                 count: countOpenReports(purchaseReports),
+                oldest: oldestTime(
+                  Object.values(purchaseReports).flatMap((byUser) =>
+                    Object.values(byUser || {}).filter((r) => r && !r.resolvedAt),
+                  ),
+                ),
                 section: "requests",
               },
             ]}
             onOpen={setSection}
           />
+
+          <AdminSystemStatus />
 
           <section className="admin-stat-grid">
             <article>
@@ -877,6 +925,24 @@ export default function Admin() {
               <span>Awaiting approval</span>
             </div>
           </section>
+          {bulkApprovable.length > 0 && (
+            <section className="admin-bulk-approve">
+              <p>
+                <strong>{bulkApprovable.length}</strong> waiting request
+                {bulkApprovable.length === 1 ? " is" : "s are"} from approved
+                sellers.
+              </p>
+              <button
+                type="button"
+                onClick={approveAllRequests}
+                disabled={bulkApproving}
+              >
+                {bulkApproving
+                  ? "Approving…"
+                  : `✓ Approve all (${bulkApprovable.length})`}
+              </button>
+            </section>
+          )}
           <section className="admin-table-card">
             <PurchaseRequestList
               role="admin"

@@ -1,0 +1,65 @@
+# Publishes database.rules.json to the live Firebase Realtime Database.
+#
+# Runs on every push to main that changes database.rules.json, or by hand
+# (Actions → "Deploy database rules" → Run workflow). The rules are first
+# compiled in the Firebase emulator; a broken rule stops the deploy.
+#
+# Needs one repository secret: FIREBASE_SERVICE_ACCOUNT — the same
+# service-account JSON used on Vercel (see README → "Deploying database
+# rules"). No tokens are stored in the repo.
+name: Deploy database rules
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - database.rules.json
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-database-rules
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # The Realtime Database emulator runs on Java.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Validate rules in the Firebase emulator
+        run: >
+          npx --yes firebase-tools@13 emulators:exec
+          --only database --project demo-gamingverse
+          "node scripts/validate-rules.mjs"
+
+      - name: Check the deploy secret is set
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::error::Add the FIREBASE_SERVICE_ACCOUNT repository secret (see README → Deploying database rules)."
+            exit 1
+          fi
+
+      - name: Deploy rules
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          # Write the key outside the repo, use it, then delete it.
+          KEY_FILE="$RUNNER_TEMP/firebase-service-account.json"
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$KEY_FILE"
+          export GOOGLE_APPLICATION_CREDENTIALS="$KEY_FILE"
+          npx --yes firebase-tools@13 deploy --only database \
+            --project gamingverse-26e57 --non-interactive
+          rm -f "$KEY_FILE"

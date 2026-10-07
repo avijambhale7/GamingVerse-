@@ -4,8 +4,12 @@
    an admin; each line opens the tab where it's handled.
    Rendered by ../Admin.jsx.
 ========================================================= */
+import { useState } from "react";
+import { waitingLabel } from "../../utils/systemStatus.js";
 
 export default function AdminAttention({ items, onOpen }) {
+  // Captured when the Overview opens; fine for "waiting 2 days".
+  const [now] = useState(() => Date.now());
   const total = items.reduce((sum, item) => sum + item.count, 0);
 
   return (
@@ -28,7 +32,12 @@ export default function AdminAttention({ items, onOpen }) {
               onClick={() => onOpen(item.section)}
             >
               <span aria-hidden="true">{item.icon}</span>
-              <span className="admin-attention-label">{item.label}</span>
+              <span className="admin-attention-label">
+                {item.label}
+                {item.count > 0 && waitingLabel(item.oldest, now) && (
+                  <small>oldest: {waitingLabel(item.oldest, now)}</small>
+                )}
+              </span>
               <strong>{item.count}</strong>
               <em aria-hidden="true">›</em>
             </button>

@@ -7,7 +7,7 @@ import react from '@vitejs/plugin-react'
 // needs FIREBASE_SERVICE_ACCOUNT in .env.local; without it, username
 // login answers "invalid" in dev and email login still works.
 // (send-push still needs Vercel.)
-const DEV_APIS = ['trailer', 'rawg', 'resolve-username']
+const DEV_APIS = ['trailer', 'rawg', 'resolve-username', 'health']
 
 // Vercel parses JSON request bodies; do the same for the dev server.
 function readJsonBody(req) {

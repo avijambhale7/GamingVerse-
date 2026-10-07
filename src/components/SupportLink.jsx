@@ -9,6 +9,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import {
   SUPPORT_EMAIL,
+  SUPPORT_WHATSAPP,
   supportMailto,
   supportWhatsAppUrl,
 } from "../config/support.js";
@@ -66,18 +67,20 @@ export default function SupportLink({
                   : "Questions, a problem with an account, booking or deal? We're here to help."}
               </p>
 
-              <a
-                className="support-option is-whatsapp"
-                href={supportWhatsAppUrl(whatsappText)}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span aria-hidden="true">🟢</span>
-                <div>
-                  <strong>Chat on WhatsApp</strong>
-                  <small>Usually the fastest reply</small>
-                </div>
-              </a>
+              {SUPPORT_WHATSAPP && (
+                <a
+                  className="support-option is-whatsapp"
+                  href={supportWhatsAppUrl(whatsappText)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span aria-hidden="true">🟢</span>
+                  <div>
+                    <strong>Chat on WhatsApp</strong>
+                    <small>Usually the fastest reply</small>
+                  </div>
+                </a>
+              )}
 
               <a className="support-option" href={supportMailto(subject)}>
                 <span aria-hidden="true">✉️</span>

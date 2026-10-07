@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  bulkApprovableRequests,
   initialRequestTab,
   requestMatchesTab,
   requestTabLabel,
@@ -157,5 +158,35 @@ describe("initialRequestTab", () => {
   it("starts on Pending when there are no requests yet", () => {
     expect(initialRequestTab([], "buyer")).toBe("open");
     expect(initialRequestTab(undefined, "admin")).toBe("open");
+  });
+});
+
+describe("bulkApprovableRequests", () => {
+  const users = [
+    { uid: "shop", role: "shop_owner" },
+    { uid: "cafe", role: "cafe_owner" },
+    { uid: "pending", requestedRole: "shop_owner" },
+    { uid: "banned", role: "shop_owner", isBanned: true },
+    { uid: "gamer" },
+  ];
+  const r = (id, sellerId, status = "pending_admin") => ({ id, sellerId, status });
+
+  it("picks pending requests from approved, unbanned sellers only", () => {
+    const list = [
+      r("a", "shop"),
+      r("b", "cafe"),
+      r("c", "pending"),
+      r("d", "banned"),
+      r("e", "gamer"),
+      r("f", "unknown"),
+      r("g", "shop", "pending_seller"),
+      r("h", "shop", "accepted"),
+    ];
+    expect(bulkApprovableRequests(list, users).map((x) => x.id)).toEqual(["a", "b"]);
+  });
+
+  it("copes with missing input", () => {
+    expect(bulkApprovableRequests(undefined, users)).toEqual([]);
+    expect(bulkApprovableRequests([r("a", "shop")], undefined)).toEqual([]);
   });
 });
