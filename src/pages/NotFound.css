@@ -1,0 +1,98 @@
+/* =========================================================
+   NOT FOUND PAGE (NotFound.jsx)
+========================================================= */
+
+.not-found {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px 16px;
+  overflow: hidden;
+  background: #050507;
+  color: #fff;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.not-found-glow {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(168, 85, 247, 0.22), transparent 45%),
+    radial-gradient(circle at 70% 70%, rgba(236, 72, 153, 0.16), transparent 45%);
+  pointer-events: none;
+}
+
+.not-found-card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(460px, 100%);
+  padding: 38px 28px 32px;
+  border: 1px solid rgba(168, 85, 247, 0.28);
+  border-radius: 26px;
+  background: rgba(15, 12, 22, 0.85);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  text-align: center;
+}
+
+.not-found-logo {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 4px;
+}
+
+.not-found-code {
+  margin: 0;
+  background: linear-gradient(120deg, #ec4899, #a855f7 55%, #6366f1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-size: 64px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.not-found-card h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.not-found-text {
+  margin: 0 0 10px;
+  color: #a1a1b5;
+  font-size: 14.5px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.not-found-text code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #e9d5ff;
+  font-size: 13px;
+}
+
+.not-found-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 26px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #ec4899, #a855f7 55%, #6366f1);
+  box-shadow: 0 12px 28px rgba(168, 85, 247, 0.35);
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.not-found-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(168, 85, 247, 0.45);
+}

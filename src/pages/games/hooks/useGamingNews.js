@@ -4,8 +4,20 @@
    key needed), refreshed every 10 minutes, with the saved list in
    ../data/news.js as the fallback. Used by ../../Games.jsx.
 ========================================================= */
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { currentGamingNews } from "../data/news.js";
+
+// Plain text from an RSS title/description (tags and entities removed).
+const cleanNewsText = (value = "") =>
+  String(value)
+    .replace(/<[^>]*>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\s+/g, " ")
+    .trim();
 
 export default function useGamingNews() {
   const [liveNews, setLiveNews] = useState([]);
@@ -13,18 +25,10 @@ export default function useGamingNews() {
   const [newsUpdatedAt, setNewsUpdatedAt] = useState(null);
   const [newsError, setNewsError] = useState("");
 
-  const cleanNewsText = (value = "") =>
-    String(value)
-      .replace(/<[^>]*>/g, "")
-      .replace(/&amp;/g, "&")
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/\s+/g, " ")
-      .trim();
-
-  const fetchLiveGamingNews = async () => {
+  // Stable across renders (it only uses state setters), so the refresh
+  // timer below is set up once and the returned function is safe to
+  // pass around.
+  const fetchLiveGamingNews = useCallback(async () => {
     try {
       setNewsLoading(true);
       setNewsError("");
@@ -106,7 +110,7 @@ export default function useGamingNews() {
     } finally {
       setNewsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- load the news feed on mount, then refresh it every 10 minutes.
@@ -115,7 +119,7 @@ export default function useGamingNews() {
     const interval = window.setInterval(fetchLiveGamingNews, 10 * 60 * 1000);
 
     return () => window.clearInterval(interval);
-  }, []);
+  }, [fetchLiveGamingNews]);
 
   const newsItems = liveNews.length ? liveNews : currentGamingNews;
 

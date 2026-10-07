@@ -1,15 +1,20 @@
 import { useEffect, useState } from "react";
 import {
   signInWithEmailAndPassword,
+  signInWithCustomToken,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
   GoogleAuthProvider,
   signInWithPopup,
   signOut,
   updateProfile,
 } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
-import { auth } from "../firebase";
+import { get, ref, set } from "firebase/database";
+import { useLocation, useNavigate } from "react-router-dom";
+import { auth, db } from "../firebase";
 import {
   BANNED_MESSAGE,
   consumeBannedNotice,
@@ -25,6 +30,15 @@ import {
   isValidUsername,
   normalizeUsername,
 } from "../utils/usernames.js";
+import {
+  authErrorMessage,
+  homePathFor,
+  isEmailIdentifier,
+  returnPathFrom,
+} from "../utils/authFlow.js";
+import useEscapeKey from "../utils/useEscapeKey.js";
+import { calculateAgeFromDob } from "./games/utils/access.js";
+import PageLoading from "../components/PageLoading.jsx";
 import "./Login.css";
 
 /* Load all game images from src/assets/horizontal */
@@ -39,8 +53,58 @@ const gameImageModules = import.meta.glob(
 
 const gameImages = Object.values(gameImageModules);
 
-function Login() {
+// The profile (users/{uid}) that decides where a user lands.
+async function readProfile(uid) {
+  try {
+    return (await get(ref(db, `users/${uid}`))).val() || {};
+  } catch (error) {
+    console.error("Profile read error:", error);
+    return {};
+  }
+}
+
+// An auth-style error ({ code }) so every failure goes through
+// authErrorMessage().
+const authError = (code) => Object.assign(new Error(code), { code });
+
+/* Username login: /api/resolve-username checks the username and
+   password on the server and returns a one-time sign-in token. Every
+   failure (unknown username, wrong password…) is the same "invalid". */
+async function usernameSignInToken(handle, password) {
+  let response;
+  try {
+    response = await fetch("/api/resolve-username", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: handle, password }),
+    });
+  } catch {
+    throw authError("auth/network-request-failed");
+  }
+  if (response.status === 429) throw authError("auth/too-many-requests");
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || !body.token) throw authError("auth/invalid-credential");
+  return body.token;
+}
+
+// Reserve a handle; if someone grabbed it in the last few seconds,
+// fall back to handle + 3 digits rather than failing the signup.
+async function claimHandleWithFallback(value, uid) {
+  let handle = normalizeUsername(value);
+  if (!(await claimUsername(handle, uid))) {
+    handle = `${handle.slice(0, 16)}${Math.floor(100 + Math.random() * 900)}`;
+    if (!(await claimUsername(handle, uid))) {
+      throw new Error("Could not reserve a username.");
+    }
+  }
+  return handle;
+}
+
+function Login({ user = null, authLoading = false }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  // The page a signed-out visitor was sent here from (ProtectedRoute).
+  const returnTo = returnPathFrom(location.state?.from);
 
   // Seed from the remembered address on the first render so the field does
   // not flash empty before the effect runs.
@@ -54,6 +118,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [modal, setModal] = useState(null);
+  useEscapeKey(() => setModal(null), Boolean(modal));
 
   const [signupName, setSignupName] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
@@ -64,6 +129,7 @@ function Login() {
   const [signupDob, setSignupDob] = useState("");
 
   const [ownerSignupName, setOwnerSignupName] = useState("");
+  const [ownerSignupUsername, setOwnerSignupUsername] = useState("");
   const [ownerSignupEmail, setOwnerSignupEmail] = useState("");
   const [ownerSignupPhone, setOwnerSignupPhone] = useState("");
   const [ownerSignupPassword, setOwnerSignupPassword] = useState("");
@@ -74,11 +140,15 @@ function Login() {
 
   const [resetEmail, setResetEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  // True while this page is signing someone in / up: it then navigates
+  // itself, so the "already signed in" redirect below stays out of it.
+  const [authBusy, setAuthBusy] = useState(false);
   const [notice, setNotice] = useState(() =>
     hasBannedNotice() ? { text: BANNED_MESSAGE, type: "error" } : null,
   );
 
   const notify = (text, type = "info") => {
+    if (!text) return;
     setNotice({ text, type });
     window.clearTimeout(window.gvLoginNoticeTimer);
     window.gvLoginNoticeTimer = window.setTimeout(
@@ -95,90 +165,90 @@ function Login() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  // Already signed in (App has finished its ban check): /login isn't
+  // for you — go back where you were headed, or to your role's home.
+  const signedInUid = !authLoading && !authBusy ? user?.uid || "" : "";
+  useEffect(() => {
+    if (!signedInUid) return undefined;
+    let cancelled = false;
+    readProfile(signedInUid).then((profile) => {
+      if (!cancelled) navigate(returnTo || homePathFor(profile), { replace: true });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [signedInUid, returnTo, navigate]);
+
+  // After a successful sign-in: show the toast, then go to the page
+  // the user was heading to, or their role's home page.
+  const finishSignIn = async (uid, message) => {
+    const path = returnTo || homePathFor(await readProfile(uid));
+    notify(message, "success");
+    window.setTimeout(() => navigate(path, { replace: true }), 600);
+  };
+
+  // Signed out right after signing in because the account is banned.
+  const rejectIfBanned = async (uid) => {
+    if (!(await isUserBanned(uid))) return false;
+    await signOut(auth);
+    consumeBannedNotice(); // App may have flagged it too
+    notify(BANNED_MESSAGE, "error");
+    return true;
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    if (!email || !password) {
-      notify("Please enter email and password.", "error");
+    const identifier = email.trim();
+    if (!identifier || !password) {
+      notify("Please enter your email or username and password.", "error");
       return;
     }
 
     setLoading(true);
+    setAuthBusy(true);
+    let signedIn = false;
 
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
+      // "Remember me" keeps the session after the browser closes;
+      // otherwise it ends with the browser session.
+      await setPersistence(
+        auth,
+        rememberMe ? browserLocalPersistence : browserSessionPersistence,
+      );
 
-      if (await isUserBanned(cred.user.uid)) {
-        await signOut(auth);
-        consumeBannedNotice(); // App may have flagged it too
-        notify(BANNED_MESSAGE, "error");
-        return;
+      let cred;
+      if (isEmailIdentifier(identifier)) {
+        cred = await signInWithEmailAndPassword(auth, identifier, password);
+      } else {
+        const handle = normalizeUsername(identifier);
+        if (!isValidUsername(handle)) throw authError("auth/invalid-credential");
+        const token = await usernameSignInToken(handle, password);
+        cred = await signInWithCustomToken(auth, token);
       }
 
+      if (await rejectIfBanned(cred.user.uid)) return;
+
       if (rememberMe) {
-        localStorage.setItem("gamingVerseEmail", email);
+        localStorage.setItem("gamingVerseEmail", identifier);
       } else {
         localStorage.removeItem("gamingVerseEmail");
       }
 
-      const { ref, get } = await import("firebase/database");
-      const { db } = await import("../firebase");
-      const userSnap = await get(ref(db, `users/${cred.user.uid}`));
-      const role = String(userSnap.child("role").val() || "").toLowerCase();
-      const awaitingApproval = !role && userSnap.child("requestedRole").exists();
-      const ownerRoles = new Set([
-        "owner",
-        "cafe_owner",
-        "shop_owner",
-        "accessory_owner",
-      ]);
-
-      notify("Login successful!", "success");
-      setTimeout(() => {
-        navigate(
-          role === "admin"
-            ? "/admin"
-            : ownerRoles.has(role) || awaitingApproval
-              ? "/owner-dashboard"
-              : "/games",
-        );
-      }, 600);
+      signedIn = true;
+      await finishSignIn(cred.user.uid, "Login successful!");
     } catch (error) {
       console.error(error);
 
       if (consumeBannedNotice()) {
         notify(BANNED_MESSAGE, "error");
-      } else if (error.code === "auth/invalid-credential") {
-        notify("Invalid email or password.", "error");
-      } else if (error.code === "auth/invalid-email") {
-        notify("Invalid email address.", "error");
       } else {
-        notify("Login failed: " + error.message, "error");
+        notify(authErrorMessage(error.code, "login"), "error");
       }
     } finally {
       setLoading(false);
+      if (!signedIn) setAuthBusy(false);
     }
-  };
-
-  const calculateAge = (dob) => {
-    if (!dob) return null;
-
-    const birthDate = new Date(`${dob}T00:00:00`);
-    if (Number.isNaN(birthDate.getTime())) return null;
-
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-
-    const beforeBirthday =
-      today.getMonth() < birthDate.getMonth() ||
-      (today.getMonth() === birthDate.getMonth() &&
-        today.getDate() < birthDate.getDate());
-
-    if (beforeBirthday) {
-      age -= 1;
-    }
-
-    return age;
   };
 
   const handleCreateAccount = async (e) => {
@@ -229,7 +299,7 @@ function Login() {
       return;
     }
 
-    const signupAge = calculateAge(signupDob);
+    const signupAge = calculateAgeFromDob(signupDob);
 
     if (signupAge === null || signupAge < 0 || signupAge > 120) {
       notify("Please enter a valid date of birth.", "error");
@@ -237,6 +307,8 @@ function Login() {
     }
 
     setLoading(true);
+    setAuthBusy(true);
+    let created = false;
 
     try {
       const result = await createUserWithEmailAndPassword(
@@ -249,19 +321,13 @@ function Login() {
         displayName: signupName.trim(),
       });
 
-      // Save DOB so GamingVerse can enforce age-based game access.
-      const { ref, set } = await import("firebase/database");
-      const { db } = await import("../firebase");
-
-      // Reserve the handle. If someone grabbed it in the last few seconds,
-      // fall back to handle + 3 digits rather than failing the signup.
-      let handle = normalizeUsername(signupUsername);
-      if (!(await claimUsername(handle, result.user.uid))) {
-        handle = `${handle.slice(0, 16)}${Math.floor(100 + Math.random() * 900)}`;
-        await claimUsername(handle, result.user.uid);
-      }
+      const handle = await claimHandleWithFallback(
+        signupUsername,
+        result.user.uid,
+      );
 
       try {
+        // DOB lets GamingVerse enforce age-based game access.
         await set(ref(db, `users/${result.user.uid}`), {
           firstName: signupName.trim().split(" ")[0] || signupName.trim(),
           lastName: signupName.trim().split(" ").slice(1).join(" "),
@@ -278,8 +344,6 @@ function Login() {
         throw profileError;
       }
 
-      notify("Account created successfully!", "success");
-
       setSignupName("");
       setSignupUsername("");
       setSignupEmail("");
@@ -289,21 +353,18 @@ function Login() {
       setSignupDob("");
       setModal(null);
 
-      setTimeout(() => navigate("/games"), 600);
+      created = true;
+      notify("Account created successfully!", "success");
+      window.setTimeout(
+        () => navigate(returnTo || "/games", { replace: true }),
+        600,
+      );
     } catch (error) {
       console.error(error);
-
-      if (error.code === "auth/email-already-in-use") {
-        notify("This email is already registered.", "error");
-      } else if (error.code === "auth/invalid-email") {
-        notify("Invalid email address.", "error");
-      } else if (error.code === "auth/weak-password") {
-        notify("Password is too weak.", "error");
-      } else {
-        notify("Account creation failed: " + error.message, "error");
-      }
+      notify(authErrorMessage(error.code, "signup"), "error");
     } finally {
       setLoading(false);
+      if (!created) setAuthBusy(false);
     }
   };
 
@@ -319,6 +380,20 @@ function Login() {
     ) {
       notify("Please fill all fields.", "error");
       return;
+    }
+
+    if (!isValidUsername(ownerSignupUsername)) {
+      notify(`Username must be ${USERNAME_RULE_TEXT}`, "error");
+      return;
+    }
+
+    try {
+      if (!(await isUsernameAvailable(ownerSignupUsername))) {
+        notify("This username is already taken. Please choose another.", "error");
+        return;
+      }
+    } catch (error) {
+      console.error("Username check failed:", error);
     }
 
     if (!isValidPhone(ownerSignupPhone)) {
@@ -342,6 +417,8 @@ function Login() {
     }
 
     setLoading(true);
+    setAuthBusy(true);
+    let created = false;
 
     try {
       const result = await createUserWithEmailAndPassword(
@@ -354,30 +431,35 @@ function Login() {
         displayName: ownerSignupName.trim(),
       });
 
-      const { ref, set } = await import("firebase/database");
-      const { db } = await import("../firebase");
-
-      await set(ref(db, `users/${result.user.uid}`), {
-        firstName: ownerSignupName.trim().split(" ")[0] || ownerSignupName.trim(),
-        lastName: ownerSignupName.trim().split(" ").slice(1).join(" "),
-        username: ownerSignupName.trim(),
-        email: ownerSignupEmail.trim(),
-        phone: normalizePhone(ownerSignupPhone),
-        // Business roles need admin approval (database rules enforce it).
-        requestedRole: ownerSignupRole,
-        businessName:
-          ownerSignupRole === "shop_owner"
-            ? ownerSignupBusinessName.trim()
-            : "",
-        createdAt: Date.now(),
-      });
-
-      notify(
-        "Business account created! An admin will review and approve it shortly.",
-        "success",
+      const handle = await claimHandleWithFallback(
+        ownerSignupUsername,
+        result.user.uid,
       );
 
+      try {
+        await set(ref(db, `users/${result.user.uid}`), {
+          firstName:
+            ownerSignupName.trim().split(" ")[0] || ownerSignupName.trim(),
+          lastName: ownerSignupName.trim().split(" ").slice(1).join(" "),
+          username: handle,
+          email: ownerSignupEmail.trim(),
+          phone: normalizePhone(ownerSignupPhone),
+          // Business roles need admin approval (database rules enforce it).
+          requestedRole: ownerSignupRole,
+          businessName:
+            ownerSignupRole === "shop_owner"
+              ? ownerSignupBusinessName.trim()
+              : "",
+          createdAt: Date.now(),
+        });
+      } catch (profileError) {
+        // Don't leave the handle reserved by a profile that wasn't saved.
+        await releaseUsername(handle, result.user.uid).catch(() => {});
+        throw profileError;
+      }
+
       setOwnerSignupName("");
+      setOwnerSignupUsername("");
       setOwnerSignupEmail("");
       setOwnerSignupPhone("");
       setOwnerSignupPassword("");
@@ -385,24 +467,21 @@ function Login() {
       setOwnerSignupBusinessName("");
       setModal(null);
 
-      setTimeout(() => navigate("/owner-dashboard"), 600);
+      created = true;
+      notify(
+        "Business account created! An admin will review and approve it shortly.",
+        "success",
+      );
+      window.setTimeout(
+        () => navigate("/owner-dashboard", { replace: true }),
+        600,
+      );
     } catch (error) {
       console.error(error);
-
-      if (error.code === "auth/email-already-in-use") {
-        notify(
-          "This email is already registered. Log in above instead.",
-          "error",
-        );
-      } else if (error.code === "auth/invalid-email") {
-        notify("Invalid email address.", "error");
-      } else if (error.code === "auth/weak-password") {
-        notify("Password is too weak.", "error");
-      } else {
-        notify("Account creation failed: " + error.message, "error");
-      }
+      notify(authErrorMessage(error.code, "signup"), "error");
     } finally {
       setLoading(false);
+      if (!created) setAuthBusy(false);
     }
   };
 
@@ -416,22 +495,25 @@ function Login() {
 
     setLoading(true);
 
-    try {
-      await sendPasswordResetEmail(auth, resetEmail.trim());
-
-      notify("Password reset email sent — check your inbox.", "success");
-
+    const sent = () => {
+      notify(
+        "If an account uses that email, a reset link is on its way — check your inbox.",
+        "success",
+      );
       setResetEmail("");
       setModal(null);
+    };
+
+    try {
+      await sendPasswordResetEmail(auth, resetEmail.trim());
+      sent();
     } catch (error) {
       console.error(error);
-
+      // Same answer whether or not the email is registered.
       if (error.code === "auth/user-not-found") {
-        notify("No account found with this email.", "error");
-      } else if (error.code === "auth/invalid-email") {
-        notify("Invalid email address.", "error");
+        sent();
       } else {
-        notify("Could not send reset email: " + error.message, "error");
+        notify(authErrorMessage(error.code, "reset"), "error");
       }
     } finally {
       setLoading(false);
@@ -440,33 +522,41 @@ function Login() {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
+    setAuthBusy(true);
+    let signedIn = false;
 
     try {
-      const provider = new GoogleAuthProvider();
+      await setPersistence(
+        auth,
+        rememberMe ? browserLocalPersistence : browserSessionPersistence,
+      );
 
+      const provider = new GoogleAuthProvider();
       const cred = await signInWithPopup(auth, provider);
 
-      if (await isUserBanned(cred.user.uid)) {
-        await signOut(auth);
-        consumeBannedNotice(); // App may have flagged it too
-        notify(BANNED_MESSAGE, "error");
-        return;
-      }
+      if (await rejectIfBanned(cred.user.uid)) return;
 
-      notify("Google login successful!", "success");
-      setTimeout(() => navigate("/games"), 600);
+      // New Google accounts finish their profile (username, phone,
+      // date of birth) in ProfileGate right after this.
+      signedIn = true;
+      await finishSignIn(cred.user.uid, "Google login successful!");
     } catch (error) {
       console.error(error);
 
       if (consumeBannedNotice()) {
         notify(BANNED_MESSAGE, "error");
-      } else if (error.code !== "auth/popup-closed-by-user") {
-        notify("Google login failed: " + error.message, "error");
+      } else {
+        notify(authErrorMessage(error.code, "google"), "error");
       }
     } finally {
       setLoading(false);
+      if (!signedIn) setAuthBusy(false);
     }
   };
+
+  // Signed in already (and not in the middle of signing in here): the
+  // redirect effect above is on its way — don't flash the login form.
+  if (authLoading || signedInUid) return <PageLoading />;
 
   return (
     <div className="login-page">
@@ -525,29 +615,34 @@ function Login() {
 
         <form onSubmit={handleLogin}>
           <div className="form-group">
-            <label>Email or Username</label>
+            <label htmlFor="login-identifier">Email or Username</label>
 
             <div className="input-wrapper">
               <span className="input-icon">👤</span>
 
               <input
-                type="email"
-                placeholder="Enter your email or username"
+                id="login-identifier"
+                type="text"
+                placeholder="Email or username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
+                autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
                 required
               />
             </div>
           </div>
 
           <div className="form-group">
-            <label>Password</label>
+            <label htmlFor="login-password">Password</label>
 
             <div className="input-wrapper">
               <span className="input-icon">🔒</span>
 
               <input
+                id="login-password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 value={password}
@@ -624,7 +719,7 @@ function Login() {
           className="business-account-button"
           onClick={() => setModal("owner-create")}
         >
-          <span>☕🖱</span>
+          <span aria-hidden="true">💼</span>
           Create Business Account
         </button>
       </div>
@@ -632,7 +727,12 @@ function Login() {
       {/* Create account modal */}
       {modal === "create" && (
         <div className="modal-backdrop" onClick={() => setModal(null)}>
-          <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="auth-modal"
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               className="modal-close"
               type="button"
@@ -651,6 +751,7 @@ function Login() {
               <input
                 type="text"
                 placeholder="Your Name"
+                aria-label="Your name"
                 value={signupName}
                 onChange={(e) => setSignupName(e.target.value)}
                 autoComplete="name"
@@ -660,6 +761,7 @@ function Login() {
               <input
                 type="text"
                 placeholder="Username (e.g. ram_gamer)"
+                aria-label="Username"
                 value={signupUsername}
                 onChange={(e) =>
                   setSignupUsername(
@@ -675,6 +777,7 @@ function Login() {
               <input
                 type="email"
                 placeholder="Email address"
+                aria-label="Email address"
                 value={signupEmail}
                 onChange={(e) => setSignupEmail(e.target.value)}
                 autoComplete="email"
@@ -685,6 +788,7 @@ function Login() {
                 type="tel"
                 inputMode="numeric"
                 placeholder="Mobile number (10 digits)"
+                aria-label="Mobile number"
                 value={signupPhone}
                 onChange={(e) => setSignupPhone(e.target.value)}
                 autoComplete="tel-national"
@@ -695,6 +799,7 @@ function Login() {
               <input
                 type="password"
                 placeholder="Password"
+                aria-label="Password"
                 value={signupPassword}
                 onChange={(e) => setSignupPassword(e.target.value)}
                 autoComplete="new-password"
@@ -705,6 +810,7 @@ function Login() {
               <input
                 type="password"
                 placeholder="Confirm password"
+                aria-label="Confirm password"
                 value={signupConfirmPassword}
                 onChange={(e) => setSignupConfirmPassword(e.target.value)}
                 autoComplete="new-password"
@@ -736,7 +842,12 @@ function Login() {
       {/* Business owner signup modal */}
       {modal === "owner-create" && (
         <div className="modal-backdrop" onClick={() => setModal(null)}>
-          <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="auth-modal"
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               className="modal-close"
               type="button"
@@ -746,7 +857,7 @@ function Login() {
               ×
             </button>
 
-            <div className="modal-icon">☕🖱</div>
+            <div className="modal-icon" aria-hidden="true">💼</div>
 
             <h2>Create Business Account</h2>
             <p>List your café or shop on GamingVerse</p>
@@ -772,6 +883,7 @@ function Login() {
               <input
                 type="text"
                 placeholder="Your Name"
+                aria-label="Your name"
                 value={ownerSignupName}
                 onChange={(e) => setOwnerSignupName(e.target.value)}
                 autoComplete="name"
@@ -779,8 +891,25 @@ function Login() {
               />
 
               <input
+                type="text"
+                placeholder="Username (e.g. pixel_cafe)"
+                aria-label="Username"
+                value={ownerSignupUsername}
+                onChange={(e) =>
+                  setOwnerSignupUsername(
+                    e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ""),
+                  )
+                }
+                autoComplete="username"
+                maxLength={20}
+                title={USERNAME_RULE_TEXT}
+                required
+              />
+
+              <input
                 type="email"
                 placeholder="Business email address"
+                aria-label="Business email address"
                 value={ownerSignupEmail}
                 onChange={(e) => setOwnerSignupEmail(e.target.value)}
                 autoComplete="email"
@@ -791,6 +920,7 @@ function Login() {
                 type="tel"
                 inputMode="numeric"
                 placeholder="Mobile number (10 digits)"
+                aria-label="Mobile number"
                 value={ownerSignupPhone}
                 onChange={(e) => setOwnerSignupPhone(e.target.value)}
                 autoComplete="tel-national"
@@ -801,6 +931,7 @@ function Login() {
               <input
                 type="password"
                 placeholder="Password"
+                aria-label="Password"
                 value={ownerSignupPassword}
                 onChange={(e) => setOwnerSignupPassword(e.target.value)}
                 autoComplete="new-password"
@@ -811,6 +942,7 @@ function Login() {
               <input
                 type="password"
                 placeholder="Confirm password"
+                aria-label="Confirm password"
                 value={ownerSignupConfirmPassword}
                 onChange={(e) =>
                   setOwnerSignupConfirmPassword(e.target.value)
@@ -829,6 +961,7 @@ function Login() {
                 <input
                   type="text"
                   placeholder="Shop / business name"
+                  aria-label="Shop or business name"
                   value={ownerSignupBusinessName}
                   onChange={(e) =>
                     setOwnerSignupBusinessName(e.target.value)
@@ -848,7 +981,12 @@ function Login() {
       {/* Forgot password modal */}
       {modal === "forgot" && (
         <div className="modal-backdrop" onClick={() => setModal(null)}>
-          <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="auth-modal"
+            role="dialog"
+            aria-modal="true"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               className="modal-close"
               type="button"
@@ -868,6 +1006,7 @@ function Login() {
               <input
                 type="email"
                 placeholder="Enter your email"
+                aria-label="Email address"
                 value={resetEmail}
                 onChange={(e) => setResetEmail(e.target.value)}
                 autoComplete="email"

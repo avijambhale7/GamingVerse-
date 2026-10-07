@@ -1,11 +1,18 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { onValue, ref } from "firebase/database";
 import { auth, db } from "./firebase";
 import { BANNED_NOTICE_KEY } from "./utils/ban.js";
 import ErrorBoundary from "./ErrorBoundary.jsx";
-import PhoneGate from "./components/PhoneGate.jsx";
+import ProfileGate from "./components/ProfileGate.jsx";
+import PageLoading from "./components/PageLoading.jsx";
 import PageTitle from "./components/PageTitle.jsx";
 
 // Only Login is needed for the very first paint. Everything else loads
@@ -19,28 +26,17 @@ const OwnerDashboard = lazy(() => import("./pages/OwnerDashboard"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Profile = lazy(() => import("./pages/Profile"));
 const UserProfile = lazy(() => import("./pages/UserProfile"));
-
-
-const PAGE_LOADING_STYLE = {
-  minHeight: "100vh",
-  background: "#000",
-  color: "white",
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "center",
-  fontSize: "20px",
-};
-
-function PageLoading() {
-  return <div style={PAGE_LOADING_STYLE}>Loading GamingVerse...</div>;
-}
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 /* =====================================================
    PROTECTED ROUTE
 ===================================================== */
+// Signed-out visitors go to /login, which sends them back here
+// (location.state.from) once they've signed in.
 function ProtectedRoute({ user, loading, children }) {
+  const location = useLocation();
   if (loading) return <PageLoading />;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" replace state={{ from: location }} />;
   return <Suspense fallback={<PageLoading />}>{children}</Suspense>;
 }
 
@@ -103,7 +99,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      {user && <PhoneGate user={user} />}
+      {user && <ProfileGate user={user} />}
       <BrowserRouter>
         <PageTitle />
         <Routes>
@@ -118,7 +114,10 @@ function App() {
           {/* =================================================
               LOGIN
           ================================================= */}
-          <Route path="/login" element={<Login />} />
+          <Route
+            path="/login"
+            element={<Login user={user} authLoading={loading} />}
+          />
 
           {/* Legacy entry point. Owners sign in through /login like everyone
               else; the dashboard itself checks their role. */}
@@ -214,7 +213,14 @@ function App() {
           {/* =================================================
               UNKNOWN URL
           ================================================= */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route
+            path="*"
+            element={
+              <Suspense fallback={<PageLoading />}>
+                <NotFound signedIn={Boolean(user)} />
+              </Suspense>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>

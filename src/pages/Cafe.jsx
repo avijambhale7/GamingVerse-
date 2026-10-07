@@ -312,9 +312,13 @@ export default function Cafe() {
     : [];
 
   const totalSeats = selectedCafe?.totalSeats || 0;
+  // timeSlots is a new array every render; this string only changes
+  // when the actual slots do (new café/date, or a slot passing today).
+  const timeSlotsKey = timeSlots.join("|");
 
   useEffect(() => {
     let cancelled = false;
+    const timeSlots = timeSlotsKey ? timeSlotsKey.split("|") : [];
     const loadSlots = async () => {
       if (!selectedCafe || !selectedDate || !user || timeSlots.length === 0) {
         setSlotAvailability({});
@@ -372,7 +376,7 @@ export default function Cafe() {
     return () => {
       cancelled = true;
     };
-  }, [selectedCafe, selectedDate, user, totalSeats]);
+  }, [selectedCafe, selectedDate, user, totalSeats, timeSlotsKey]);
 
   const bookCafe = async () => {
     if (!user) {

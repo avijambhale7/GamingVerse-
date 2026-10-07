@@ -11,7 +11,14 @@
   What stays here is the Games component itself: state, effects,
   Firebase wiring, and the props it hands to each view.
 */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   limitToLast,
@@ -139,13 +146,14 @@ function Games() {
     }
   }, [searchParams]);
 
-  // A browser reload always starts GamingVerse on the Home page.
-  useEffect(() => {
+  // A browser reload always starts GamingVerse on the Home page. This
+  // is a one-time check of how the page was opened, so it reads the URL
+  // through an Effect Event and runs only on mount.
+  const resetViewAfterReload = useEffectEvent(() => {
     const navigationEntry = performance.getEntriesByType("navigation")[0];
     if (navigationEntry?.type === "reload") {
       const reloadView = searchParams.get("view");
       if (reloadView === "clubs") {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- on a browser reload, reset to the section the URL names (runs once).
         setActiveView("clubs");
         setSpacesSection("clubs");
       } else if (reloadView === "spaces") {
@@ -160,6 +168,10 @@ function Games() {
       }
       window.scrollTo({ top: 0, behavior: "auto" });
     }
+  });
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- on a browser reload, reset to the section the URL names (runs once).
+    resetViewAfterReload();
   }, []);
 
   const [heroIndex, setHeroIndex] = useState(0);
@@ -340,15 +352,23 @@ function Games() {
   /* =======================================================
        LOAD USER AGE FROM FIREBASE
   ======================================================= */
+  // auth.currentUser isn't React state, so changes to it never re-ran
+  // this effect; follow the signed-in uid through onAuthStateChanged.
+  const [authUid, setAuthUid] = useState(() => auth.currentUser?.uid || "");
+  useEffect(
+    () => onAuthStateChanged(auth, (current) => setAuthUid(current?.uid || "")),
+    [],
+  );
+
   useEffect(() => {
-    if (!auth.currentUser) {
+    if (!authUid) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- signed out: there is no profile to subscribe to.
       setUserAge(null);
       setAgeLoading(false);
       return undefined;
     }
 
-    const userRef = ref(db, `users/${auth.currentUser.uid}`);
+    const userRef = ref(db, `users/${authUid}`);
 
     const unsubscribe = onValue(userRef, (snapshot) => {
       const data = snapshot.val() || {};
@@ -365,7 +385,7 @@ function Games() {
     });
 
     return () => unsubscribe();
-  }, [auth.currentUser?.uid]);
+  }, [authUid]);
 
   /* =======================================================
        AUTOMATIC GAME CATALOGUE + UPCOMING GAMES
@@ -736,7 +756,7 @@ function Games() {
       document.removeEventListener("keydown", handleEscape);
     };
   }, []);
-  const getCatalogueImage = (game) => {
+  const getCatalogueImage = useCallback((game) => {
     // Curated local art (src/assets/Posters, src/assets/horizontal) is
     // properly composed for these titles, unlike RAWG's landscape
     // screenshots, which crop badly in a poster tile. Prefer it over
@@ -768,7 +788,7 @@ function Games() {
     }
 
     return "";
-  };
+  }, [catalogueImageMap]);
 
   // Lets getGameDetails() resolve an admin-added game's own description,
   // genre, platforms etc. instead of falling back to the generic
@@ -839,13 +859,18 @@ function Games() {
         ...game,
         image: getCatalogueImage(game),
       }));
-  }, [search, activeCategory, catalogueImageMap, fullGameCatalogue]);
+  }, [search, activeCategory, getCatalogueImage, fullGameCatalogue]);
 
   // Resolve missing poster images from RAWG.
   // This runs only for games that still have no local image. The search
   // itself lives in utils/posterLookup.js, shared with the Admin panel's
   // own game browser, so a poster only ever needs to be found once and
   // both pages read/write the same localStorage cache.
+  const findGamesWithoutPoster = useEffectEvent(() =>
+    completeGameCatalogue.filter(
+      (game) => game?.name && !getCatalogueImage(game),
+    ),
+  );
   useEffect(() => {
     if (automaticGamesLoading || !RAWG_ENABLED) return undefined;
 
@@ -857,9 +882,7 @@ function Games() {
     // the request volume that kept tripping RAWG's rate limit.
     const cachedImages = readPosterImageCache();
 
-    const missingGames = completeGameCatalogue.filter(
-      (game) => game?.name && !getCatalogueImage(game),
-    );
+    const missingGames = findGamesWithoutPoster();
 
     if (missingGames.length) {
       lookupMissingPosters(missingGames, cachedImages, {
@@ -877,19 +900,28 @@ function Games() {
 
   // Load a trailer media source for the game details page.
   // Prefer a RAWG playable clip, then use a verified YouTube trailer.
+  // Re-runs only when a different game opens; the cache, the open game's
+  // other fields and the poster map are read fresh via Effect Events.
+  const selectedGameName = selectedGame?.name || "";
+  const hasTrailerMedia = useEffectEvent((key) => Boolean(trailerMediaMap[key]));
+  const readSelectedGame = useEffectEvent(() => selectedGame);
+  const posterFromMap = useEffectEvent(
+    (name) => catalogueImageMap[normalizeCatalogueImageKey(name)],
+  );
   useEffect(() => {
-    if (!showDetails || !selectedGame?.name || !RAWG_ENABLED) return undefined;
+    if (!showDetails || !selectedGameName || !RAWG_ENABLED) return undefined;
 
-    const gameName = String(selectedGame.name).trim();
+    const gameName = String(selectedGameName).trim();
     const key = normalizeTrailerGameName(gameName);
-    if (trailerMediaMap[key]) return undefined;
+    if (hasTrailerMedia(key)) return undefined;
+    const openedGame = readSelectedGame();
 
     let cancelled = false;
 
     const candidates = [
       gameName,
       getGameDetails(gameName)?.title,
-      selectedGame?.databaseKey,
+      openedGame?.databaseKey,
     ]
       .map((value) => String(value || "").trim())
       .filter(Boolean);
@@ -935,7 +967,7 @@ function Games() {
           best?.clip?.clips?.["320"] ||
           best?.clip?.clip ||
           "";
-        let preview = best?.clip?.preview || selectedGame?.image || "";
+        let preview = best?.clip?.preview || openedGame?.image || "";
 
         if (best?.id && !clipUrl) {
           const detailResponse = await fetch(
@@ -972,7 +1004,7 @@ function Games() {
             ...current,
             image:
               getBestLocalImage(current, posterGames) ||
-              catalogueImageMap[normalizeCatalogueImageKey(gameName)] ||
+              posterFromMap(gameName) ||
               current.image ||
               rawgImage ||
               mediaFallback.poster ||
@@ -1048,7 +1080,7 @@ function Games() {
           [key]: {
             type: getVerifiedTrailerUrl(gameName) ? "youtube" : "search",
             url: getVerifiedTrailerUrl(gameName),
-            preview: selectedGame?.image || "",
+            preview: openedGame?.image || "",
             searchUrl:
               details?.trailerSearchUrl ||
               `https://www.youtube.com/results?search_query=${encodeURIComponent(`${details?.title || gameName} official trailer`)}`,
@@ -1062,7 +1094,7 @@ function Games() {
     return () => {
       cancelled = true;
     };
-  }, [showDetails, selectedGame?.name]);
+  }, [showDetails, selectedGameName]);
 
   const filteredHorizontal = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -1191,8 +1223,8 @@ function Games() {
        LOAD GAME REVIEWS LIVE
     ======================================================= */
   useEffect(() => {
-    if (!selectedGame) return undefined;
-    const gameId = createGameId(selectedGame.name);
+    if (!selectedGameName) return undefined;
+    const gameId = createGameId(selectedGameName);
     const reviewsRef = ref(db, `gameReviews/${gameId}`);
 
     const unsubscribe = onValue(
@@ -1282,7 +1314,7 @@ function Games() {
     // Keyed on the name, not the object: opening a trailer replaces
     // selectedGame with a copy, which used to tear down and rebuild this
     // subscription — and reset the composer — for the same game.
-  }, [selectedGame?.name]);
+  }, [selectedGameName]);
   const toggleSavedList = (listName, gameName, setList) => {
     setList((current) => {
       const next = current.includes(gameName)
@@ -1396,6 +1428,9 @@ function Games() {
     setShowDetails(true);
     setReviewMessage("");
   };
+  // The ?openGame= deep-link effect below opens a game with whatever
+  // openDetails is current (it reads userAge), without re-running for it.
+  const openDeepLinkedGame = useEffectEvent((game) => openDetails(game));
 
   useEffect(() => {
     if (ageLoading) return;
@@ -1433,7 +1468,7 @@ function Games() {
     setActiveView("home");
     setActiveCategory("All");
     setSearch("");
-    openDetails(targetGame);
+    openDeepLinkedGame(targetGame);
     const returnQuery = new URLSearchParams();
     const returnTarget = searchParams.get("return");
     const returnTab = searchParams.get("tab");
