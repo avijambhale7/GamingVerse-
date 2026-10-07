@@ -478,3 +478,18 @@
   background: rgba(244, 63, 94, 0.12);
   color: #fda4af;
 }
+
+/* No-shows (OwnerDashboard booking cards) */
+.dp-meta-chips .dp-noshow-chip {
+  border-color: rgba(244, 63, 94, 0.45);
+  background: rgba(244, 63, 94, 0.14);
+  color: #fecdd3;
+  font-weight: 800;
+}
+.owner-row-actions .owner-noshow-btn {
+  border-color: rgba(245, 179, 1, 0.45);
+  color: #fde68a;
+}
+.owner-booking-no-show {
+  opacity: 0.85;
+}

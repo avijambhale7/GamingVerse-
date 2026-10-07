@@ -47,11 +47,10 @@ import "../../../components/PageSkeleton.css";
 
 const MAX_CAPTION = 2200;
 const MAX_COMMENT = 500;
-// Posts load 10 at a time ("Load more" adds 10) — each carries its photo.
-const PAGE_SIZE = 10;
-// Must stay under the imageData limit in database.rules.json (600000).
-// ~300 KB keeps photos sharp at feed size while loading quickly.
-const MAX_IMAGE_CHARS = 300000;
+// Posts load 20 at a time ("Load more" adds 20) — each carries its photo.
+const PAGE_SIZE = 20;
+// New photos use the "feed" preset (utils/imageData.js: 1080px, ~200 KB),
+// well under the imageData limit in database.rules.json (600000).
 const REPORT_REASONS = [
   ["spam", "Spam"],
   ["offensive", "Offensive or hateful"],
@@ -288,9 +287,7 @@ export default function UserFeed({ onOpenGame }) {
     setError("");
     let imageData;
     try {
-      imageData = await compressImageToDataUrl(file, {
-        maxChars: MAX_IMAGE_CHARS,
-      });
+      imageData = await compressImageToDataUrl(file, "feed");
     } catch (err) {
       console.error("Image compress error:", err);
       setError(

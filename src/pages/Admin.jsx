@@ -29,6 +29,7 @@ import ProductImage from "./marketplace/views/ProductImage.jsx";
 import { roleLabel } from "../utils/authFlow.js";
 import AdminBirthDate from "./admin/AdminBirthDate.jsx";
 import AdminAttention from "./admin/AdminAttention.jsx";
+import { countOpenReports } from "../utils/purchaseReports.js";
 
 // Module scope, evaluated once at page load — not a render-time call, so
 // the activity chart's "last 14 days" window doesn't need Date.now() (an
@@ -51,6 +52,8 @@ export default function Admin() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authorized, setAuthorized] = useState(false);
+  // purchaseReports/{requestId}/{uid}: problems reported on accepted deals.
+  const [purchaseReports, setPurchaseReports] = useState({});
   const [section, setSection] = useState("overview");
   const [message, setMessage] = useState("");
 
@@ -190,6 +193,15 @@ export default function Admin() {
     });
     return () => unsubscribe();
   }, [navigate]);
+
+  useEffect(() => {
+    if (!authorized) return undefined;
+    return onValue(
+      ref(db, "purchaseReports"),
+      (snap) => setPurchaseReports(snap.val() || {}),
+      (error) => console.error("Purchase reports listener error:", error),
+    );
+  }, [authorized]);
 
   useEffect(() => {
     if (!authorized) return undefined;
@@ -781,6 +793,13 @@ export default function Admin() {
                 count: pendingRequestCount,
                 section: "requests",
               },
+              {
+                id: "reports",
+                icon: "⚑",
+                label: "Open deal problem reports",
+                count: countOpenReports(purchaseReports),
+                section: "requests",
+              },
             ]}
             onOpen={setSection}
           />
@@ -863,6 +882,7 @@ export default function Admin() {
               role="admin"
               uid={user.uid}
               onMessage={setMessage}
+              reports={purchaseReports}
             />
           </section>
         </main>
@@ -1329,6 +1349,7 @@ export default function Admin() {
               />
               <ImageUploadButton
                 pathPrefix={`gameImages/${user.uid}`}
+                preset="poster"
                 onUploaded={(url) =>
                   setGameForm((f) => ({ ...f, image: url }))
                 }

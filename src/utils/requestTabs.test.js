@@ -75,6 +75,28 @@ describe("requestMatchesTab", () => {
   });
 });
 
+describe("Reported tab (admins)", () => {
+  it("only appears when reports are available", () => {
+    expect(requestTabsFor("admin").map((t) => t.id)).not.toContain("reported");
+    expect(requestTabsFor("admin", { reports: true }).map((t) => t.id)).toContain(
+      "reported",
+    );
+    expect(requestTabsFor("buyer", { reports: true }).map((t) => t.id)).not.toContain(
+      "reported",
+    );
+  });
+
+  it("holds requests with open reports, whatever their status", () => {
+    expect(requestMatchesTab({ status: "accepted", openReports: 1 }, "reported", "admin")).toBe(
+      true,
+    );
+    expect(requestMatchesTab({ status: "accepted", openReports: 0 }, "reported", "admin")).toBe(
+      false,
+    );
+    expect(requestMatchesTab({ status: "accepted" }, "reported", "admin")).toBe(false);
+  });
+});
+
 describe("requestTabLabel", () => {
   it("names tabs for the 'Moved to …' notice", () => {
     expect(requestTabLabel("accepted")).toBe("Accepted");

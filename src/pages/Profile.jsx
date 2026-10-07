@@ -522,10 +522,7 @@ function Profile() {
 
         if (photoFile) {
           // Saved in the database (no Storage bucket on this project).
-          savedPhotoURL = await compressImageToDataUrl(photoFile, {
-            maxSide: 400,
-            maxChars: 120000,
-          });
+          savedPhotoURL = await compressImageToDataUrl(photoFile, "avatar");
         }
 
         const ownerData = {
@@ -623,10 +620,7 @@ function Profile() {
 
       if (photoFile) {
         // Saved in the database (no Storage bucket on this project).
-        savedPhotoURL = await compressImageToDataUrl(photoFile, {
-          maxSide: 400,
-          maxChars: 120000,
-        });
+        savedPhotoURL = await compressImageToDataUrl(photoFile, "avatar");
       }
 
       const updatedData = {

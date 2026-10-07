@@ -20,6 +20,7 @@ const STATUS_ORDER = {
   Completed: 2,
   Cancelled: 3,
   Rejected: 3,
+  "No-show": 3,
 };
 
 const STATUS_NOTE = {
@@ -28,6 +29,7 @@ const STATUS_NOTE = {
   Completed: "Checked in — ticket used",
   Cancelled: "Booking cancelled",
   Rejected: "Request rejected by the café",
+  "No-show": "Marked as a no-show by the café",
 };
 
 export default function ProfileTickets({ navigate, uid }) {

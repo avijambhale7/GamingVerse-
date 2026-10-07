@@ -8,6 +8,7 @@
 import { ACCESSORY_CATEGORIES, MARKET_TABS } from "../data/catalog.js";
 import { money } from "../utils/format.js";
 import ProductImage from "./ProductImage.jsx";
+import { isSoldOut } from "../../../utils/stock.js";
 
 export default function ProductCatalogue({
   openRequest,
@@ -32,6 +33,8 @@ export default function ProductCatalogue({
   sortBy,
   toggleWishlist,
   wishlist,
+  hasMore = false,
+  onLoadMore,
 }) {
   const typeProducts = products.filter((product) =>
     marketType === "accessories"
@@ -206,9 +209,7 @@ export default function ProductCatalogue({
             <div className="poster-bottom">
               <strong>{money(product.price)}</strong>
               <span className="poster-badge">
-                {Number(product.stock) > 0
-                  ? `${product.stock} available`
-                  : "Out of stock"}
+                {isSoldOut(product) ? "Sold out" : `${product.stock} available`}
               </span>
             </div>
           </div>
@@ -267,18 +268,20 @@ export default function ProductCatalogue({
           <div className="product-bottom">
             <div>
               <strong>{money(product.price)}</strong>
-              <small>{stock > 0 ? `${stock} available` : "Out of stock"}</small>
+              <small className={isSoldOut(product) ? "is-sold-out" : ""}>
+                {isSoldOut(product) ? "Sold out" : `${stock} available`}
+              </small>
             </div>
 
             <button
               className="primary-btn"
-              disabled={stock === 0}
+              disabled={isSoldOut(product)}
               onClick={(e) => {
                 e.stopPropagation();
-                openRequest(product);
+                if (!isSoldOut(product)) openRequest(product);
               }}
             >
-              📨 Request
+              {isSoldOut(product) ? "Sold out" : "📨 Request"}
             </button>
           </div>
         </div>
@@ -378,6 +381,11 @@ export default function ProductCatalogue({
           {filteredProducts.map(renderProductCard)}
         </div>
       )}
+      {hasMore && onLoadMore && (
+        <button type="button" className="market-load-more" onClick={onLoadMore}>
+          Load more listings
+        </button>
+      )}
     </>
   );
 
@@ -466,12 +474,12 @@ export default function ProductCatalogue({
 
               <button
                 className="primary-btn large"
-                disabled={Number(selectedProduct.stock || 0) <= 0}
-                onClick={() => openRequest(selectedProduct)}
+                disabled={isSoldOut(selectedProduct)}
+                onClick={() => {
+                  if (!isSoldOut(selectedProduct)) openRequest(selectedProduct);
+                }}
               >
-                {Number(selectedProduct.stock || 0) <= 0
-                  ? "Out of stock"
-                  : "📨 Request to Buy"}
+                {isSoldOut(selectedProduct) ? "Sold out" : "📨 Request to Buy"}
               </button>
             </div>
           </div>

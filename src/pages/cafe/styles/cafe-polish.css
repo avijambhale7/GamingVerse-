@@ -646,3 +646,21 @@
     animation: none;
   }
 }
+
+/* "Load more" under the list (pages load 20 at a time) */
+.cafe-load-more {
+  display: block;
+  margin: 22px auto 0;
+  padding: 12px 26px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+.cafe-load-more:hover {
+  border-color: rgba(168, 85, 247, 0.55);
+  background: rgba(168, 85, 247, 0.12);
+}

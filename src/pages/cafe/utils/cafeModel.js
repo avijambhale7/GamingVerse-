@@ -1,4 +1,5 @@
 import { parseTime } from "./time.js";
+import { indiaDateISO, indiaMinutesNow, weekdayOfISO } from "./indiaTime.js";
 
 /* =========================================================
    CAFE MODEL
@@ -53,12 +54,10 @@ export function normalizeCafe(id, raw) {
   };
 }
 
-function weekdayAbbrev(date) {
-  return date.toLocaleDateString("en-US", { weekday: "short" });
-}
-
-export function isDateBlocked(cafe, dateObj, dateISO) {
-  if (cafe.closedDays.includes(weekdayAbbrev(dateObj))) return true;
+// Closed weekday or blocked date. Takes the calendar date ("YYYY-MM-DD");
+// its weekday doesn't depend on the device's timezone.
+export function isDateBlocked(cafe, dateISO) {
+  if (cafe.closedDays.includes(weekdayOfISO(dateISO))) return true;
   return cafe.blockedDates.includes(dateISO);
 }
 
@@ -69,15 +68,17 @@ export function isDateBlocked(cafe, dateObj, dateISO) {
 export function isCafeOpenNow(cafe, now = new Date()) {
   if (!cafe || /online appointment/i.test(cafe.opening)) return null;
 
-  const iso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  if (isDateBlocked(cafe, now, iso)) return false;
+  // India time, whatever the device's timezone.
+  const nowMs = now.getTime();
+  const iso = indiaDateISO(nowMs);
+  if (isDateBlocked(cafe, iso)) return false;
   if (/24\s*hours/i.test(cafe.opening)) return true;
 
   const open = parseTime(cafe.opening);
   const close = parseTime(cafe.closing);
   if (open == null || close == null) return null;
 
-  const minutes = now.getHours() * 60 + now.getMinutes();
+  const minutes = indiaMinutesNow(nowMs);
   // Same-day hours (10 AM–10 PM) vs overnight hours (6 PM–2 AM).
   return close > open
     ? minutes >= open && minutes < close

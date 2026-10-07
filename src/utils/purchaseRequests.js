@@ -11,9 +11,15 @@
    adminNotifications             shared feed for all admins
 ========================================================= */
 
-import { get, push, ref, runTransaction, set, update } from "firebase/database";
+import { get, push, ref, set, update } from "firebase/database";
 import { auth, db } from "../firebase";
 import { notifyAdmins, notifyUser } from "./notify.js";
+import {
+  canFulfil,
+  requestQuantity,
+  stockAfterCancel,
+  stockAfterSale,
+} from "./stock.js";
 
 export const REQUEST_STATUS = {
   PENDING_ADMIN: "pending_admin",
@@ -192,45 +198,25 @@ export async function sellerDecide(request, accept) {
   if (!isValidPhone(sellerPhone))
     throw new Error("Add your mobile number to your account first.");
 
-  // Take the stock atomically first, so two requests accepted at the
-  // same moment can't both take the same units.
-  const quantity = Number(request.quantity) || 1;
-  const stockRef = ref(db, `products/${request.productId}/stock`);
-  let shortBy = null;
-  const taken = await runTransaction(stockRef, (current) => {
-    if (current === null) return current; // not loaded yet: retried
-    const stock = Number(current) || 0;
-    if (stock < quantity) {
-      shortBy = stock;
-      return; // abort: not enough
-    }
-    return stock - quantity;
-  });
-  if (!taken.committed || taken.snapshot.val() === null) {
-    throw new Error(`Not enough stock — only ${shortBy ?? 0} left.`);
+  // The stock, the request's status and the seller's phone change in one
+  // multi-path update: all of it is saved, or none of it.
+  const quantity = requestQuantity(request);
+  const stockSnap = await get(ref(db, `products/${request.productId}/stock`));
+  if (!stockSnap.exists()) throw new Error("This product no longer exists.");
+  const stock = Number(stockSnap.val()) || 0;
+  if (!canFulfil(stock, quantity)) {
+    throw new Error(`Not enough stock — only ${stock} left.`);
   }
-
-  try {
-    // Phone first: the contact node is only readable once "accepted".
-    await set(
-      ref(db, `purchaseRequestContacts/${request.id}/sellerPhone`),
+  const now = Date.now();
+  await update(ref(db), {
+    [`products/${request.productId}/stock`]: stockAfterSale(stock, quantity),
+    [`products/${request.productId}/updatedAt`]: now,
+    [`purchaseRequestContacts/${request.id}/sellerPhone`]:
       normalizePhone(sellerPhone),
-    );
-    await update(ref(db, `purchaseRequests/${request.id}`), {
-      status: REQUEST_STATUS.ACCEPTED,
-      sellerActionAt: Date.now(),
-      updatedAt: Date.now(),
-    });
-    await update(ref(db, `products/${request.productId}`), {
-      updatedAt: Date.now(),
-    });
-  } catch (error) {
-    // The request wasn't accepted: give the stock back.
-    await runTransaction(stockRef, (current) =>
-      current === null ? current : (Number(current) || 0) + quantity,
-    ).catch(() => {});
-    throw error;
-  }
+    [`purchaseRequests/${request.id}/status`]: REQUEST_STATUS.ACCEPTED,
+    [`purchaseRequests/${request.id}/sellerActionAt`]: now,
+    [`purchaseRequests/${request.id}/updatedAt`]: now,
+  });
 
   const contactSnap = await get(
     ref(db, `purchaseRequestContacts/${request.id}`),
@@ -245,6 +231,40 @@ export async function sellerDecide(request, accept) {
     notifyUser(
       request.sellerId,
       `You accepted ${request.buyerName}'s request for ${request.productName}. Buyer's mobile: ${formatPhone(buyerPhone)}`,
+    ),
+  ]);
+}
+
+// Seller or admin → cancel a deal that was already accepted (the buyer
+// backed out, the item broke…). Its units go back into stock in the
+// same update.
+export async function cancelAcceptedDeal(request) {
+  const quantity = requestQuantity(request);
+  const now = Date.now();
+  const updates = {
+    [`purchaseRequests/${request.id}/status`]: REQUEST_STATUS.CANCELLED,
+    [`purchaseRequests/${request.id}/cancelledAfterAcceptAt`]: now,
+    [`purchaseRequests/${request.id}/updatedAt`]: now,
+  };
+  const stockSnap = await get(ref(db, `products/${request.productId}/stock`));
+  // A deleted product has no stock to give back.
+  if (stockSnap.exists()) {
+    updates[`products/${request.productId}/stock`] = stockAfterCancel(
+      stockSnap.val(),
+      quantity,
+    );
+    updates[`products/${request.productId}/updatedAt`] = now;
+  }
+  await update(ref(db), updates);
+
+  await Promise.all([
+    notifyUser(
+      request.buyerId,
+      `Your deal for ${request.productName} was cancelled.`,
+    ),
+    notifyUser(
+      request.sellerId,
+      `The deal for ${request.productName} was cancelled; ${quantity} unit${quantity === 1 ? " was" : "s were"} added back to stock.`,
     ),
   ]);
 }

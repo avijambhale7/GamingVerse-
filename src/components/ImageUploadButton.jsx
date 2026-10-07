@@ -14,6 +14,8 @@ export default function ImageUploadButton({
   className = "",
   label = "Upload Photo",
   multiple = false,
+  // Size limits for the upload — see IMAGE_PRESETS in utils/imageData.js.
+  preset = "product",
   onError,
   onUploaded,
 }) {
@@ -28,7 +30,7 @@ export default function ImageUploadButton({
     setUploading(true);
     try {
       const urls = await Promise.all(
-        files.map((file) => uploadImageFile(file)),
+        files.map((file) => uploadImageFile(file, preset)),
       );
       onUploaded(multiple ? urls : urls[0]);
     } catch (error) {

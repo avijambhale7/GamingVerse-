@@ -8,6 +8,7 @@ import { compressImageToDataUrl } from "./imageData.js";
    other image URL — this project has no Firebase Storage
    bucket, so uploads there never completed.
 ========================================================= */
-export async function uploadImageFile(file) {
-  return compressImageToDataUrl(file, { maxSide: 1080, maxChars: 400000 });
+// `preset`: "product", "cafe", "poster"… (see IMAGE_PRESETS).
+export async function uploadImageFile(file, preset = "product") {
+  return compressImageToDataUrl(file, preset);
 }

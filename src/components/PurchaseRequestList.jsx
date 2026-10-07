@@ -8,6 +8,7 @@
 import { useState } from "react";
 import PurchaseRequestCard from "./PurchaseRequestCard.jsx";
 import usePurchaseRequests from "../utils/usePurchaseRequests.js";
+import { openReportCount } from "../utils/purchaseReports.js";
 import {
   initialRequestTab,
   requestMatchesTab,
@@ -30,9 +31,15 @@ export default function PurchaseRequestList({
   onMessage,
   data,
   emptyAction,
+  reports,
 }) {
   const own = usePurchaseRequests(role, data ? "" : uid);
-  const { requests, error } = data || own;
+  const { requests: rawRequests, error } = data || own;
+  // Admins pass purchaseReports in: each request gets its open-report
+  // count, which the "Reported" tab filters on.
+  const requests = reports
+    ? rawRequests.map((r) => ({ ...r, openReports: openReportCount(reports[r.id]) }))
+    : rawRequests;
   // Until the user picks a tab, open the one with the latest change
   // (requests arrive after the first render, so this is derived, not
   // stored) — never an empty tab while another has items.
@@ -41,7 +48,7 @@ export default function PurchaseRequestList({
   // The request this user just acted on. When its new status moves it out
   // of the open tab, say where it went instead of letting it vanish.
   const [actedId, setActedId] = useState("");
-  const tabs = requestTabsFor(role);
+  const tabs = requestTabsFor(role, { reports: Boolean(reports) });
 
   const visible = requests.filter((r) => requestMatchesTab(r, filter, role));
 
@@ -131,6 +138,7 @@ export default function PurchaseRequestList({
               role={role}
               onMessage={onMessage}
               onActed={() => setActedId(request.id)}
+              reports={reports?.[request.id]}
             />
           ))}
         </div>

@@ -11,6 +11,7 @@ import {
   REQUEST_STATUS_LABEL,
   REQUEST_STEPS,
   adminDecide,
+  cancelAcceptedDeal,
   cancelPurchaseRequest,
   formatPhone,
   getRequestContacts,
@@ -19,6 +20,7 @@ import {
   requestStepIndex,
   sellerDecide,
 } from "../utils/purchaseRequests.js";
+import { ReportList, ReportProblem } from "./DealReport.jsx";
 import "./PurchaseRequestCard.css";
 
 function money(value) {
@@ -58,6 +60,7 @@ export default function PurchaseRequestCard({
   role,
   onMessage,
   onActed,
+  reports,
 }) {
   const [busy, setBusy] = useState(false);
   const [contacts, setContacts] = useState(null);
@@ -178,7 +181,36 @@ export default function PurchaseRequestCard({
           </div>
         )}
 
+        {role === "admin" && (
+          <ReportList request={request} reports={reports} onMessage={onMessage} />
+        )}
+
         <div className="prc-actions">
+          {accepted && (role === "buyer" || role === "seller") && (
+            <ReportProblem request={request} role={role} onMessage={onMessage} />
+          )}
+
+          {accepted && (role === "seller" || role === "admin") && (
+            <button
+              type="button"
+              className="prc-btn"
+              disabled={busy}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Cancel this accepted deal? Its quantity goes back into stock.",
+                  )
+                )
+                  run(
+                    () => cancelAcceptedDeal(request),
+                    "Deal cancelled — stock added back.",
+                  );
+              }}
+            >
+              Cancel deal
+            </button>
+          )}
+
           {role === "buyer" && isOpenRequest(request.status) && (
             <button
               type="button"

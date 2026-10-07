@@ -187,6 +187,7 @@ export default function SellerView({
                   {user && (
                     <ImageUploadButton
                       pathPrefix={`productImages/${user.uid}`}
+                      preset="product"
                       label="Upload"
                       onUploaded={(url) =>
                         setSellerForm((prev) => ({ ...prev, image: url }))

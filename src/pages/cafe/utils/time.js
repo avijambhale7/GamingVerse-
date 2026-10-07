@@ -1,6 +1,8 @@
 /* =========================================================
    TIME SLOT HELPERS
+   Café dates are India dates — see indiaTime.js.
 ========================================================= */
+import { indiaTodayISO } from "./indiaTime.js";
 
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -44,11 +46,13 @@ export function getTimeSlots(opening, closing, afterMinutes = -1) {
   return slots;
 }
 
+// Today's date in India (cafés are in India, whatever the phone's
+// timezone is set to).
 export function todayISO() {
-  return localISO(new Date());
+  return indiaTodayISO();
 }
 
-// YYYY-MM-DD in the user's local timezone.
+// YYYY-MM-DD in the device's local timezone (not for café dates).
 export function localISO(d) {
   const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
   return local.toISOString().slice(0, 10);

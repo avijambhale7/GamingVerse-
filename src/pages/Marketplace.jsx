@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate as useRouterNavigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import {
+  equalTo,
   get,
+  limitToLast,
+  orderByChild,
+  query,
   ref,
   set,
   push,
@@ -27,6 +31,20 @@ import ProductCatalogue from "./marketplace/views/ProductCatalogue.jsx";
 import SellerView from "./marketplace/views/SellerView.jsx";
 import { upsertById } from "../utils/listUtils.js";
 
+const PRODUCT_PAGE = 20;
+
+// products/{id} snapshot value → list for the catalogue (blocked hidden).
+function toProductList(data) {
+  return Object.entries(data)
+    .filter(([, product]) => product && typeof product === "object")
+    .map(([id, product]) => ({
+      id,
+      ...product,
+      productType: product.productType || "game",
+    }))
+    .filter((product) => product.status !== "blocked");
+}
+
 export default function Marketplace({ embedded = false }) {
   const routeNavigate = useRouterNavigate();
   const navigateToGames = () => routeNavigate("/games");
@@ -34,7 +52,13 @@ export default function Marketplace({ embedded = false }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Newest listings, PRODUCT_PAGE at a time ("Load more" adds more)…
   const [products, setProducts] = useState([]);
+  const [productLimit, setProductLimit] = useState(PRODUCT_PAGE);
+  const [moreProducts, setMoreProducts] = useState(false);
+  // …plus every listing of the signed-in seller, so "My listings" is
+  // always complete however many pages have loaded.
+  const [myProducts, setMyProducts] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   // Product the buyer is about to request (opens the request modal).
   const [requestProduct, setRequestProduct] = useState(null);
@@ -76,21 +100,17 @@ export default function Marketplace({ embedded = false }) {
   // through the Sell tab (or an owner's accessory form), so what buyers see
   // is exactly what people are actually offering, never seed/demo data.
   useEffect(() => {
-    const productsRef = ref(db, "products");
+    const productsRef = query(
+      ref(db, "products"),
+      orderByChild("createdAt"),
+      limitToLast(productLimit),
+    );
     const unsubscribeProducts = onValue(
       productsRef,
       (snapshot) => {
         const data = snapshot.val() || {};
-        const firebaseProducts = Object.entries(data)
-          .filter(([, product]) => product && typeof product === "object")
-          .map(([id, product]) => ({
-            id,
-            ...product,
-            productType: product.productType || "game",
-          }))
-          .filter((product) => product.status !== "blocked");
-
-        setProducts(firebaseProducts);
+        setMoreProducts(Object.keys(data).length >= productLimit);
+        setProducts(toProductList(data));
       },
       (error) => {
         console.error("Marketplace product listener error:", error);
@@ -99,7 +119,22 @@ export default function Marketplace({ embedded = false }) {
     );
 
     return () => unsubscribeProducts();
-  }, []);
+  }, [productLimit]);
+
+  useEffect(() => {
+    if (!user?.uid) return undefined;
+    return onValue(
+      query(ref(db, "products"), orderByChild("sellerId"), equalTo(user.uid)),
+      (snapshot) => setMyProducts(toProductList(snapshot.val() || {})),
+      (error) => console.error("My listings listener error:", error),
+    );
+  }, [user?.uid]);
+
+  // Loaded page + the seller's own listings, without duplicates.
+  const allProducts = useMemo(() => {
+    const seen = new Set(products.map((product) => product.id));
+    return [...products, ...myProducts.filter((product) => !seen.has(product.id))];
+  }, [products, myProducts]);
 
   const navigate = (nextPage) => {
     setPage(nextPage);
@@ -450,7 +485,9 @@ export default function Marketplace({ embedded = false }) {
           openProduct={openProduct}
           page={page}
           platform={platform}
-          products={products}
+          products={allProducts}
+          hasMore={moreProducts}
+          onLoadMore={() => setProductLimit((n) => n + PRODUCT_PAGE)}
           search={search}
           selectedProduct={selectedProduct}
           setCategory={setCategory}

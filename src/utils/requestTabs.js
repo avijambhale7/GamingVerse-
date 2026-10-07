@@ -9,15 +9,18 @@ const TAB_LABELS = {
   approved: "Approved",
   accepted: "Accepted",
   closed: "Rejected / Cancelled",
+  reported: "⚑ Reported",
   all: "All",
 };
 
 // Admins get an "Approved" tab for requests they approved that are now
 // waiting on the seller — before, those only showed under "All".
-export function requestTabsFor(role) {
+// `reports`: show the admin's "Reported" tab (requests with open
+// problem reports; needs purchaseReports passed to the list).
+export function requestTabsFor(role, { reports = false } = {}) {
   const ids =
     role === "admin"
-      ? ["open", "approved", "accepted", "closed", "all"]
+      ? ["open", "approved", "accepted", "closed", ...(reports ? ["reported"] : []), "all"]
       : ["open", "accepted", "closed", "all"];
   return ids.map((id) => ({ id, label: TAB_LABELS[id] }));
 }
@@ -42,7 +45,10 @@ export function requestTabOf(request, role) {
 }
 
 export function requestMatchesTab(request, tab, role) {
-  return tab === "all" || requestTabOf(request, role) === tab;
+  if (tab === "all") return true;
+  // A filter across statuses, not a status of its own.
+  if (tab === "reported") return Number(request?.openReports) > 0;
+  return requestTabOf(request, role) === tab;
 }
 
 const updatedTime = (request) =>

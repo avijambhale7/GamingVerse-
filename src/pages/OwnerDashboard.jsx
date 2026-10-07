@@ -29,11 +29,13 @@ import {
 } from "./cafe/utils/cafeModel.js";
 import { decodeTicket } from "./cafe/utils/ticket.js";
 import { nowMs, todayISO } from "./cafe/utils/time.js";
+import { indiaMonthOf } from "./cafe/utils/indiaTime.js";
 import WalkInBookingForm from "./owner/views/WalkInBookingForm.jsx";
 import useOwnerBookings from "./owner/useOwnerBookings.js";
 import { changeBookingStatus } from "./cafe/utils/bookingWrites.js";
 import { getSellerName } from "../utils/profileName.js";
 import { mergePhotoList } from "../utils/photoList.js";
+import { NO_SHOW, canMarkNoShow, noShowCount } from "./cafe/utils/noShow.js";
 
 const OWNER_ROLES = new Set([
   "owner",
@@ -115,7 +117,7 @@ function matchesBookingFilter(booking, filter) {
   const status = String(booking.status || "Pending");
   if (filter === "All") return true;
   if (filter === "Cancelled")
-    return status === "Cancelled" || status === "Rejected";
+    return status === "Cancelled" || status === "Rejected" || status === NO_SHOW;
   return status === filter;
 }
 
@@ -128,6 +130,12 @@ export default function OwnerDashboard() {
   // Business signup awaiting admin approval (users/{uid}/requestedRole).
   const [pendingRole, setPendingRole] = useState("");
   const [section, setSection] = useState("overview");
+  // Ticks every minute so "No-show" appears once a booked hour is over.
+  const [clockMs, setClockMs] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockMs(Date.now()), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [products, setProducts] = useState([]);
   const [savingProduct, setSavingProduct] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -143,10 +151,8 @@ export default function OwnerDashboard() {
   const [savingCafeDetails, setSavingCafeDetails] = useState(false);
   const [newCafeForm, setNewCafeForm] = useState(EMPTY_NEW_CAFE);
   const [creatingCafe, setCreatingCafe] = useState(false);
-  const [revenueMonth, setRevenueMonth] = useState(() => {
-    const now = new Date();
-    return { year: now.getFullYear(), month: now.getMonth() };
-  });
+  // Revenue months are India months (see cafe/utils/indiaTime.js).
+  const [revenueMonth, setRevenueMonth] = useState(() => indiaMonthOf());
   const [scanResult, setScanResult] = useState(null);
   const [scanError, setScanError] = useState("");
   // Ticket code typed or pasted when the camera can't be used.
@@ -449,11 +455,8 @@ export default function OwnerDashboard() {
   const monthlyCompletedBookings = useMemo(() => {
     return bookings.filter((booking) => {
       if (String(booking.status || "") !== "Completed") return false;
-      const when = new Date(Number(booking.completedAt || booking.createdAt || 0));
-      return (
-        when.getFullYear() === revenueMonth.year &&
-        when.getMonth() === revenueMonth.month
-      );
+      const when = indiaMonthOf(Number(booking.completedAt || booking.createdAt || 0));
+      return when.year === revenueMonth.year && when.month === revenueMonth.month;
     });
   }, [bookings, revenueMonth]);
 
@@ -1025,6 +1028,10 @@ export default function OwnerDashboard() {
                   );
                   const pending = status === "Pending";
                   const confirmed = status === "Confirmed";
+                  const noShowAllowed = canMarkNoShow(booking, clockMs);
+                  const pastNoShows = booking.walkIn
+                    ? 0
+                    : noShowCount(bookings, booking.customerId, booking.cafeId);
                   return (
                     <article
                       key={`${booking.customerId}-${booking.id}`}
@@ -1055,6 +1062,14 @@ export default function OwnerDashboard() {
                         <div className="dp-meta-chips">
                           {booking.walkIn && (
                             <span className="dp-walkin-chip">🚶 Walk-in</span>
+                          )}
+                          {pastNoShows > 0 && (
+                            <span
+                              className="dp-noshow-chip"
+                              title="No-shows this customer has had at this café"
+                            >
+                              ⚠ {pastNoShows} no-show{pastNoShows === 1 ? "" : "s"} here
+                            </span>
                           )}
                           <span>🕐 {booking.time}</span>
                           <span>🎮 {booking.station || "Gaming station"}</span>
@@ -1132,6 +1147,22 @@ export default function OwnerDashboard() {
                             >
                               Cancel
                             </button>
+                            {noShowAllowed && (
+                              <button
+                                type="button"
+                                className="owner-noshow-btn"
+                                onClick={() => {
+                                  if (
+                                    window.confirm(
+                                      `Mark ${customerName} as a no-show for ${booking.time}?`,
+                                    )
+                                  )
+                                    updateBookingStatus(booking, NO_SHOW);
+                                }}
+                              >
+                                🚫 No-show
+                              </button>
+                            )}
                           </>
                         )}
                         {!pending && !confirmed && (
@@ -1395,6 +1426,7 @@ export default function OwnerDashboard() {
                     )}
                     <ImageUploadButton
                       pathPrefix={`cafePhotos/${user.uid}`}
+                      preset="cafe"
                       label="Upload Photos"
                       multiple
                       onUploaded={(urls) =>
@@ -1886,6 +1918,7 @@ export default function OwnerDashboard() {
                   />
                   <ImageUploadButton
                     pathPrefix={`productImages/${user.uid}`}
+                    preset="product"
                     label="Upload"
                     onUploaded={(url) =>
                       setProductForm((p) => ({ ...p, image: url }))

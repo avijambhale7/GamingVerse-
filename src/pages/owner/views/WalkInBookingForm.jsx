@@ -9,7 +9,8 @@
 
 import { useState } from "react";
 import { SlotFullError, createBooking } from "../../cafe/utils/bookingWrites.js";
-import { getTimeSlots, localISO } from "../../cafe/utils/time.js";
+import { getTimeSlots } from "../../cafe/utils/time.js";
+import { indiaDateISO, indiaMinutesNow } from "../../cafe/utils/indiaTime.js";
 import { isDateBlocked } from "../../cafe/utils/cafeModel.js";
 import {
   MAX_SEATS_PER_BOOKING,
@@ -21,8 +22,9 @@ import {
 
 export default function WalkInBookingForm({ cafes, ownerUid, onDone }) {
   // Captured when the form opens; good enough for picking today's slots.
-  const [openedAt] = useState(() => new Date());
-  const today = localISO(openedAt);
+  // India time, whatever the device's timezone.
+  const [openedAt] = useState(() => Date.now());
+  const today = indiaDateISO(openedAt);
 
   const [cafeId, setCafeId] = useState(cafes[0]?.id || "");
   const [date, setDate] = useState(today);
@@ -36,14 +38,14 @@ export default function WalkInBookingForm({ cafes, ownerUid, onDone }) {
   const cafe = cafes.find((c) => c.id === cafeId) || cafes[0];
   if (!cafe) return null;
 
-  const closed = isDateBlocked(cafe, new Date(`${date}T00:00:00`), date);
+  const closed = isDateBlocked(cafe, date);
   const slots = closed
     ? []
     : getTimeSlots(
         cafe.opening,
         cafe.closing,
         date === today
-          ? openedAt.getHours() * 60 + openedAt.getMinutes()
+          ? indiaMinutesNow(openedAt)
           : -1,
       );
   const maxSeats = Math.min(MAX_SEATS_PER_BOOKING, cafe.totalSeats);

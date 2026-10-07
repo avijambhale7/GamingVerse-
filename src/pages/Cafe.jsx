@@ -3,6 +3,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import {
   equalTo,
   get,
+  limitToLast,
   onValue,
   orderByChild,
   query,
@@ -21,11 +22,16 @@ import {
 } from "./cafe/utils/localBookings.js";
 import {
   getTimeSlots,
-  localISO,
   makeLocalBookingId,
   nowMs as currentTimeMs,
   todayISO,
 } from "./cafe/utils/time.js";
+import {
+  indiaDateISO,
+  indiaMinutesNow,
+  indiaUpcomingDates,
+  weekdayOfISO,
+} from "./cafe/utils/indiaTime.js";
 import {
   isCafeOpenNow,
   isDateBlocked,
@@ -58,6 +64,9 @@ import { plural } from "../utils/authorLabel.js";
 
 // The map library (Leaflet) only downloads when someone opens Map view.
 const CafeMap = lazy(() => import("./cafe/views/CafeMap.jsx"));
+
+// Cafés load this many at a time ("Load more cafés" adds more).
+const CAFE_PAGE = 20;
 
 export default function Cafe() {
   const [user, setUser] = useState(null);
@@ -92,6 +101,9 @@ export default function Cafe() {
   const [rateBooking, setRateBooking] = useState(null);
   const [showBookings, setShowBookings] = useState(false);
   const [qrBooking, setQrBooking] = useState(null);
+  // Newest cafés first, CAFE_PAGE at a time.
+  const [cafeLimit, setCafeLimit] = useState(CAFE_PAGE);
+  const [moreCafes, setMoreCafes] = useState(false);
   // Ticks every minute so today's slot list drops slots as they start.
   const [nowMs, setNowMs] = useState(() => Date.now());
 
@@ -105,10 +117,17 @@ export default function Cafe() {
   // café's details stay live-updated wherever it's shown.
   useEffect(() => {
     const unsubscribe = onValue(
-      // Customers can only read approved cafés (database rules).
-      query(ref(db, "cafes"), orderByChild("status"), equalTo("approved")),
+      // Customers can only read approved cafés (database rules). The newest
+      // CAFE_PAGE load first; "Load more cafés" raises the limit.
+      query(
+        ref(db, "cafes"),
+        orderByChild("status"),
+        equalTo("approved"),
+        limitToLast(cafeLimit),
+      ),
       (snapshot) => {
         const data = snapshot.val() || {};
+        setMoreCafes(Object.keys(data).length >= cafeLimit);
         const next = Object.entries(data)
           .map(([id, raw]) => normalizeCafe(id, raw))
           .filter(Boolean)
@@ -121,7 +140,7 @@ export default function Cafe() {
       },
     );
     return () => unsubscribe();
-  }, []);
+  }, [cafeLimit]);
 
   const selectedCafe = useMemo(
     () => cafes.find((c) => c.id === selectedCafeId) || null,
@@ -303,13 +322,13 @@ export default function Cafe() {
   };
 
   const now = new Date(nowMs);
-  const isTodaySelected = selectedDate === localISO(now);
+  const isTodaySelected = selectedDate === indiaDateISO(nowMs);
   const timeSlots = selectedCafe
     ? getTimeSlots(
         selectedCafe.opening,
         selectedCafe.closing,
         // Today: only slots that start after the current time.
-        isTodaySelected ? now.getHours() * 60 + now.getMinutes() : -1,
+        isTodaySelected ? indiaMinutesNow(nowMs) : -1,
       )
     : [];
 
@@ -410,11 +429,7 @@ export default function Cafe() {
     }
 
     if (
-      isDateBlocked(
-        selectedCafe,
-        new Date(`${selectedDate}T00:00:00`),
-        selectedDate,
-      )
+      isDateBlocked(selectedCafe, selectedDate)
     ) {
       notify("The café is closed on that date. Please choose another day.");
       return;
@@ -784,11 +799,14 @@ export default function Cafe() {
                         ? "Booking confirmed"
                         : status === "Rejected"
                           ? "Request rejected"
-                          : status;
+                          : status === "No-show"
+                            ? "Marked as a no-show by the café"
+                            : status;
                   const canCancel = ![
                     "Completed",
                     "Cancelled",
                     "Rejected",
+                    "No-show",
                   ].includes(status);
                   return (
                     <article className="cafe-booking-card" key={b.id}>
@@ -971,11 +989,8 @@ export default function Cafe() {
                 </span>
                 <h2>Choose date & hourly slot</h2>
                 <div className="cafe-date-chips">
-                  {Array.from({ length: 7 }, (_, i) => {
-                    const d = new Date();
-                    d.setDate(d.getDate() + i);
-                    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-                    const blocked = isDateBlocked(selectedCafe, d, iso);
+                  {indiaUpcomingDates(7, nowMs).map((iso, i) => {
+                    const blocked = isDateBlocked(selectedCafe, iso);
                     const selected = selectedDate === iso;
                     return (
                       <button
@@ -989,11 +1004,9 @@ export default function Cafe() {
                         }}
                       >
                         <strong>
-                          {i === 0
-                            ? "Today"
-                            : d.toLocaleDateString("en-US", { weekday: "short" })}
+                          {i === 0 ? "Today" : weekdayOfISO(iso)}
                         </strong>
-                        <span>{d.getDate()}</span>
+                        <span>{Number(iso.slice(8, 10))}</span>
                       </button>
                     );
                   })}
@@ -1245,6 +1258,15 @@ export default function Cafe() {
                 </article>
               ))}
             </div>
+            )}
+            {moreCafes && (
+              <button
+                type="button"
+                className="cafe-load-more"
+                onClick={() => setCafeLimit((n) => n + CAFE_PAGE)}
+              >
+                Load more cafés
+              </button>
             )}
             {!filteredCafes.length && (
               <div className="cafe-empty">
