@@ -14,7 +14,21 @@ import {
   isPushSupported,
   pushPermission,
 } from "../utils/push.js";
+import { needsHomeScreenForPush } from "../utils/inAppBrowser.js";
 import "./PushToggle.css";
+
+const IOS_HOME_SCREEN_HINT =
+  "On iPhone, tap Share → Add to Home Screen, then open GamingVerse from your Home Screen to get notifications.";
+
+const currentDevice = () =>
+  typeof navigator === "undefined"
+    ? {}
+    : {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        maxTouchPoints: navigator.maxTouchPoints,
+        standalone: navigator.standalone,
+      };
 
 export default function PushToggle() {
   const [supported, setSupported] = useState(false);
@@ -22,6 +36,8 @@ export default function PushToggle() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const uid = auth.currentUser?.uid;
+  // iPhone/iPad Safari only allows push for Home Screen apps.
+  const [iosNeedsInstall] = useState(() => needsHomeScreenForPush(currentDevice()));
 
   useEffect(() => {
     let alive = true;
@@ -38,7 +54,17 @@ export default function PushToggle() {
     };
   }, [uid]);
 
-  if (!supported || !uid) return null;
+  if (!uid) return null;
+  if (!supported) {
+    if (!iosNeedsInstall) return null;
+    return (
+      <div className="push-toggle">
+        <p className="push-toggle-ios">
+          <span aria-hidden="true">📲</span> {IOS_HOME_SCREEN_HINT}
+        </p>
+      </div>
+    );
+  }
 
   const blocked = pushPermission() === "denied";
 

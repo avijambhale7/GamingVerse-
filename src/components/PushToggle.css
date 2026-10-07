@@ -65,3 +65,11 @@
   color: #fda4af;
   font-size: 12px;
 }
+
+/* iPhone/iPad Safari without Home Screen install: how to get push */
+.push-toggle-ios {
+  margin: 0;
+  color: #c9c6d4;
+  font-size: 12.5px;
+  line-height: 1.5;
+}

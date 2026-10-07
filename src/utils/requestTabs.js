@@ -44,3 +44,21 @@ export function requestTabOf(request, role) {
 export function requestMatchesTab(request, tab, role) {
   return tab === "all" || requestTabOf(request, role) === tab;
 }
+
+const updatedTime = (request) =>
+  Number(request?.updatedAt || request?.createdAt || 0) || 0;
+
+// The tab to open first: the one holding the most recently updated
+// request (so a fresh change is right there), "All" when that can't be
+// worked out, and never a tab with nothing in it while another has items.
+export function initialRequestTab(requests = [], role) {
+  const list = Array.isArray(requests) ? requests.filter(Boolean) : [];
+  if (!list.length) return "open";
+  const latest = list.reduce((best, request) =>
+    updatedTime(request) > updatedTime(best) ? request : best,
+  );
+  if (!updatedTime(latest)) return "all";
+  const tab = requestTabOf(latest, role);
+  const known = requestTabsFor(role).some((item) => item.id === tab);
+  return known && list.some((r) => requestMatchesTab(r, tab, role)) ? tab : "all";
+}

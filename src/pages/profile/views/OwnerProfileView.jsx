@@ -3,6 +3,8 @@
    Rendered by ../../Profile.jsx.
 ========================================================= */
 
+import SupportLink from "../../../components/SupportLink.jsx";
+
 export default function OwnerProfileView({
   handleLogout,
   navigate,
@@ -40,6 +42,9 @@ export default function OwnerProfileView({
           >
             Owner Dashboard
           </button>
+          <SupportLink className="cafe-owner-support-link">
+            Help &amp; Support
+          </SupportLink>
           <button
             type="button"
             className="cafe-owner-logout-btn"

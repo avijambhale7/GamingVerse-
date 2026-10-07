@@ -27,6 +27,8 @@ import { REQUEST_STATUS } from "../utils/purchaseRequests.js";
 import { notifyUser } from "../utils/notify.js";
 import ProductImage from "./marketplace/views/ProductImage.jsx";
 import { roleLabel } from "../utils/authFlow.js";
+import AdminBirthDate from "./admin/AdminBirthDate.jsx";
+import AdminAttention from "./admin/AdminAttention.jsx";
 
 // Module scope, evaluated once at page load — not a render-time call, so
 // the activity chart's "last 14 days" window doesn't need Date.now() (an
@@ -756,6 +758,33 @@ export default function Admin() {
 
       {section === "overview" && (
         <main className="admin-main gv-page-enter">
+          <AdminAttention
+            items={[
+              {
+                id: "businesses",
+                icon: "💼",
+                label: "Business accounts to approve",
+                count: pendingBusinesses.length,
+                section: "users",
+              },
+              {
+                id: "cafes",
+                icon: "☕",
+                label: "Cafés to review",
+                count: cafes.filter((c) => c.status === "pending").length,
+                section: "cafes",
+              },
+              {
+                id: "requests",
+                icon: "📨",
+                label: "Purchase requests to approve",
+                count: pendingRequestCount,
+                section: "requests",
+              },
+            ]}
+            onOpen={setSection}
+          />
+
           <section className="admin-stat-grid">
             <article>
               <i className="dp-stat-icon" aria-hidden="true">👥</i>
@@ -938,6 +967,12 @@ export default function Admin() {
                         {u.role && <small className="admin-role-tag">{roleLabel(u.role)}</small>}
                       </div>
                       <div className="admin-row-actions">
+                        <AdminBirthDate
+                          key={`${u.uid}-${u.dob || ""}`}
+                          user={u}
+                          name={name}
+                          onMessage={setMessage}
+                        />
                         {u.isBanned ? (
                           <button
                             type="button"

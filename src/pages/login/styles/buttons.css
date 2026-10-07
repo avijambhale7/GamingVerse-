@@ -226,3 +226,36 @@
   background: rgba(139, 92, 246, 0.15);
   border-color: rgba(168, 85, 247, 0.55);
 }
+
+/* Inside Instagram / WhatsApp / Facebook… browsers (Login.jsx) */
+.in-app-browser-note {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(245, 179, 1, 0.4);
+  border-radius: 14px;
+  background: rgba(245, 179, 1, 0.08);
+  text-align: left;
+}
+.in-app-browser-note p {
+  margin: 0;
+  color: #f5e6b8;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.in-app-browser-note strong {
+  color: #fff;
+}
+.in-app-browser-note button {
+  justify-self: start;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}

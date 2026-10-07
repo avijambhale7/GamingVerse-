@@ -1,0 +1,137 @@
+/* =========================================================
+   HELP & SUPPORT (SupportLink.jsx)
+========================================================= */
+
+.support-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #c4b5fd;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.support-link:hover {
+  color: #fff;
+}
+
+.support-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px 16px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.support-modal {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  width: min(400px, 100%);
+  margin: auto;
+  padding: 28px 22px 22px;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: 22px;
+  background: linear-gradient(145deg, #15121d, #0b0a10);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65);
+  color: #fff;
+  text-align: center;
+  font-family: Inter, system-ui, sans-serif;
+}
+.support-modal h2 {
+  margin: 0;
+  font-size: 21px;
+}
+.support-modal > p {
+  margin: 0 0 6px;
+  color: #a1a1b5;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.support-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  background: transparent;
+  color: #8e8e98;
+  font-size: 26px;
+  cursor: pointer;
+}
+.support-close:hover {
+  color: #fff;
+}
+
+.support-icon {
+  width: 58px;
+  height: 58px;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  font-size: 26px;
+}
+
+.support-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  text-align: left;
+  text-decoration: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.support-option:hover {
+  border-color: rgba(168, 85, 247, 0.55);
+  background: rgba(168, 85, 247, 0.1);
+}
+.support-option.is-whatsapp:hover {
+  border-color: rgba(37, 211, 102, 0.6);
+  background: rgba(37, 211, 102, 0.1);
+}
+.support-option > span {
+  font-size: 22px;
+}
+.support-option strong,
+.support-option small {
+  display: block;
+}
+.support-option small {
+  margin-top: 2px;
+  color: #a1a1b5;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+
+/* Where the link sits */
+.profile-support-link {
+  display: block;
+  margin: 14px auto 0;
+  font-size: 14px;
+}
+.cafe-owner-support-link {
+  padding: 0 6px;
+  font-size: 14px;
+}
+.login-support {
+  margin: 16px 0 0;
+  color: #8e8e98;
+  font-size: 13px;
+  text-align: center;
+}

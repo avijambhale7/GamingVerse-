@@ -209,3 +209,13 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.owner-manual-ticket .owner-manual-ticket-error {
+  margin: 0;
+  color: #fda4af;
+  font-size: 13px;
+  font-weight: 700;
+}
+.owner-manual-ticket input[aria-invalid="true"] {
+  border-color: rgba(244, 63, 94, 0.7);
+}

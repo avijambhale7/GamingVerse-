@@ -3,6 +3,7 @@
    Rendered by ../../Profile.jsx.
 ========================================================= */
 import GVLogoMark from "../../../components/GVLogoMark.jsx";
+import SupportLink from "../../../components/SupportLink.jsx";
 
 export default function EditProfileView({
   handleEditChange,
@@ -174,7 +175,10 @@ export default function EditProfileView({
                 />
                 {dobLocked && (
                   <small id="dob-locked-note">
-                    Contact support to change your date of birth.
+                    <SupportLink topic="Changing my date of birth">
+                      Contact support
+                    </SupportLink>{" "}
+                    to change your date of birth.
                   </small>
                 )}
               </div>

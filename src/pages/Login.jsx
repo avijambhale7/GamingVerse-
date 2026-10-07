@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useEffectEvent, useState } from "react";
 import {
   signInWithEmailAndPassword,
   signInWithCustomToken,
@@ -8,7 +8,9 @@ import {
   browserLocalPersistence,
   browserSessionPersistence,
   GoogleAuthProvider,
+  getRedirectResult,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
   updateProfile,
 } from "firebase/auth";
@@ -37,9 +39,15 @@ import {
   returnPathFrom,
 } from "../utils/authFlow.js";
 import useEscapeKey from "../utils/useEscapeKey.js";
+import {
+  POPUP_UNSUPPORTED_CODES,
+  isInAppBrowser,
+} from "../utils/inAppBrowser.js";
 import { calculateAgeFromDob } from "./games/utils/access.js";
 import PageLoading from "../components/PageLoading.jsx";
+import { NOTIFY_TITLES, notifyAdmins } from "../utils/notify.js";
 import "./Login.css";
+import SupportLink from "../components/SupportLink.jsx";
 
 /* Load all game images from src/assets/horizontal */
 const gameImageModules = import.meta.glob(
@@ -112,6 +120,26 @@ function writeStorage(key, value) {
 }
 
 const REMEMBER_ME_KEY = "gamingVerseRememberMe";
+// Set while a Google sign-in redirect is under way (the page reloads),
+// with the page to return to afterwards.
+const GOOGLE_REDIRECT_KEY = "gamingVerseGoogleRedirect";
+
+function readSession(key) {
+  try {
+    return sessionStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeSession(key, value) {
+  try {
+    if (value === null) sessionStorage.removeItem(key);
+    else sessionStorage.setItem(key, value);
+  } catch {
+    /* storage unavailable */
+  }
+}
 const REMEMBERED_EMAIL_KEY = "gamingVerseEmail";
 
 // Reserve a handle; if someone grabbed it in the last few seconds,
@@ -175,7 +203,17 @@ function Login({ user = null, authLoading = false }) {
   const [loading, setLoading] = useState(false);
   // True while this page is signing someone in / up: it then navigates
   // itself, so the "already signed in" redirect below stays out of it.
-  const [authBusy, setAuthBusy] = useState(false);
+  // Also true while returning from a Google sign-in redirect, until its
+  // result is handled below.
+  const [authBusy, setAuthBusy] = useState(
+    () => readSession(GOOGLE_REDIRECT_KEY) !== null,
+  );
+  // Instagram / Facebook / WhatsApp / Line / Android WebView: Google
+  // sign-in is blocked there, so suggest a real browser.
+  const [inAppBrowser] = useState(() =>
+    isInAppBrowser(typeof navigator === "undefined" ? "" : navigator.userAgent),
+  );
+  const [linkCopied, setLinkCopied] = useState(false);
   const [notice, setNotice] = useState(() =>
     hasBannedNotice() ? { text: BANNED_MESSAGE, type: "error" } : null,
   );
@@ -214,8 +252,8 @@ function Login({ user = null, authLoading = false }) {
 
   // After a successful sign-in: show the toast, then go to the page
   // the user was heading to, or their role's home page.
-  const finishSignIn = async (uid, message) => {
-    const path = returnTo || homePathFor(await readProfile(uid));
+  const finishSignIn = async (uid, message, backTo = returnTo) => {
+    const path = backTo || homePathFor(await readProfile(uid));
     notify(message, "success");
     window.setTimeout(() => navigate(path, { replace: true }), 600);
   };
@@ -227,6 +265,55 @@ function Login({ user = null, authLoading = false }) {
     consumeBannedNotice(); // App may have flagged it too
     notify(BANNED_MESSAGE, "error");
     return true;
+  };
+
+  // Back from a Google sign-in redirect: same ban check and landing page
+  // as the pop-up. Only runs when this page started a redirect.
+  const handleRedirectResult = useEffectEvent((pending, isCancelled) =>
+    getRedirectResult(auth)
+      .then(async (cred) => {
+        if (isCancelled()) return;
+        if (!cred?.user) {
+          setAuthBusy(false);
+          return;
+        }
+        if (await rejectIfBanned(cred.user.uid)) {
+          setAuthBusy(false);
+          return;
+        }
+        await finishSignIn(cred.user.uid, "Google login successful!", pending);
+      })
+      .catch((error) => {
+        console.error("Google redirect sign-in error:", error);
+        if (isCancelled()) return;
+        setAuthBusy(false);
+        notify(
+          consumeBannedNotice()
+            ? BANNED_MESSAGE
+            : authErrorMessage(error.code, "google"),
+          "error",
+        );
+      }),
+  );
+  useEffect(() => {
+    const pending = readSession(GOOGLE_REDIRECT_KEY);
+    if (pending === null) return undefined;
+    writeSession(GOOGLE_REDIRECT_KEY, null);
+    let cancelled = false;
+    handleRedirectResult(pending, () => cancelled);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const copyPageLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setLinkCopied(true);
+      window.setTimeout(() => setLinkCopied(false), 2000);
+    } catch {
+      notify(`Copy this link: ${window.location.href}`, "info");
+    }
   };
 
   const handleLogin = async (e) => {
@@ -497,6 +584,12 @@ function Login({ user = null, authLoading = false }) {
       setModal(null);
 
       created = true;
+      notifyAdmins(
+        `New business account waiting for approval: ${handle} (${
+          ownerSignupRole === "cafe_owner" ? "café owner" : "shop owner"
+        }).`,
+        NOTIFY_TITLES.admin,
+      ).catch((error) => console.warn("Admin notification failed:", error));
       notify(
         "Business account created! An admin will review and approve it shortly.",
         "success",
@@ -561,7 +654,18 @@ function Login({ user = null, authLoading = false }) {
       );
 
       const provider = new GoogleAuthProvider();
-      const cred = await signInWithPopup(auth, provider);
+      let cred;
+      try {
+        cred = await signInWithPopup(auth, provider);
+      } catch (popupError) {
+        // Pop-ups blocked or unsupported here: sign in with a full-page
+        // redirect instead. The result is handled when the page reloads.
+        if (!POPUP_UNSUPPORTED_CODES.has(popupError.code)) throw popupError;
+        writeSession(GOOGLE_REDIRECT_KEY, returnTo);
+        signedIn = true; // keep the page busy while the browser leaves
+        await signInWithRedirect(auth, provider);
+        return;
+      }
 
       if (await rejectIfBanned(cred.user.uid)) return;
 
@@ -572,6 +676,8 @@ function Login({ user = null, authLoading = false }) {
     } catch (error) {
       console.error(error);
 
+      writeSession(GOOGLE_REDIRECT_KEY, null);
+      signedIn = false;
       if (consumeBannedNotice()) {
         notify(BANNED_MESSAGE, "error");
       } else {
@@ -727,6 +833,18 @@ function Login({ user = null, authLoading = false }) {
           <div></div>
         </div>
 
+        {inAppBrowser && (
+          <div className="in-app-browser-note" role="note">
+            <p>
+              <strong>For Google sign-in, open this page in Chrome or Safari.</strong>{" "}
+              Google blocks sign-in inside apps like Instagram and WhatsApp.
+            </p>
+            <button type="button" onClick={copyPageLink}>
+              {linkCopied ? "Link copied ✓" : "Copy link"}
+            </button>
+          </div>
+        )}
+
         <button
           type="button"
           className="social-button"
@@ -756,6 +874,10 @@ function Login({ user = null, authLoading = false }) {
           <span aria-hidden="true">💼</span>
           Create Business Account
         </button>
+
+        <p className="login-support">
+          Trouble signing in? <SupportLink>Help &amp; Support</SupportLink>
+        </p>
       </div>
 
       {/* Create account modal */}

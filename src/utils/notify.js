@@ -15,6 +15,8 @@ export const NOTIFY_TITLES = {
   cafe: "GamingVerse Café",
   feed: "GamingVerse Feed",
   release: "GamingVerse Release",
+  support: "GamingVerse Support",
+  admin: "GamingVerse Admin",
 };
 
 function write(path, title, message) {

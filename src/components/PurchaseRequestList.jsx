@@ -9,6 +9,7 @@ import { useState } from "react";
 import PurchaseRequestCard from "./PurchaseRequestCard.jsx";
 import usePurchaseRequests from "../utils/usePurchaseRequests.js";
 import {
+  initialRequestTab,
   requestMatchesTab,
   requestTabLabel,
   requestTabOf,
@@ -32,7 +33,11 @@ export default function PurchaseRequestList({
 }) {
   const own = usePurchaseRequests(role, data ? "" : uid);
   const { requests, error } = data || own;
-  const [filter, setFilter] = useState("open");
+  // Until the user picks a tab, open the one with the latest change
+  // (requests arrive after the first render, so this is derived, not
+  // stored) — never an empty tab while another has items.
+  const [pickedFilter, setPickedFilter] = useState("");
+  const filter = pickedFilter || initialRequestTab(requests, role);
   // The request this user just acted on. When its new status moves it out
   // of the open tab, say where it went instead of letting it vanish.
   const [actedId, setActedId] = useState("");
@@ -47,7 +52,7 @@ export default function PurchaseRequestList({
       : "";
 
   const openTab = (tab) => {
-    setFilter(tab);
+    setPickedFilter(tab);
     setActedId("");
   };
 

@@ -735,3 +735,132 @@
   background: #22a06b;
   color: #fff;
 }
+
+/* Admin → Users: correct a birth date (admin/AdminBirthDate.jsx) */
+.admin-dob-editor {
+  display: grid;
+  gap: 8px;
+  flex-basis: 100%;
+  min-width: 240px;
+  padding: 12px;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  border-radius: 14px;
+  background: rgba(168, 85, 247, 0.08);
+  text-align: left;
+}
+.admin-dob-editor label {
+  display: grid;
+  gap: 6px;
+  color: #e6e1f2;
+  font-size: 13px;
+  font-weight: 700;
+}
+.admin-dob-editor input {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font: inherit;
+  color-scheme: dark;
+}
+.admin-dob-editor small,
+.admin-dob-editor p {
+  margin: 0;
+  color: #b9b6c4;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.admin-dob-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.admin-dob-actions .is-confirm {
+  border-color: transparent;
+  background: linear-gradient(120deg, #a855f7, #6366f1);
+  color: #fff;
+}
+.admin-dob-editor .admin-dob-error {
+  color: #fda4af;
+}
+
+/* Overview: "Needs your attention" (admin/AdminAttention.jsx) */
+.admin-attention {
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid rgba(80, 210, 142, 0.3);
+  border-radius: 18px;
+  background: linear-gradient(140deg, rgba(80, 210, 142, 0.08), rgba(255, 255, 255, 0.02));
+}
+.admin-attention.has-items {
+  border-color: rgba(245, 179, 1, 0.45);
+  background: linear-gradient(140deg, rgba(245, 179, 1, 0.1), rgba(255, 255, 255, 0.02));
+}
+.admin-attention-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 12px;
+  margin-bottom: 12px;
+}
+.admin-attention-head h2 {
+  margin: 0;
+  font-size: 19px;
+}
+.admin-attention-head span {
+  color: #b9b6c4;
+  font-size: 13px;
+  font-weight: 700;
+}
+.admin-attention ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.admin-attention button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.25);
+  color: #c4c4cc;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.admin-attention button:hover {
+  border-color: rgba(168, 85, 247, 0.5);
+  background: rgba(168, 85, 247, 0.08);
+}
+.admin-attention-label {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.admin-attention button strong {
+  min-width: 28px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  text-align: center;
+}
+.admin-attention button.is-waiting strong {
+  background: rgba(245, 179, 1, 0.9);
+  color: #1a1206;
+}
+.admin-attention button em {
+  color: #8e8e98;
+  font-size: 20px;
+  font-style: normal;
+}

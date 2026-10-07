@@ -13,6 +13,7 @@ import GVLogoMark from "../../../components/GVLogoMark.jsx";
 import useRemotePosters from "../utils/useRemotePosters.js";
 import useEscapeKey from "../../../utils/useEscapeKey.js";
 import { userPath } from "../../../utils/publicProfile.js";
+import SupportLink from "../../../components/SupportLink.jsx";
 
 export default function ProfileView({
   activeTab,
@@ -169,6 +170,10 @@ export default function ProfileView({
           >
             ↪ Log Out
           </button>
+
+          <SupportLink className="profile-support-link">
+            💬 Help &amp; Support
+          </SupportLink>
         </section>
 
         <section className="profile-middle">

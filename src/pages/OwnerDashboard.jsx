@@ -20,7 +20,7 @@ import NotificationBell from "../components/NotificationBell.jsx";
 import PurchaseRequestList from "../components/PurchaseRequestList.jsx";
 import usePurchaseRequests from "../utils/usePurchaseRequests.js";
 import { REQUEST_STATUS } from "../utils/purchaseRequests.js";
-import { NOTIFY_TITLES, notifyUser } from "../utils/notify.js";
+import { NOTIFY_TITLES, notifyAdmins, notifyUser } from "../utils/notify.js";
 import ImageUploadButton from "../components/ImageUploadButton.jsx";
 import {
   DEFAULT_PRICE_PER_HOUR,
@@ -151,6 +151,7 @@ export default function OwnerDashboard() {
   const [scanError, setScanError] = useState("");
   // Ticket code typed or pasted when the camera can't be used.
   const [manualTicket, setManualTicket] = useState("");
+  const [manualTicketError, setManualTicketError] = useState("");
   const videoRef = useRef(null);
   const scanFrameRef = useRef(null);
 
@@ -333,6 +334,10 @@ export default function OwnerDashboard() {
       });
 
       await set(ref(db, `users/${user.uid}/ownedCafeIds/${newCafeId}`), true);
+      notifyAdmins(
+        `New café waiting for approval: ${newCafeForm.name.trim()}.`,
+        NOTIFY_TITLES.admin,
+      ).catch((error) => console.warn("Admin notification failed:", error));
       setActiveCafeId(newCafeId);
       setNewCafeForm(EMPTY_NEW_CAFE);
       setMessage(
@@ -1648,6 +1653,15 @@ export default function OwnerDashboard() {
                   onSubmit={(event) => {
                     event.preventDefault();
                     if (!manualTicket.trim()) return;
+                    // A typed code that can't be read keeps the box open
+                    // with what was typed, so it can be corrected.
+                    if (!decodeTicket(manualTicket)) {
+                      setManualTicketError(
+                        "Ticket code not recognised — check it and try again.",
+                      );
+                      return;
+                    }
+                    setManualTicketError("");
                     handleScan(manualTicket);
                     setManualTicket("");
                   }}
@@ -1662,7 +1676,14 @@ export default function OwnerDashboard() {
                       id="owner-manual-ticket"
                       type="text"
                       value={manualTicket}
-                      onChange={(e) => setManualTicket(e.target.value)}
+                      onChange={(e) => {
+                        setManualTicket(e.target.value);
+                        setManualTicketError("");
+                      }}
+                      aria-invalid={Boolean(manualTicketError)}
+                      aria-describedby={
+                        manualTicketError ? "owner-manual-ticket-error" : undefined
+                      }
                       placeholder="Code shown under the customer's QR"
                       autoComplete="off"
                       autoCapitalize="none"
@@ -1673,6 +1694,15 @@ export default function OwnerDashboard() {
                       Check
                     </button>
                   </div>
+                  {manualTicketError && (
+                    <p
+                      id="owner-manual-ticket-error"
+                      className="owner-manual-ticket-error"
+                      role="alert"
+                    >
+                      {manualTicketError}
+                    </p>
+                  )}
                 </form>
               )}
 
