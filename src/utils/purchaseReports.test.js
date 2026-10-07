@@ -3,6 +3,7 @@ import {
   REPORT_MESSAGE_MAX,
   REPORT_REASONS,
   cleanReportMessage,
+  reportReasonsFor,
   countOpenReports,
   openReportCount,
   reportReasonLabel,
@@ -19,6 +20,27 @@ describe("report reasons", () => {
     ]);
     expect(reportReasonLabel("not_paid")).toBe("Didn't pay");
     expect(reportReasonLabel("weird")).toBe("Other");
+  });
+});
+
+describe("reportReasonsFor", () => {
+  const labels = (role) => reportReasonsFor(role).map((r) => r.label);
+
+  it("gives buyers the buyer-side problems", () => {
+    expect(labels("buyer")).toEqual([
+      "Didn't deliver",
+      "Item not as described",
+      "Other",
+    ]);
+  });
+
+  it("gives sellers the seller-side problems", () => {
+    expect(labels("seller")).toEqual(["Didn't pay", "Other"]);
+  });
+
+  it("gives nothing to anyone else", () => {
+    expect(reportReasonsFor("admin")).toEqual([]);
+    expect(reportReasonsFor(undefined)).toEqual([]);
   });
 });
 

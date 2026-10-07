@@ -13,3 +13,11 @@ export function upsertById(list, item) {
   );
   return [item, ...rest];
 }
+
+// "1 result", "26 results", or "20+ results" while more pages exist
+// (the database can't count everything without downloading it all).
+export function resultCountLabel(count, hasMore = false) {
+  const n = Math.max(0, Number(count) || 0);
+  if (hasMore) return `${n}+ results`;
+  return `${n} result${n === 1 ? "" : "s"}`;
+}

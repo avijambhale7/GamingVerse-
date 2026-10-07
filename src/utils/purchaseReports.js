@@ -7,12 +7,17 @@
    read them all and mark them resolved.
 ========================================================= */
 
+// `roles`: who may give this reason (database.rules.json checks it too).
 export const REPORT_REASONS = [
-  { id: "not_delivered", label: "Didn't deliver" },
-  { id: "not_paid", label: "Didn't pay" },
-  { id: "not_as_described", label: "Item not as described" },
-  { id: "other", label: "Other" },
+  { id: "not_delivered", label: "Didn't deliver", roles: ["buyer"] },
+  { id: "not_paid", label: "Didn't pay", roles: ["seller"] },
+  { id: "not_as_described", label: "Item not as described", roles: ["buyer"] },
+  { id: "other", label: "Other", roles: ["buyer", "seller"] },
 ];
+
+// The reasons a buyer or a seller can pick.
+export const reportReasonsFor = (role) =>
+  REPORT_REASONS.filter((reason) => reason.roles.includes(role));
 
 export const REPORT_MESSAGE_MAX = 500;
 

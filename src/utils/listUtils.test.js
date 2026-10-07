@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { upsertById } from "./listUtils.js";
+import { resultCountLabel, upsertById } from "./listUtils.js";
 
 describe("upsertById", () => {
   it("adds a new item at the front", () => {
@@ -30,5 +30,22 @@ describe("upsertById", () => {
     expect(upsertById(undefined, { id: "a" })).toEqual([{ id: "a" }]);
     expect(upsertById([{ id: "a" }], null)).toEqual([{ id: "a" }]);
     expect(upsertById(null, null)).toEqual([]);
+  });
+});
+
+describe("resultCountLabel", () => {
+  it("shows the exact total once everything is loaded", () => {
+    expect(resultCountLabel(26, false)).toBe("26 results");
+    expect(resultCountLabel(1, false)).toBe("1 result");
+    expect(resultCountLabel(0, false)).toBe("0 results");
+  });
+
+  it("shows N+ while more listings can still load", () => {
+    expect(resultCountLabel(20, true)).toBe("20+ results");
+    expect(resultCountLabel(3, true)).toBe("3+ results");
+  });
+
+  it("copes with bad input", () => {
+    expect(resultCountLabel(undefined)).toBe("0 results");
   });
 });

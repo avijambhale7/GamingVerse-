@@ -12,8 +12,8 @@ import { auth, db } from "../firebase";
 import { NOTIFY_TITLES, notifyAdmins } from "../utils/notify.js";
 import {
   REPORT_MESSAGE_MAX,
-  REPORT_REASONS,
   cleanReportMessage,
+  reportReasonsFor,
   reportReasonLabel,
   reportsList,
 } from "../utils/purchaseReports.js";
@@ -101,7 +101,7 @@ export function ReportProblem({ request, role, onMessage }) {
     <form className="prc-report-form" onSubmit={submit}>
       <strong>What went wrong?</strong>
       <div className="prc-report-reasons" role="radiogroup" aria-label="Reason">
-        {REPORT_REASONS.map((item) => (
+        {reportReasonsFor(role).map((item) => (
           <label key={item.id} className={reason === item.id ? "is-picked" : ""}>
             <input
               type="radio"

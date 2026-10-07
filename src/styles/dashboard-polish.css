@@ -956,6 +956,9 @@
 .dp-status-chip.is-cancelled {
   --k: 244, 63, 94;
 }
+.dp-status-chip.is-no-show {
+  --k: 245, 158, 11;
+}
 .dp-status-chip i {
   width: 8px;
   height: 8px;

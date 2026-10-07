@@ -116,8 +116,9 @@ function ownerRoleLabel(role) {
 function matchesBookingFilter(booking, filter) {
   const status = String(booking.status || "Pending");
   if (filter === "All") return true;
+  // No-shows have their own tab (status "No-show" matches it below).
   if (filter === "Cancelled")
-    return status === "Cancelled" || status === "Rejected" || status === NO_SHOW;
+    return status === "Cancelled" || status === "Rejected";
   return status === filter;
 }
 
@@ -979,7 +980,7 @@ export default function OwnerDashboard() {
               )}
 
               <nav className="dp-status-filter" aria-label="Filter bookings">
-                {["All", "Pending", "Confirmed", "Completed", "Cancelled"].map(
+                {["All", "Pending", "Confirmed", "Completed", "Cancelled", NO_SHOW].map(
                   (item) => {
                     const count = bookings.filter((b) =>
                       matchesBookingFilter(b, item),

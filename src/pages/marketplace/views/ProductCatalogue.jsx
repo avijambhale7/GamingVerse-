@@ -9,6 +9,7 @@ import { ACCESSORY_CATEGORIES, MARKET_TABS } from "../data/catalog.js";
 import { money } from "../utils/format.js";
 import ProductImage from "./ProductImage.jsx";
 import { isSoldOut } from "../../../utils/stock.js";
+import { resultCountLabel } from "../../../utils/listUtils.js";
 
 export default function ProductCatalogue({
   openRequest,
@@ -281,7 +282,7 @@ export default function ProductCatalogue({
                 if (!isSoldOut(product)) openRequest(product);
               }}
             >
-              {isSoldOut(product) ? "Sold out" : "📨 Request"}
+              {isSoldOut(product) ? "Unavailable" : "📨 Request"}
             </button>
           </div>
         </div>
@@ -354,8 +355,7 @@ export default function ProductCatalogue({
         <div>
           <h2>Items</h2>
           <p>
-            <b>{filteredProducts.length}</b> result
-            {filteredProducts.length === 1 ? "" : "s"}
+            <b>{resultCountLabel(filteredProducts.length, hasMore)}</b>
           </p>
         </div>
         {filtersActive && (
@@ -440,7 +440,9 @@ export default function ProductCatalogue({
 
               <div>
                 <span>Stock</span>
-                <strong>{selectedProduct.stock}</strong>
+                <strong className={isSoldOut(selectedProduct) ? "is-sold-out" : ""}>
+                  {isSoldOut(selectedProduct) ? "Sold out" : selectedProduct.stock}
+                </strong>
               </div>
             </div>
 
@@ -479,7 +481,7 @@ export default function ProductCatalogue({
                   if (!isSoldOut(selectedProduct)) openRequest(selectedProduct);
                 }}
               >
-                {isSoldOut(selectedProduct) ? "Sold out" : "📨 Request to Buy"}
+                {isSoldOut(selectedProduct) ? "Unavailable" : "📨 Request to Buy"}
               </button>
             </div>
           </div>

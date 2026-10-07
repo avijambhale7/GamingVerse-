@@ -318,7 +318,7 @@
           ".read": "auth != null && auth.uid === $uid",
           ".write": "auth != null && ((auth.uid === $uid && !data.exists() && newData.exists() && root.child('users').child(auth.uid).child('isBanned').val() !== true && root.child('purchaseRequests').child($requestId).child('status').val() === 'accepted' && (root.child('purchaseRequests').child($requestId).child('buyerId').val() === auth.uid || root.child('purchaseRequests').child($requestId).child('sellerId').val() === auth.uid)) || root.child('users').child(auth.uid).child('role').val() === 'admin')",
           ".validate": "newData.hasChildren(['reason', 'role', 'createdAt'])",
-          "reason": { ".validate": "newData.isString() && newData.val().matches(/^(not_delivered|not_paid|not_as_described|other)$/)" },
+          "reason": { ".validate": "newData.isString() && (newData.val() === 'other' || (newData.parent().child('role').val() === 'buyer' && newData.val().matches(/^(not_delivered|not_as_described)$/)) || (newData.parent().child('role').val() === 'seller' && newData.val() === 'not_paid'))" },
           "role": { ".validate": "newData.isString() && newData.val() === (root.child('purchaseRequests').child($requestId).child('buyerId').val() === $uid ? 'buyer' : 'seller')" },
           "message": { ".validate": "newData.isString() && newData.val().length <= 500" },
           "createdAt": { ".validate": "newData.val() === now || (root.child('users').child(auth.uid).child('role').val() === 'admin' && newData.val() === data.val())" },
