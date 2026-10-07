@@ -993,3 +993,26 @@
   background: rgba(16, 185, 129, 0.9);
   color: #04130c;
 }
+
+/* System status: rows that couldn't be checked yet, localhost note */
+.admin-system-head span.is-unknown {
+  color: #93c5fd;
+}
+.admin-system-status li.is-unknown {
+  border: 1px solid rgba(147, 197, 253, 0.25);
+  opacity: 0.85;
+}
+.admin-system-note {
+  margin: 0 0 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(147, 197, 253, 0.08);
+  color: #bfdbfe;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.admin-system-note code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+}

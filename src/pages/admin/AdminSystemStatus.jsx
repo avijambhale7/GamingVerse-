@@ -19,12 +19,22 @@ import {
 
 const ENV_HINT = "Vercel → Settings → Environment Variables";
 
+// Each row: state "ok" (✅), "warn" (⚠️ needs fixing) or "unknown" (ℹ️
+// couldn't be checked yet — e.g. everything that needs the server key
+// while that key is missing). Only "warn" counts as something to fix.
+function stateOf(ok, known = true) {
+  if (!known) return "unknown";
+  return ok ? "ok" : "warn";
+}
+
 function rowsFrom(health) {
-  return [
+  // Without the server key nothing else on the server can be checked.
+  const serverReady = health.serviceAccount === true;
+  const rows = [
     {
       id: "serviceAccount",
       label: "Server key (username login, push notifications)",
-      ok: health.serviceAccount,
+      state: stateOf(serverReady),
       fix: `Add FIREBASE_SERVICE_ACCOUNT (the service-account JSON on one line) in ${ENV_HINT}, then redeploy.`,
     },
     {
@@ -35,35 +45,50 @@ function rowsFrom(health) {
           : health.rules === "not_published"
             ? "Database rules NOT published"
             : "Database rules (couldn't check)",
-      ok: health.rules === "up_to_date",
+      state: stateOf(health.rules === "up_to_date", serverReady && health.rules !== "unknown"),
       fix: "Publish database.rules.json: push it to main (with the GitHub secret set) or paste it in Firebase console → Realtime Database → Rules.",
     },
     {
       id: "rawgConfigured",
       label: "RAWG games key",
-      ok: health.rawgConfigured,
+      state: stateOf(health.rawgConfigured, serverReady),
       fix: `Add RAWG_API_KEY in ${ENV_HINT}.`,
     },
     {
       id: "rawgReachable",
       label: "RAWG answers requests",
-      ok: health.rawgReachable,
+      state: stateOf(health.rawgReachable, serverReady && health.rawgConfigured),
       fix: "Check the RAWG key and its monthly quota at rawg.io/apidocs.",
     },
     {
       id: "trailerKey",
       label: "Trailer (YouTube) key",
-      ok: health.trailerKey,
+      state: stateOf(health.trailerKey, serverReady),
       fix: `Add YOUTUBE_API_KEY in ${ENV_HINT}.`,
     },
     {
       id: "push",
       label: "Push notifications set up",
-      ok: health.pushServer && health.pushClientKey,
+      state: stateOf(health.pushServer && health.pushClientKey, serverReady),
       fix: `Needs FIREBASE_SERVICE_ACCOUNT and VITE_FIREBASE_VAPID_KEY in ${ENV_HINT}, then redeploy.`,
     },
   ];
+  return rows.map((row) =>
+    row.state === "unknown"
+      ? {
+          ...row,
+          fix: serverReady
+            ? "Couldn't check this right now — press Re-check."
+            : "Can't check this until the server key (above) is set.",
+        }
+      : row,
+  );
 }
+
+// Local dev only sees .env.local, not the keys set on Vercel.
+const IS_LOCAL =
+  typeof window !== "undefined" &&
+  /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname);
 
 export default function AdminSystemStatus() {
   const [state, setState] = useState({ loading: true, rows: [], error: "" });
@@ -108,11 +133,12 @@ export default function AdminSystemStatus() {
   const supportRow = {
     id: "support",
     label: "Support email set",
-    ok: !isPlaceholderEmail(SUPPORT_EMAIL),
+    state: stateOf(!isPlaceholderEmail(SUPPORT_EMAIL)),
     fix: "Set SUPPORT_EMAIL in src/config/support.js to your real address.",
   };
   const rows = [...state.rows, supportRow];
-  const problems = rows.filter((row) => !row.ok).length;
+  const problems = rows.filter((row) => row.state === "warn").length;
+  const unknowns = rows.filter((row) => row.state === "unknown").length;
 
   // Downloads posts, products and cafés once — only when asked.
   const checkSize = async () => {
@@ -134,8 +160,12 @@ export default function AdminSystemStatus() {
       <div className="admin-system-head">
         <h2 id="system-status-title">System status</h2>
         {!state.loading && (
-          <span className={problems ? "is-warn" : "is-ok"}>
-            {problems ? `${problems} to fix` : "All good ✓"}
+          <span className={problems ? "is-warn" : unknowns ? "is-unknown" : "is-ok"}>
+            {problems
+              ? `${problems} to fix`
+              : unknowns
+                ? `${unknowns} not checked`
+                : "All good ✓"}
           </span>
         )}
         <button
@@ -150,15 +180,24 @@ export default function AdminSystemStatus() {
         </button>
       </div>
 
+      {IS_LOCAL && (
+        <p className="admin-system-note">
+          ℹ️ You&apos;re on localhost, so this checks the keys in{" "}
+          <code>.env.local</code>, not the ones set on Vercel. Open Admin on
+          the live site to check production.
+        </p>
+      )}
       {state.error && <p className="admin-system-error">{state.error}</p>}
 
       <ul>
         {(state.loading ? [supportRow] : rows).map((row) => (
-          <li key={row.id} className={row.ok ? "is-ok" : "is-warn"}>
-            <span aria-hidden="true">{row.ok ? "✅" : "⚠️"}</span>
+          <li key={row.id} className={`is-${row.state}`}>
+            <span aria-hidden="true">
+              {row.state === "ok" ? "✅" : row.state === "warn" ? "⚠️" : "ℹ️"}
+            </span>
             <div>
               <strong>{row.label}</strong>
-              {!row.ok && <small>{row.fix}</small>}
+              {row.state !== "ok" && <small>{row.fix}</small>}
             </div>
           </li>
         ))}

@@ -73,8 +73,16 @@ export default defineConfig(({ mode }) => {
   if (env.VITE_RAWG_API_KEY && !process.env.VITE_RAWG_API_KEY) {
     process.env.VITE_RAWG_API_KEY = env.VITE_RAWG_API_KEY
   }
-  if (env.FIREBASE_SERVICE_ACCOUNT && !process.env.FIREBASE_SERVICE_ACCOUNT) {
-    process.env.FIREBASE_SERVICE_ACCOUNT = env.FIREBASE_SERVICE_ACCOUNT
+  // The other server-side keys the /api functions (and Admin → System
+  // status) read, when they're in .env.local.
+  for (const name of [
+    'FIREBASE_SERVICE_ACCOUNT',
+    'FIREBASE_DATABASE_URL',
+    'RAWG_API_KEY',
+    'YOUTUBE_API_KEY',
+    'VITE_FIREBASE_VAPID_KEY',
+  ]) {
+    if (env[name] && !process.env[name]) process.env[name] = env[name]
   }
 
   return {
