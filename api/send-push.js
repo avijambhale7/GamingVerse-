@@ -21,15 +21,14 @@ import { getAuth } from "firebase-admin/auth";
 import { getDatabase } from "firebase-admin/database";
 import { readServiceAccount } from "../src/utils/serviceAccount.js";
 import { getMessaging } from "firebase-admin/messaging";
+import { NOTIFICATION_VIEWS } from "../src/utils/notificationTarget.js";
 
 const DEFAULT_DB_URL = "https://gamingverse-26e57-default-rtdb.firebaseio.com";
 
-const LINKS = {
-  "GamingVerse Market": "/games?view=marketplace",
-  "GamingVerse Café": "/games?view=cafe",
-  "GamingVerse Feed": "/games?view=spaces",
-  "GamingVerse Release": "/games?view=upcomings",
-};
+// Same sections the in-app bell opens (src/utils/notificationTarget.js).
+const LINKS = Object.fromEntries(
+  Object.entries(NOTIFICATION_VIEWS).map(([title, view]) => [title, `/games?view=${view}`]),
+);
 
 const RATE_LIMIT = 20; // pushes per caller…
 const RATE_WINDOW_MS = 60 * 1000; // …per minute

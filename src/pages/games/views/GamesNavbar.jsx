@@ -41,11 +41,11 @@ function getNotificationMeta(title) {
 
 export default function GamesNavbar({
   focusSearch,
-  markNotificationRead,
   navigate,
   notificationTab,
   notifications,
   openDetails,
+  openNotification,
   openSearchResult,
   profileMenuRef,
   search,
@@ -298,7 +298,7 @@ export default function GamesNavbar({
                               key={item.id}
                               type="button"
                               className={`notification-item ${item.read ? "is-read" : ""}`}
-                              onClick={() => markNotificationRead(item.id)}
+                              onClick={() => openNotification(item)}
                             >
                               <div
                                 className={`notification-avatar tone-${meta.tone}`}

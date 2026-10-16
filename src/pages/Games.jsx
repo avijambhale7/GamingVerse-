@@ -110,7 +110,8 @@ import {
   savedOnLabel,
 } from "./games/utils/gamesFallback.js";
 import { indiaTodayISO } from "./cafe/utils/indiaTime.js";
-import { dedupeGames, rememberEsrbRating } from "./games/utils/ageRating.js";
+import { dedupeGames, gameNameKey, rememberEsrbRating } from "./games/utils/ageRating.js";
+import { notificationTarget } from "../utils/notificationTarget.js";
 
 /* =========================================================
    GAMES PAGE
@@ -216,13 +217,15 @@ function Games() {
   // Notifications live in Firebase now, keyed by uid, so they follow the
   // account across devices/browsers instead of staying stuck in whichever
   // browser generated them.
-  const addGamingVerseNotification = (title, message, type = "activity") => {
+  // `game`: the game it's about, so clicking the notification opens it.
+  const addGamingVerseNotification = (title, message, type = "activity", game = "") => {
     const uid = auth.currentUser?.uid;
     if (!uid) return;
     push(ref(db, `notifications/${uid}`), {
       title,
       message,
       type,
+      ...(game ? { game } : {}),
       createdAt: serverTimestamp(),
       read: false,
     });
@@ -1455,6 +1458,7 @@ function Games() {
             : "Play Later"
       }.`,
       "activity",
+      gameName,
     );
   };
   const toggleWatched = () => {
@@ -1534,6 +1538,25 @@ function Games() {
     setReviewMessage(
       `Age restricted: this game requires ${requiredAge}+. Your GamingVerse age is ${userAge}.`,
     );
+  };
+
+  // Clicking a notification: mark it read and open what it's about.
+  const openNotification = (item) => {
+    markNotificationRead(item.id);
+    const target = notificationTarget(item);
+    if (!target) return;
+    setShowNotifications(false);
+    if (target.type === "view") {
+      navigate(`/games?view=${target.view}`);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    const key = gameNameKey(target.name);
+    const game =
+      fullGameCatalogue.find((entry) => gameNameKey(entry.name) === key) || {
+        name: target.name,
+      };
+    openDetails(game);
   };
 
   const openDetails = (game) => {
@@ -1969,6 +1992,7 @@ function Games() {
         "GamingVerse Verdict",
         `Your '${verdictName(composerVerdict)}' verdict for ${selectedGame.name} was saved.`,
         "activity",
+        selectedGame.name,
       );
       return;
     }
@@ -1979,6 +2003,7 @@ function Games() {
       "GamingVerse Review",
       `Your '${verdictName(composerVerdict)}' review for ${selectedGame.name} was posted.`,
       "activity",
+      selectedGame.name,
     );
   };
 
@@ -2187,10 +2212,10 @@ function Games() {
       {/* ===================================================
             NAVBAR
         =================================================== */}
-      <GamesNavbar
+      <GamesNavbar
         focusSearch={focusSearch}
         navigate={navigate}
-        markNotificationRead={markNotificationRead}
+        openNotification={openNotification}
         notificationTab={notificationTab}
         notifications={notifications}
         openDetails={openDetails}
@@ -2307,7 +2332,7 @@ function Games() {
         closeDetails={closeDetails}
         collectionGames={collectionGames}
         composerVerdict={composerVerdict}
-        likedReviewIds={likedReviewIds}
+        likedReviewIds={likedReviewIds}
         openPoster={openPoster}
         openTrailer={openTrailer}
         postCommunityReview={postCommunityReview}
