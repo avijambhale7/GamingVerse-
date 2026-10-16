@@ -206,11 +206,14 @@
    is shared with the Profile page too, so its styling lives in
    src/components/AppBottomNav.css instead of here.
 ========================================================= */
+/* The room for the floating bar goes under the footer (the last thing
+   on every Games view), not above it — otherwise the page showed a
+   big empty gap and the bar still covered the footer's logo.
+   Bar: 16px from the bottom + ~58px tall, plus the iPhone home strip. */
 @media (max-width: 750px) {
-  .games-content {
-    padding-bottom: 104px;
+  .games-footer {
+    padding: 26px 20px calc(96px + env(safe-area-inset-bottom));
   }
-
 }
 
 /* =========================================================
