@@ -10,7 +10,8 @@
      serviceAccount: bool,   FIREBASE_SERVICE_ACCOUNT set and parses
      serviceAccountProblem:  why not (only when false, also sent to
                              signed-out callers — it's a word, not data):
-                             "missing" | "misnamed" | "not_json" | "incomplete"
+                             "missing" | "misnamed" | "not_json" |
+                             "incomplete" | "rejected" (Firebase refused it)
      rawgConfigured: bool,   RAWG key present
      rawgReachable:  bool,   one tiny RAWG request succeeded
      trailerKey:     bool,   YOUTUBE_API_KEY present (api/trailer.js)
@@ -28,28 +29,11 @@ import { readFileSync } from "node:fs";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getDatabase } from "firebase-admin/database";
+import { readServiceAccount } from "../src/utils/serviceAccount.js";
 import { rulesFingerprint } from "../src/utils/systemStatus.js";
 
 const DEFAULT_DB_URL = "https://gamingverse-26e57-default-rtdb.firebaseio.com";
 
-function readServiceAccount() {
-  const raw = String(process.env.FIREBASE_SERVICE_ACCOUNT || "").trim();
-  if (!raw) {
-    // A key saved as " FIREBASE_SERVICE_ACCOUNT" or with a typo.
-    const misnamed = Object.keys(process.env).some(
-      (name) => name !== "FIREBASE_SERVICE_ACCOUNT" && /SERVICE_?ACCOUNT/i.test(name),
-    );
-    return { problem: misnamed ? "misnamed" : "missing" };
-  }
-  let json;
-  try {
-    json = JSON.parse(raw);
-  } catch {
-    return { problem: "not_json" };
-  }
-  if (!json?.private_key || !json?.client_email) return { problem: "incomplete" };
-  return { account: json };
-}
 
 function adminApp(serviceAccount) {
   if (!getApps().length) {
@@ -125,7 +109,10 @@ export default async function handler(req, res) {
   }
   res.setHeader("Cache-Control", "no-store");
 
-  const { account: serviceAccount, problem } = readServiceAccount();
+  const { account: serviceAccount, problem } = readServiceAccount(
+    process.env.FIREBASE_SERVICE_ACCOUNT,
+    Object.keys(process.env),
+  );
   if (!serviceAccount) {
     // Can't verify who's asking without the Admin SDK — say only that.
     return res.status(503).json({ serviceAccount: false, serviceAccountProblem: problem });
@@ -136,7 +123,7 @@ export default async function handler(req, res) {
     app = adminApp(serviceAccount);
   } catch (error) {
     console.error("Admin SDK init failed:", error.message);
-    return res.status(503).json({ serviceAccount: false, serviceAccountProblem: "incomplete" });
+    return res.status(503).json({ serviceAccount: false, serviceAccountProblem: "rejected" });
   }
 
   // Admins only.

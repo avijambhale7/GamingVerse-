@@ -19,7 +19,7 @@
    (server-only: no client rule grants access).
 
    Environment (Vercel → Settings → Environment Variables):
-     FIREBASE_SERVICE_ACCOUNT  – the service-account JSON (one line)
+     FIREBASE_SERVICE_ACCOUNT  – the service-account JSON file's text
      FIREBASE_DATABASE_URL     – optional, defaults to this project's
      FIREBASE_WEB_API_KEY      – optional, defaults to the public web key
 ========================================================= */
@@ -27,6 +27,7 @@
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getDatabase } from "firebase-admin/database";
+import { readServiceAccount } from "../src/utils/serviceAccount.js";
 
 const DEFAULT_DB_URL = "https://gamingverse-26e57-default-rtdb.firebaseio.com";
 // The same public key the web app ships in src/firebase.js.
@@ -40,10 +41,10 @@ const MIN_RESPONSE_MS = 700; // even out timing between failure paths
 
 function adminApp() {
   if (!getApps().length) {
-    const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT is not configured");
+    const { account, problem } = readServiceAccount(process.env.FIREBASE_SERVICE_ACCOUNT);
+    if (!account) throw new Error(`FIREBASE_SERVICE_ACCOUNT: ${problem}`);
     initializeApp({
-      credential: cert(JSON.parse(raw)),
+      credential: cert(account),
       databaseURL: process.env.FIREBASE_DATABASE_URL || DEFAULT_DB_URL,
     });
   }

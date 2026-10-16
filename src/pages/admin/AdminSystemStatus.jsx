@@ -32,6 +32,7 @@ const SERVICE_ACCOUNT_FIXES = {
   misnamed: "A variable with a similar name exists. Its name must be exactly FIREBASE_SERVICE_ACCOUNT (no spaces).",
   not_json: "FIREBASE_SERVICE_ACCOUNT isn't valid JSON. Paste the whole key file again, from the first { to the last }.",
   incomplete: "FIREBASE_SERVICE_ACCOUNT is missing parts of the key file. Paste the whole key file again.",
+  rejected: "Firebase refused FIREBASE_SERVICE_ACCOUNT (deleted or damaged key). Make a new key and paste the whole file.",
 };
 
 function rowsFrom(health) {
