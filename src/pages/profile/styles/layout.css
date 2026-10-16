@@ -18,7 +18,7 @@
     ),
     var(--gv-surface-1);
   color: #fff;
-  font-family: Inter, Arial, Helvetica, sans-serif;
+  font-family: var(--gv-font);
 }
 
 button,
