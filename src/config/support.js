@@ -4,11 +4,11 @@
    and the date-of-birth note in Edit Profile).
 ========================================================= */
 
-export const SUPPORT_EMAIL = "avijambhale9@gmail.com";
+export const SUPPORT_EMAIL = "siddharthlokhande1978@gmail.com";
 
 // WhatsApp number in international format, digits only (country code
 // first, e.g. 919876543210). Empty = no WhatsApp option is shown.
-export const SUPPORT_WHATSAPP = "917387859144";
+export const SUPPORT_WHATSAPP = "917083882497";
 
 // Values that mean "not filled in yet".
 export function isPlaceholderEmail(email = SUPPORT_EMAIL) {
