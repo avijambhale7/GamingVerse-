@@ -31,12 +31,6 @@
     flex-direction: column;
     align-items: flex-start;
   }
-  .cafe-hero-stat {
-    align-self: flex-end;
-    width: 110px;
-    height: 110px;
-    flex-basis: 110px;
-  }
   .cafe-search-bar {
     grid-template-columns: 1fr;
   }

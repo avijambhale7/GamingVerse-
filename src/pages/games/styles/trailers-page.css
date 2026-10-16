@@ -90,29 +90,6 @@ body,
   letter-spacing: 1.8px;
 }
 
-.trailer-play {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0.9);
-  width: 56px;
-  height: 56px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: rgba(8, 8, 12, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  backdrop-filter: blur(3px);
-  color: #fff;
-  font-size: 18px;
-  padding-left: 3px;
-  opacity: 0;
-  transition:
-    opacity 0.22s ease,
-    transform 0.22s ease,
-    background 0.22s ease;
-}
-
 .trailers-promo {
   display: none !important;
   position: sticky;

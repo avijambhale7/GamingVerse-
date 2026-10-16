@@ -8,14 +8,14 @@
    the device's timezone. Unit tested in indiaTime.test.js.
 ========================================================= */
 
-export const INDIA_OFFSET_MINUTES = 5 * 60 + 30;
+const INDIA_OFFSET_MINUTES = 5 * 60 + 30;
 const OFFSET_MS = INDIA_OFFSET_MINUTES * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const pad = (n) => String(n).padStart(2, "0");
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 // The India wall-clock reading for a moment in time.
-export function indiaParts(ms = Date.now()) {
+function indiaParts(ms = Date.now()) {
   const shifted = new Date(Number(ms) + OFFSET_MS);
   return {
     year: shifted.getUTCFullYear(),

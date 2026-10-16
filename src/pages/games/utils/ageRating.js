@@ -24,7 +24,7 @@ const ROMAN = {
 
 // A title as normalised words:
 // "Grand Theft Auto: San Andreas" → ["gta", "san", "andreas"].
-export function gameNameWords(name = "") {
+function gameNameWords(name = "") {
   const words = String(name || "")
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "") // accents (Ragnarök → Ragnarok)
@@ -92,7 +92,7 @@ function buildGamingVerseRatings() {
 
 const gamingVerseRatings = buildGamingVerseRatings();
 
-export function gamingVerseAge(name) {
+function gamingVerseAge(name) {
   return gamingVerseRatings.get(gameNameKey(name)) ?? null;
 }
 
@@ -141,7 +141,7 @@ export function rememberEsrbRating(name, slug) {
   if (key) rememberedEsrb.set(key, String(slug).toLowerCase());
 }
 
-export const DEFAULT_REQUIRED_AGE = 16;
+const DEFAULT_REQUIRED_AGE = 16;
 
 // Minimum age for a game (object or name).
 export function requiredGameAge(gameOrName) {

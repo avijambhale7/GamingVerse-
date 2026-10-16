@@ -29,61 +29,9 @@
    SEMI CIRCLE METER
 ===================================================== */
 
-.meter-gauge {
-  display: flex;
-
-  justify-content: center;
-  align-items: flex-end;
-
-  height: 220px;
-
-  overflow: hidden;
-}
-
-.meter-inner {
-  width: 235px;
-  height: 118px;
-
-  border-radius: 235px 235px 0 0;
-
-  background: var(--gv-surface-1);
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-
-  padding-bottom: 15px;
-}
-
-.meter-inner strong {
-  color: var(--gv-go);
-
-  font-size: 48px;
-  line-height: 1;
-}
-
-.meter-inner span {
-  margin-top: 7px;
-
-  color: #b7b7c2;
-
-  font-size: 15px;
-}
-
 /* =====================================================
    BREAKDOWN
 ===================================================== */
-
-.meter-breakdown {
-  display: grid;
-
-  grid-template-columns: repeat(4, 1fr);
-
-  gap: 10px;
-
-  margin-top: 25px;
-}
 
 /* =====================================================
    WRITE REVIEW
@@ -117,25 +65,3 @@
    MOBILE
 ===================================================== */
 
-@media (max-width: 700px) {
-  
-
-  .meter-breakdown {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  
-
-  
-
-  
-
-  .meter-inner {
-    width: 200px;
-    height: 100px;
-  }
-
-  .meter-inner strong {
-    font-size: 40px;
-  }
-}

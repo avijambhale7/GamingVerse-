@@ -12,6 +12,7 @@
 import { useState } from "react";
 import { reviewOptions } from "../data/reviewOptions.js";
 import { authorLabel } from "../../../utils/authorLabel.js";
+import { reviewAge } from "../../../utils/timeAgo.js";
 
 const COMMENT_LIMIT = 500;
 
@@ -52,7 +53,6 @@ export default function ReviewCard({
   review,
   liked,
   currentUserId,
-  formatReviewAge,
   onToggleLike,
   onDelete,
   onPostComment,
@@ -87,7 +87,7 @@ export default function ReviewCard({
               {authorLabel(review)}
               {review.isMine && <em className="review-you-tag">You</em>}
             </strong>
-            <span>{formatReviewAge(review.createdAt)}</span>
+            <span>{reviewAge(review.createdAt)}</span>
           </div>
         </div>
         <span className={`community-verdict-pill ${review.verdict}`}>
@@ -146,7 +146,7 @@ export default function ReviewCard({
                   <div className="review-comment-body">
                     <div className="review-comment-meta">
                       <strong>{authorLabel(comment)}</strong>
-                      <span>{formatReviewAge(comment.createdAt)}</span>
+                      <span>{reviewAge(comment.createdAt)}</span>
                       {(comment.userId === currentUserId || review.isMine) && (
                         <button
                           type="button"

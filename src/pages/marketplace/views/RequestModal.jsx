@@ -6,7 +6,7 @@
 ========================================================= */
 
 import { useEffect, useState } from "react";
-import { money } from "../utils/format.js";
+import { money } from "../../../utils/money.js";
 import ProductImage from "./ProductImage.jsx";
 import {
   createPurchaseRequest,

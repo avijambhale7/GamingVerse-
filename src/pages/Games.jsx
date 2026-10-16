@@ -103,7 +103,6 @@ import {
   normalizeTrailerGameName,
 } from "./games/utils/text.js";
 import { verdictName } from "../utils/authorLabel.js";
-import { plural } from "../utils/plural.js";
 import {
   futureGames,
   isUpcomingRelease,
@@ -2052,13 +2051,6 @@ function Games() {
       setReviewMessage("Could not update that like. Please try again.");
     }
   };
-  const formatReviewAge = (timestamp) => {
-    const hours = Math.max(0, Math.floor((Date.now() - timestamp) / 3600000));
-    if (hours < 1) return "Just now";
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${plural(days, "day")} ago`;
-  };
   /* Newest first. With the sort control removed there is one obvious
      order, and a fresh review should land where its author can see it. */
   const visibleCommunityReviews = [...communityReviews].sort(
@@ -2293,7 +2285,6 @@ function Games() {
         closeDetails={closeDetails}
         collectionGames={collectionGames}
         composerVerdict={composerVerdict}
-        formatReviewAge={formatReviewAge}
         likedReviewIds={likedReviewIds}
         openPoster={openPoster}
         openTrailer={openTrailer}

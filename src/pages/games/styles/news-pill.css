@@ -40,12 +40,3 @@
     transform: rotate(360deg);
   }
 }
-
-.game-age-badge {
-  padding: 3px 7px;
-  border: 1px solid rgba(169, 50, 255, 0.35);
-  border-radius: 999px;
-  color: var(--gv-accent-bright);
-  font-size: 10px;
-  font-weight: 800;
-}

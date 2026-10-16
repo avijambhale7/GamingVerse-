@@ -27,7 +27,7 @@ export function isPlaceholderWhatsApp(number = SUPPORT_WHATSAPP) {
 }
 
 // Pre-filled first message for WhatsApp chats.
-export const SUPPORT_WHATSAPP_MESSAGE = "Hi GamingVerse support, I need help with";
+const SUPPORT_WHATSAPP_MESSAGE = "Hi GamingVerse support, I need help with";
 
 export const supportMailto = (subject = "GamingVerse support") =>
   `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}`;

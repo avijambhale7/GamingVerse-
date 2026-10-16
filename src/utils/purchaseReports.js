@@ -31,7 +31,7 @@ export function reportsList(byUser = {}) {
     .sort((a, b) => Number(b.createdAt || 0) - Number(a.createdAt || 0));
 }
 
-export const isOpenReport = (report) => Boolean(report) && !report.resolvedAt;
+const isOpenReport = (report) => Boolean(report) && !report.resolvedAt;
 
 // Open (unresolved) reports for one request.
 export const openReportCount = (byUser = {}) =>

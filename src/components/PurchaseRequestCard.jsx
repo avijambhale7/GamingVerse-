@@ -22,10 +22,7 @@ import {
 } from "../utils/purchaseRequests.js";
 import { ReportList, ReportProblem } from "./DealReport.jsx";
 import "./PurchaseRequestCard.css";
-
-function money(value) {
-  return `₹${Number(value || 0).toLocaleString("en-IN")}`;
-}
+import { money } from "../utils/money.js";
 
 function ContactLine({ label, name, phone }) {
   const digits = normalizePhone(phone);

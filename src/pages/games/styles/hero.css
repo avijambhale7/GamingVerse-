@@ -136,13 +136,6 @@
   transform: translateY(-2px);
 }
 
-.details-button {
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(10, 10, 15, 0.58);
-  color: white;
-  backdrop-filter: blur(10px);
-}
-
 .hero-carousel {
   position: absolute;
   right: 28px;

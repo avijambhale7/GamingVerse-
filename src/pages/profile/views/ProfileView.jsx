@@ -15,13 +15,13 @@ import useEscapeKey from "../../../utils/useEscapeKey.js";
 import { userPath } from "../../../utils/publicProfile.js";
 import SupportLink from "../../../components/SupportLink.jsx";
 import { pluralWord } from "../../../utils/plural.js";
+import { reviewAge } from "../../../utils/timeAgo.js";
 
 export default function ProfileView({
   activeTab,
   collectionGames,
   filter,
   filteredReviews,
-  formatAge,
   fullName,
   handleLogout,
   myReviews,
@@ -376,7 +376,7 @@ export default function ProfileView({
 
                           <div>
                             <h3>{review.gameName}</h3>
-                            <span>{formatAge(review.createdAt)}</span>
+                            <span>{reviewAge(review.createdAt)}</span>
                           </div>
                         </div>
 

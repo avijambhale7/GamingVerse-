@@ -6,7 +6,7 @@
 
 import { useState } from "react";
 import { EMPTY_PRODUCT } from "../data/catalog.js";
-import { money } from "../utils/format.js";
+import { money } from "../../../utils/money.js";
 import ImageUploadButton from "../../../components/ImageUploadButton.jsx";
 import PurchaseRequestList from "../../../components/PurchaseRequestList.jsx";
 import usePurchaseRequests from "../../../utils/usePurchaseRequests.js";

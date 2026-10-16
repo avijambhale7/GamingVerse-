@@ -56,12 +56,6 @@
     font-size: 42px;
   }
 
-  .hero-stat {
-    width: 125px;
-    height: 125px;
-    flex-basis: 125px;
-  }
-
   .products-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

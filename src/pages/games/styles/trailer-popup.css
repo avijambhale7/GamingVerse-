@@ -39,18 +39,6 @@ reference-game-hero-thumbnail {
   transform: scale(1.002);
 }
 
-.reference-game-hero-thumbnail::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.06) 0%,
-    rgba(0, 0, 0, 0.1) 42%,
-    rgba(0, 0, 0, 0.68) 100%
-  );
-}
-
 .reference-game-hero-play {
   position: absolute;
   top: 50%;

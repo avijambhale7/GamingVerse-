@@ -5,7 +5,7 @@
    Firebase auth error codes.
 ========================================================= */
 
-export const BUSINESS_ROLES = new Set([
+const BUSINESS_ROLES = new Set([
   "owner",
   "cafe_owner",
   "shop_owner",

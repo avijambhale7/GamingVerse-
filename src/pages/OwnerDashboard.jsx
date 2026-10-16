@@ -38,6 +38,7 @@ import { mergePhotoList } from "../utils/photoList.js";
 import { NO_SHOW, canMarkNoShow, noShowCount } from "./cafe/utils/noShow.js";
 import { homePathFor } from "../utils/authFlow.js";
 import { plural } from "../utils/plural.js";
+import { money } from "../utils/money.js";
 
 const OWNER_ROLES = new Set([
   "owner",
@@ -101,10 +102,6 @@ const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
-
-function money(value) {
-  return `₹${Number(value || 0).toLocaleString("en-IN")}`;
-}
 
 function ownerRoleLabel(role) {
   if (role === "cafe_owner") return "Café Owner";

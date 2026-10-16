@@ -64,26 +64,6 @@
   line-height: 1.65;
   margin: 0;
 }
-.cafe-hero-stat {
-  position: relative;
-  z-index: 2;
-  width: 150px;
-  height: 150px;
-  flex: 0 0 150px;
-  border: 1px solid rgba(164, 91, 255, 0.3);
-  border-radius: 50%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: rgba(132, 60, 255, 0.06);
-}
-.cafe-hero-stat strong {
-  font-size: 42px;
-}
-.cafe-hero-stat small {
-  color: #898693;
-}
 .cafe-search-bar {
   display: grid;
   grid-template-columns: 1fr;

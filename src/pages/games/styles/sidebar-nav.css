@@ -35,20 +35,6 @@
   color: #fff;
 }
 
-.comment-body {
-  min-width: 0;
-  flex: 1;
-}
-
-.comment-body p {
-  margin: 7px 0 0;
-  color: #c5c5cc;
-  font-size: 13px;
-  line-height: 1.55;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
 /* =========================================================
    GAMINGVERSE NAVBAR - PROFILE ICON FIX
    Prevent Profile.css from making navbar avatar huge

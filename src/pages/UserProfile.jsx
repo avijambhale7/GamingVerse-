@@ -31,7 +31,8 @@ import { formatGameName } from "./profile/utils/gameImages.js";
 import useRemotePosters from "./profile/utils/useRemotePosters.js";
 import "./Profile.css";
 import "./profile/styles/user-profile.css";
-import { plural, pluralWord } from "../utils/plural.js";
+import { pluralWord } from "../utils/plural.js";
+import { reviewAge } from "../utils/timeAgo.js";
 
 const POST_LIMIT = 30;
 const VERDICT_LABEL = {
@@ -40,15 +41,6 @@ const VERDICT_LABEL = {
   timepass: "TIMEPASS",
   skip: "SKIP",
 };
-
-function timeAgo(value) {
-  const ms = Date.now() - Number(value || 0);
-  if (!value || ms < 3600000) return "Just now";
-  const hours = Math.floor(ms / 3600000);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${plural(days, "day")} ago`;
-}
 
 // Opening another gamer's page starts fresh (no leftovers from the last one).
 export default function UserProfile() {
@@ -399,7 +391,7 @@ function UserProfilePage({ uid }) {
                         </div>
                         <div>
                           <h3>{review.gameName}</h3>
-                          <span>{timeAgo(review.createdAt)}</span>
+                          <span>{reviewAge(review.createdAt)}</span>
                         </div>
                       </div>
                       <span className={`my-review-verdict ${review.verdict}`}>

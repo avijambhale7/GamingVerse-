@@ -22,7 +22,7 @@ import {
   normalizeUsername,
   releaseUsername,
 } from "../utils/usernames.js";
-import { plural } from "../utils/plural.js";
+import { calculateAgeFromDob } from "./games/utils/access.js";
 
 function Profile() {
   const navigate = useNavigate();
@@ -412,18 +412,6 @@ function Profile() {
     }
   };
 
-  const formatAge = (timestamp) => {
-    if (!timestamp) return "";
-
-    const hours = Math.max(0, Math.floor((Date.now() - timestamp) / 3600000));
-
-    if (hours < 1) return "Just now";
-    if (hours < 24) return `${hours}h ago`;
-
-    const days = Math.floor(hours / 24);
-    return `${plural(days, "day")} ago`;
-  };
-
   const verdictLabel = {
     perfection: "PERFECTION",
     "go-for-it": "GO FOR IT",
@@ -431,28 +419,8 @@ function Profile() {
     skip: "SKIP",
   };
 
-  const calculateAge = (dob) => {
-    if (!dob) return null;
 
-    const birthDate = new Date(`${dob}T00:00:00`);
-    if (Number.isNaN(birthDate.getTime())) return null;
-
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-
-    const beforeBirthday =
-      today.getMonth() < birthDate.getMonth() ||
-      (today.getMonth() === birthDate.getMonth() &&
-        today.getDate() < birthDate.getDate());
-
-    if (beforeBirthday) {
-      age -= 1;
-    }
-
-    return age;
-  };
-
-  const profileAge = calculateAge(profile.dob);
+  const profileAge = calculateAgeFromDob(profile.dob);
 
   const handleEditChange = (event) => {
     const { name, value } = event.target;
@@ -579,7 +547,7 @@ function Profile() {
       return;
     }
 
-    const age = calculateAge(profile.dob);
+    const age = calculateAgeFromDob(profile.dob);
 
     if (age === null || age < 0 || age > 120) {
       setMessage("Please enter a valid date of birth.");
@@ -741,7 +709,6 @@ function Profile() {
       collectionGames={collectionGames}
       filter={filter}
       filteredReviews={filteredReviews}
-      formatAge={formatAge}
       fullName={fullName}
       handleLogout={handleLogout}
       myReviews={myReviews}

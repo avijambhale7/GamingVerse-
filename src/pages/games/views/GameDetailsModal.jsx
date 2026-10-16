@@ -73,7 +73,6 @@ export default function GameDetailsModal({
   closeDetails,
   collectionGames,
   composerVerdict,
-  formatReviewAge,
   likedReviewIds,
   openPoster,
   openTrailer,
@@ -685,7 +684,6 @@ export default function GameDetailsModal({
                               review={review}
                               liked={likedReviewIds.includes(review.id)}
                               currentUserId={auth.currentUser?.uid}
-                              formatReviewAge={formatReviewAge}
                               onToggleLike={toggleReviewLike}
                               onDelete={deleteMyReview}
                               onPostComment={postReviewComment}

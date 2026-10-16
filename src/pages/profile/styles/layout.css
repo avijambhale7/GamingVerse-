@@ -97,10 +97,6 @@ textarea {
 }
 
 /* Old header actions are intentionally hidden/removed. */
-.profile-header-actions {
-  display: none !important;
-}
-
 /* =========================================================
    MAIN LAYOUT
 ========================================================= */
