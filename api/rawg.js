@@ -26,6 +26,16 @@ const ALLOWED_PARAMS = new Set([
   "exclude_additions",
 ]);
 
+// RAWG puts the key into its "next"/"previous" page links — take it
+// out so the answer never shows it to the browser.
+export function withoutKey(body, key) {
+  return body
+    .split(`key=${key}&`).join("")
+    .split(`&key=${key}`).join("")
+    .split(`key=${key}`).join("")
+    .split(key).join("");
+}
+
 export default async function handler(req, res) {
   if (req.method !== "GET") {
     res.setHeader("Allow", "GET");
@@ -47,7 +57,7 @@ export default async function handler(req, res) {
 
   try {
     const upstream = await fetch(`https://api.rawg.io/api/${path}?${params}`);
-    const body = await upstream.text();
+    const body = withoutKey(await upstream.text(), key);
     res.setHeader("Content-Type", "application/json");
     if (upstream.ok) {
       // Game data changes slowly: cache for 6 hours, serve stale for a

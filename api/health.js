@@ -86,20 +86,26 @@ async function rulesStatus(app) {
   }
 }
 
-async function rawgReachable(key) {
-  if (!key) return false;
+async function rawgOnce(key) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
   try {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 6000);
     const res = await fetch(
       `https://api.rawg.io/api/games?key=${encodeURIComponent(key)}&page_size=1`,
       { signal: controller.signal },
     );
-    clearTimeout(timer);
     return res.ok;
   } catch {
     return false;
+  } finally {
+    clearTimeout(timer);
   }
+}
+
+// One slow or dropped answer shouldn't show a warning: try twice.
+async function rawgReachable(key) {
+  if (!key) return false;
+  return (await rawgOnce(key)) || (await rawgOnce(key));
 }
 
 export default async function handler(req, res) {
