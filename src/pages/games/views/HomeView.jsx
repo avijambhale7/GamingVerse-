@@ -7,7 +7,6 @@
 import { useState } from "react";
 import { canAccessGame, getRequiredGameAge, isBlockedGame } from "../utils/access.js";
 import { containsBlockedGameTerm } from "../utils/text.js";
-import { gameAgeRatings } from "../data/ageRatings.js";
 import { getGameDetails, getGameGenreLabel } from "../utils/gameInfo.js";
 import ServiceNotice from "../../../components/ServiceNotice.jsx";
 
@@ -109,7 +108,7 @@ export default function HomeView({
                         onClick={() => setHeroIndex(index)}
                         aria-label={`Show ${game.name}`}
                       >
-                        <img src={game.image} alt="" />
+                        {game.image ? <img src={game.image} alt="" /> : <span className="game-image-placeholder" aria-hidden="true">🎮</span>}
                         <span>{game.name}</span>
                       </button>
                     ))}
@@ -192,7 +191,7 @@ export default function HomeView({
                     showAllFeaturedGames ? filteredHorizontal.length : 3,
                   )
                   .map((game, index) => {
-                    const requiredAge = getRequiredGameAge(game.name);
+                    const requiredAge = getRequiredGameAge(game);
                     const accessible = canAccessGame(game, userAge);
                     const blocked = isBlockedGame(game);
 
@@ -211,7 +210,11 @@ export default function HomeView({
                             : game.name
                         }
                       >
-                        <img src={game.image} alt={game.name} />
+                        {game.image ? (
+                          <img src={game.image} alt={game.name} />
+                        ) : (
+                          <span className="game-image-placeholder" aria-hidden="true">🎮</span>
+                        )}
 
                         <div className="card-gradient"></div>
 
@@ -247,7 +250,7 @@ export default function HomeView({
 
                           <div className="game-meta">
                             <span>🎮 Action</span>
-                            <span>{gameAgeRatings[game.name] || "16+"}</span>
+                            <span>{getRequiredGameAge(game)}+</span>
                           </div>
 
                           <button
@@ -317,7 +320,7 @@ export default function HomeView({
                 />
                 <div className="automatic-games-grid">
                   {visibleAutomaticGames.map((game) => {
-                    const requiredAge = getRequiredGameAge(game.name);
+                    const requiredAge = getRequiredGameAge(game);
                     const accessible = canAccessGame(game, userAge);
 
                     return (
@@ -332,11 +335,15 @@ export default function HomeView({
                         }
                       >
                         <div className="automatic-game-image-wrap">
-                          <img
-                            src={game.image}
-                            alt={game.name}
-                            loading="lazy"
-                          />
+                          {game.image ? (
+                            <img
+                              src={game.image}
+                              alt={game.name}
+                              loading="lazy"
+                            />
+                          ) : (
+                            <span className="game-image-placeholder" aria-hidden="true">🎮</span>
+                          )}
                           <div className="automatic-game-image-gradient"></div>
 
                           <div className="automatic-game-source-badge">
@@ -423,7 +430,7 @@ export default function HomeView({
                   .filter((game) => !containsBlockedGameTerm(game.name))
                   .slice(0, showAllCatalogueGames ? filteredPosters.length : 6)
                   .map((game, index) => {
-                    const requiredAge = getRequiredGameAge(game.name);
+                    const requiredAge = getRequiredGameAge(game);
                     const accessible = canAccessGame(game, userAge);
                     const blocked = isBlockedGame(game);
 

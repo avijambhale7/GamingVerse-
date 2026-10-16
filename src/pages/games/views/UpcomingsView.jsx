@@ -52,7 +52,7 @@ export default function UpcomingsView({
                 <ServiceNotice message={upcomingGamesNote} onRetry={retryGames} />
                 <div className="automatic-games-grid">
                   {filteredUpcomingGames.map((game) => {
-                    const requiredAge = getRequiredGameAge(game.name);
+                    const requiredAge = getRequiredGameAge(game);
                     const accessible = canAccessGame(game, userAge);
 
                     return (
@@ -67,11 +67,17 @@ export default function UpcomingsView({
                         }
                       >
                         <div className="automatic-game-image-wrap">
-                          <img
-                            src={game.image}
-                            alt={game.name}
-                            loading="lazy"
-                          />
+                          {game.image ? (
+                            <img
+                              src={game.image}
+                              alt={game.name}
+                              loading="lazy"
+                            />
+                          ) : (
+                            // No artwork (e.g. a built-in fallback game):
+                            // a placeholder, never <img src="">.
+                            <span className="game-image-placeholder" aria-hidden="true">🎮</span>
+                          )}
                           <div className="automatic-game-image-gradient"></div>
                           <div className="automatic-game-source-badge">
                             UPCOMING

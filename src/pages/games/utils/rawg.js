@@ -10,6 +10,7 @@
    and in .env.local for `npm run dev`.
 ========================================================= */
 import { containsBlockedGameTerm } from "./text.js";
+import { esrbAge, rememberEsrbRating } from "./ageRating.js";
 
 /* RAWG calls are always routed through the server proxy. */
 export const RAWG_ENABLED = true;
@@ -23,17 +24,11 @@ const RAWG_ALLOWED_PLATFORM_SLUGS = new Set([
   "xbox-series-s",
 ]);
 
+// ESRB → GamingVerse label (display only; ageRating.js decides access).
 function rawgRatingToGamingVerse(rating) {
-  const slug = String(rating?.slug || "").toLowerCase();
-
-  if (slug === "adults-only") return "18+";
-  if (slug === "mature") return "18+";
-  if (slug === "teen") return "16+";
-  if (slug === "everyone-10-plus") return "12+";
-  if (slug === "everyone") return "7+";
-
+  const age = esrbAge(rating?.slug);
   // Unknown/unrated automatic games stay protected.
-  return "16+";
+  return `${age ?? 16}+`;
 }
 
 export function rawgGameHasAllowedPlatform(game) {
@@ -82,7 +77,9 @@ export function mapRawgGame(game) {
       : "Game";
 
   const ageRating = rawgRatingToGamingVerse(game?.esrb_rating);
+  const esrbSlug = String(game?.esrb_rating?.slug || "").toLowerCase();
   const displayName = String(game?.name || "").trim();
+  rememberEsrbRating(displayName, esrbSlug);
   const developerName =
     Array.isArray(game?.developers) && game.developers.length
       ? game.developers
@@ -109,6 +106,7 @@ export function mapRawgGame(game) {
     image: game.background_image || "",
     trailerUrl: rawgTrailerUrl,
     ageRating,
+    esrbSlug,
     genre,
     rating: Number.isFinite(Number(game?.rating)) ? Number(game.rating) : 0,
     ratingCount: Number.isFinite(Number(game?.ratings_count))

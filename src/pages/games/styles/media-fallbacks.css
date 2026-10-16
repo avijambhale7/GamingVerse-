@@ -91,3 +91,16 @@
     min-height: 280px !important;
   }
 }
+
+/* A game with no artwork: placeholder instead of <img src=""> */
+.game-image-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(168, 85, 247, 0.28), transparent 60%),
+    #111117;
+  font-size: 34px;
+}

@@ -16,4 +16,11 @@ export const gameAgeRatings = {
   "God of War": "16+",
   "Hogwarts Legacy": "12+",
   Minecraft: "7+",
+  "Red Dead Redemption": "18+",
+  "Red Dead Redemption 2": "18+",
+  "The Last of Us Part I": "18+",
+  "The Last of Us Part II": "18+",
+  "The Last of Us": "18+",
+  "Resident Evil 4": "18+",
+  "Resident Evil Village": "18+",
 };

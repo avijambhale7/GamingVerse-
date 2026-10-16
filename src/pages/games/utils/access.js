@@ -2,8 +2,8 @@
    AGE GATING
    Decides which games an account is allowed to open.
 ========================================================= */
-import { gameAgeRatings } from "../data/ageRatings.js";
 import { blockedGameNames } from "../data/contentFilters.js";
+import { requiredGameAge } from "./ageRating.js";
 import { getGameDetails } from "./gameInfo.js";
 
 export function calculateAgeFromDob(dob) {
@@ -26,9 +26,11 @@ export function calculateAgeFromDob(dob) {
   return age >= 0 && age <= 120 ? age : null;
 }
 
-export function getRequiredGameAge(gameName) {
-  const rating = gameAgeRatings[gameName] || "16+";
-  return Number.parseInt(rating, 10) || 16;
+// Minimum age for a game — pass the game object when you have it (its
+// RAWG ESRB rating counts), or just the name. Every spelling of a rated
+// title matches ("GTA 6" = "Grand Theft Auto VI"); see ageRating.js.
+export function getRequiredGameAge(gameOrName) {
+  return requiredGameAge(gameOrName);
 }
 
 export function isBlockedGame(game) {
@@ -49,7 +51,7 @@ export function isBlockedGame(game) {
 export function canAccessGame(game, userAge) {
   if (!game || isBlockedGame(game)) return false;
 
-  const requiredAge = getRequiredGameAge(game.name);
+  const requiredAge = getRequiredGameAge(game);
 
   /*
     No DOB = allow only games below 16.

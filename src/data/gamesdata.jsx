@@ -968,7 +968,9 @@ const gamesData = {
 // ALIASES FOR COMMON FILE NAMES
 // ============================================================
 
-const gamesDataAliases = {
+// Also used to match age ratings across spellings
+// (src/pages/games/utils/ageRating.js).
+export const gamesDataAliases = {
   ACS: "Assassin's Creed Shadows",
   AU: "AU",
   Wukong: "Black Myth Wukong",

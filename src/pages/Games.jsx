@@ -45,7 +45,6 @@ import SpacesView from "./games/views/SpacesView.jsx";
 import TrailerModal from "./games/views/TrailerModal.jsx";
 import UpcomingsView from "./games/views/UpcomingsView.jsx";
 
-import { gameAgeRatings } from "./games/data/ageRatings.js";
 
 import useGamingNews from "./games/hooks/useGamingNews.js";
 import useGamingClubs from "./games/hooks/useGamingClubs.js";
@@ -112,6 +111,7 @@ import {
   savedOnLabel,
 } from "./games/utils/gamesFallback.js";
 import { indiaTodayISO } from "./cafe/utils/indiaTime.js";
+import { dedupeGames, rememberEsrbRating } from "./games/utils/ageRating.js";
 
 /* =========================================================
    GAMES PAGE
@@ -475,7 +475,8 @@ function Games() {
           publisher: game.publisher || "—",
           trailerUrl: game.trailerUrl || "",
         };
-        gameAgeRatings[game.name] = game.ageRating;
+        // Saved lists (older ones lack esrbSlug) still teach the matcher.
+        rememberEsrbRating(game.name, game.esrbSlug);
       };
 
       // The live list couldn't load: show the last saved copy (any age),
@@ -911,7 +912,8 @@ function Games() {
     });
     const newAdminGames = Array.from(adminByKey.values());
 
-    return [...newAdminGames, ...overridden].filter(
+    // One entry per title, however many spellings the sources use.
+    return dedupeGames([...newAdminGames, ...overridden]).filter(
       (game) => !hiddenGames[normalizeGameSearchText(game.name)],
     );
   }, [adminGames, hiddenGames]);
@@ -1044,6 +1046,9 @@ function Games() {
 
           if (results[0]) {
             best = results[0];
+            // Only under RAWG's own name for it — a fuzzy match may be a
+            // different game, so its rating never moves to the searched one.
+            rememberEsrbRating(best.name, best.esrb_rating?.slug);
             break;
           }
         }
@@ -1193,7 +1198,11 @@ function Games() {
 
   const filteredAutomaticGames = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return applyAdminGameOverrides(automaticGames).filter(
+    // Same title under two names → one card, the GamingVerse entry.
+    return dedupeGames(
+      applyAdminGameOverrides(automaticGames),
+      fullGameCatalogue,
+    ).filter(
       (game) =>
         game.name.toLowerCase().includes(query) &&
         matchesHomeCategory(game, activeCategory) &&
@@ -1201,6 +1210,7 @@ function Games() {
         !hiddenGames[normalizeGameSearchText(game.name)],
     );
   }, [
+    fullGameCatalogue,
     automaticGames,
     applyAdminGameOverrides,
     search,
@@ -1216,7 +1226,11 @@ function Games() {
 
   const filteredUpcomingGames = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return applyAdminGameOverrides(upcomingGames).filter(
+    // "GTA VI" and RAWG's "Grand Theft Auto VI" → one card.
+    return dedupeGames(
+      applyAdminGameOverrides(upcomingGames),
+      fullGameCatalogue,
+    ).filter(
       (game) =>
         game.name.toLowerCase().includes(query) &&
         matchesHomeCategory(game, activeCategory) &&
@@ -1226,6 +1240,7 @@ function Games() {
         isUpcomingRelease(game.releaseDate, indiaTodayISO()),
     );
   }, [
+    fullGameCatalogue,
     upcomingGames,
     applyAdminGameOverrides,
     search,
@@ -1240,26 +1255,18 @@ function Games() {
       return [];
     }
 
-    const combined = [
-      ...applyAdminGameOverrides(automaticGames),
-      ...fullGameCatalogue,
-    ];
-    const seen = new Set();
+    // Catalogue first, so a title found in both keeps its GamingVerse
+    // entry; dedupeGames merges every spelling of the same game.
+    const combined = dedupeGames(
+      [...fullGameCatalogue, ...applyAdminGameOverrides(automaticGames)],
+      fullGameCatalogue,
+    );
 
-    return combined.filter((game) => {
-      const key = game.name.toLowerCase();
-
-      if (
-        seen.has(key) ||
-        !key.includes(query) ||
-        hiddenGames[normalizeGameSearchText(game.name)]
-      ) {
-        return false;
-      }
-
-      seen.add(key);
-      return true;
-    });
+    return combined.filter(
+      (game) =>
+        game.name.toLowerCase().includes(query) &&
+        !hiddenGames[normalizeGameSearchText(game.name)],
+    );
   }, [
     search,
     automaticGames,
@@ -1486,8 +1493,8 @@ function Games() {
        OPEN / CLOSE METER
     ======================================================= */
   const handleRestrictedGame = (game) => {
-    const rating = gameAgeRatings[game?.name] || "16+";
-    const requiredAge = getRequiredGameAge(game?.name);
+    const requiredAge = getRequiredGameAge(game);
+    const rating = `${requiredAge}+`;
 
     if (isBlockedGame(game)) {
       setReviewMessage(
@@ -1740,6 +1747,7 @@ function Games() {
 
         if (results[0]) {
           best = results[0];
+          rememberEsrbRating(best.name, best.esrb_rating?.slug);
           break;
         }
       }
@@ -1757,6 +1765,7 @@ function Games() {
 
         if (detailResponse.ok) {
           best = await detailResponse.json();
+          rememberEsrbRating(best?.name, best?.esrb_rating?.slug);
         }
       }
 

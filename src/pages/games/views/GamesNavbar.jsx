@@ -174,7 +174,11 @@ export default function GamesNavbar({
                         openDetails(game);
                       }}
                     >
-                      <img src={game.image} alt={game.name} />
+                      {game.image ? (
+                        <img src={game.image} alt={game.name} />
+                      ) : (
+                        <span className="game-image-placeholder" aria-hidden="true">🎮</span>
+                      )}
                       <span>
                         <strong>{game.name}</strong>
                         <small>

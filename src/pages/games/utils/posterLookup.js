@@ -13,6 +13,7 @@ import {
   localImageSimilarity,
   normalizeCatalogueImageKey,
 } from "./text.js";
+import { rememberEsrbRating } from "./ageRating.js";
 
 const POSTER_CACHE_KEY = "gamingverse_poster_image_cache_v1";
 
@@ -108,6 +109,10 @@ async function lookupGameImage(game) {
         Array.isArray(data?.results) ? data.results : [],
         game,
       );
+
+      // Search results carry RAWG's ESRB rating — keep it (by RAWG's own
+      // name for the game) for the age check.
+      rememberEsrbRating(result?.name, result?.esrb_rating?.slug);
 
       if (result?.background_image) {
         return {
