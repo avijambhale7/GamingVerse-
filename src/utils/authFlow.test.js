@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   INVALID_LOGIN_MESSAGE,
+  destinationAfterLogin,
   USERNAME_LOGIN_UNAVAILABLE_MESSAGE,
   authErrorMessage,
   homePathFor,
@@ -153,5 +154,30 @@ describe("roleLabel", () => {
     expect(roleLabel("game_master")).toBe("Game master");
     expect(roleLabel("")).toBe("");
     expect(roleLabel(undefined)).toBe("");
+  });
+});
+
+describe("destinationAfterLogin", () => {
+  it("goes back to the page the user was opening", () => {
+    expect(destinationAfterLogin("/cafe?x=1", {})).toBe("/cafe?x=1");
+    expect(destinationAfterLogin("/admin", { role: "admin" })).toBe("/admin");
+    expect(destinationAfterLogin("/owner-dashboard", { role: "cafe_owner" })).toBe(
+      "/owner-dashboard",
+    );
+    expect(destinationAfterLogin("/owner-dashboard", { requestedRole: "shop_owner" })).toBe(
+      "/owner-dashboard",
+    );
+  });
+
+  it("never sends an account to a page it can't open (that loops back to login)", () => {
+    expect(destinationAfterLogin("/admin", {})).toBe("/games");
+    expect(destinationAfterLogin("/admin/x", { role: "cafe_owner" })).toBe("/owner-dashboard");
+    expect(destinationAfterLogin("/owner-dashboard", {})).toBe("/games");
+    expect(destinationAfterLogin("/owner-dashboard", { role: "admin" })).toBe("/admin");
+  });
+
+  it("uses the role's home when there's nowhere to go back to", () => {
+    expect(destinationAfterLogin("", { role: "admin" })).toBe("/admin");
+    expect(destinationAfterLogin(undefined, {})).toBe("/games");
   });
 });

@@ -40,6 +40,19 @@ export function returnPathFrom(from) {
   return `${pathname}${from.search || ""}${from.hash || ""}`;
 }
 
+// Where to go after login: back to the page the user was heading to —
+// unless their account can't open it (e.g. /admin for a normal user,
+// which would just bounce them back to login) — else their role's home.
+export function destinationAfterLogin(returnTo, profile = {}) {
+  const home = homePathFor(profile);
+  if (!returnTo) return home;
+  const path = String(returnTo);
+  const role = String(profile?.role || "").toLowerCase();
+  if (path.startsWith("/admin") && role !== "admin") return home;
+  if (path.startsWith("/owner-dashboard") && !isBusinessProfile(profile)) return home;
+  return path;
+}
+
 // "Email or username" login field: anything with an @ is an email.
 export function isEmailIdentifier(value = "") {
   return String(value).includes("@");

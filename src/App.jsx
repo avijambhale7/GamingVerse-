@@ -60,6 +60,11 @@ function App() {
         return;
       }
 
+      // Signed in, but the ban check below hasn't answered yet: show
+      // "Loading" rather than treating the user as signed out (on a slow
+      // connection that used to bounce a fresh login back to /login).
+      setLoading(true);
+
       // Watch the ban flag live: a user banned at login time or while
       // already signed in is signed out immediately, and Login shows why.
       let firstCheck = true;

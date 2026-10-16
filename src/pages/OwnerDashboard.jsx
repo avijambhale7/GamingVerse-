@@ -36,6 +36,7 @@ import { changeBookingStatus } from "./cafe/utils/bookingWrites.js";
 import { getSellerName } from "../utils/profileName.js";
 import { mergePhotoList } from "../utils/photoList.js";
 import { NO_SHOW, canMarkNoShow, noShowCount } from "./cafe/utils/noShow.js";
+import { homePathFor } from "../utils/authFlow.js";
 
 const OWNER_ROLES = new Set([
   "owner",
@@ -186,8 +187,9 @@ export default function OwnerDashboard() {
           return;
         }
         if (!OWNER_ROLES.has(nextRole)) {
-          await signOut(auth);
-          navigate("/login", { replace: true });
+          // Not a business account: go to this account's own home page
+          // instead of signing it out (which looked like a failed login).
+          navigate(homePathFor(data), { replace: true });
           return;
         }
         setRole(nextRole);

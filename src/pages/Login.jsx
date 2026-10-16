@@ -34,7 +34,7 @@ import {
 } from "../utils/usernames.js";
 import {
   authErrorMessage,
-  homePathFor,
+  destinationAfterLogin,
   isEmailIdentifier,
   returnPathFrom,
 } from "../utils/authFlow.js";
@@ -243,7 +243,9 @@ function Login({ user = null, authLoading = false }) {
     if (!signedInUid) return undefined;
     let cancelled = false;
     readProfile(signedInUid).then((profile) => {
-      if (!cancelled) navigate(returnTo || homePathFor(profile), { replace: true });
+      if (!cancelled) {
+        navigate(destinationAfterLogin(returnTo, profile), { replace: true });
+      }
     });
     return () => {
       cancelled = true;
@@ -253,7 +255,7 @@ function Login({ user = null, authLoading = false }) {
   // After a successful sign-in: show the toast, then go to the page
   // the user was heading to, or their role's home page.
   const finishSignIn = async (uid, message, backTo = returnTo) => {
-    const path = backTo || homePathFor(await readProfile(uid));
+    const path = destinationAfterLogin(backTo, await readProfile(uid));
     notify(message, "success");
     window.setTimeout(() => navigate(path, { replace: true }), 600);
   };

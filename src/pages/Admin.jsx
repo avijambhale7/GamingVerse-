@@ -27,7 +27,7 @@ import { REQUEST_STATUS, adminDecide } from "../utils/purchaseRequests.js";
 import { bulkApprovableRequests } from "../utils/requestTabs.js";
 import { notifyUser } from "../utils/notify.js";
 import ProductImage from "./marketplace/views/ProductImage.jsx";
-import { roleLabel } from "../utils/authFlow.js";
+import { homePathFor, roleLabel } from "../utils/authFlow.js";
 import AdminBirthDate from "./admin/AdminBirthDate.jsx";
 import AdminAttention from "./admin/AdminAttention.jsx";
 import { countOpenReports } from "../utils/purchaseReports.js";
@@ -182,8 +182,10 @@ export default function Admin() {
         const snap = await get(ref(db, `users/${currentUser.uid}`));
         const data = snap.exists() ? snap.val() : {};
         if (String(data.role || "").toLowerCase() !== "admin") {
-          await signOut(auth);
-          navigate("/login", { replace: true });
+          // Not an admin: go to this account's own home page. (Signing
+          // them out here sent people who'd just logged in straight back
+          // to the login page.)
+          navigate(homePathFor(data), { replace: true });
           return;
         }
         setAuthorized(true);
