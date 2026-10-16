@@ -9,7 +9,10 @@
       "Grand Theft Auto VI" are the same game.
    2. The game's ESRB rating from RAWG (esrbSlug on RAWG games, or
       remembered by name when RAWG results are loaded).
-   3. Otherwise 16+ (unknown games stay protected).
+   3. A spin-off of an 18+ series ("Grand Theft Auto: San Andreas",
+      "Cyberpunk 2077: Phantom Liberty") gets that series' rating —
+      whole words only, so "gta" never matches "Gtamania".
+   4. Otherwise 16+ (unknown games stay protected).
 ========================================================= */
 import gamesData, { gamesDataAliases } from "../../../data/gamesdata.jsx";
 import { gameAgeRatings } from "../data/ageRatings.js";
@@ -19,10 +22,9 @@ const ROMAN = {
   vi: "6", vii: "7", viii: "8", ix: "9", x: "10",
 };
 
-// The same key for every spelling of a title:
-// "Grand Theft Auto VI" / "GTA 6" / "gta vi" → "gta6",
-// "Black Myth: Wukong" → "blackmythwukong", "The Last of Us" → "lastofus".
-export function gameNameKey(name = "") {
+// A title as normalised words:
+// "Grand Theft Auto: San Andreas" → ["gta", "san", "andreas"].
+export function gameNameWords(name = "") {
   const words = String(name || "")
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "") // accents (Ragnarök → Ragnarok)
@@ -34,7 +36,14 @@ export function gameNameKey(name = "") {
     .filter(Boolean)
     .map((word) => ROMAN[word] || word);
   if (words[0] === "the" && words.length > 1) words.shift();
-  return words.join("");
+  return words;
+}
+
+// The same key for every spelling of a title:
+// "Grand Theft Auto VI" / "GTA 6" / "gta vi" → "gta6",
+// "Black Myth: Wukong" → "blackmythwukong", "The Last of Us" → "lastofus".
+export function gameNameKey(name = "") {
+  return gameNameWords(name).join("");
 }
 
 // ESRB (RAWG esrb_rating.slug) → minimum age.
@@ -87,6 +96,41 @@ export function gamingVerseAge(name) {
   return gamingVerseRatings.get(gameNameKey(name)) ?? null;
 }
 
+// 18+ series: any game whose name STARTS with one of these (as whole
+// words) is treated as part of that series. Also every 18+ title in
+// ageRatings.js, by its full name.
+const ADULT_SERIES = [
+  "GTA",
+  "Cyberpunk 2077",
+  "Red Dead Redemption",
+  "Resident Evil",
+  "The Last of Us",
+  "Mortal Kombat",
+  "Call of Duty",
+];
+
+const adultSeriesPrefixes = [
+  ...ADULT_SERIES,
+  ...Object.entries(gameAgeRatings)
+    .filter(([, rating]) => parseAge(rating) >= 18)
+    .map(([name]) => name),
+]
+  .map((name) => gameNameWords(name))
+  .filter((words) => words.length > 0);
+
+// 18 when the name begins with an 18+ series' words, else null.
+// Word-by-word, so "gta" matches "GTA San Andreas" but not "Gtamania",
+// and "Call of Duty" doesn't match "Call of Juarez".
+export function seriesAge(name) {
+  const words = gameNameWords(name);
+  const isSeries = adultSeriesPrefixes.some(
+    (prefix) =>
+      prefix.length <= words.length &&
+      prefix.every((word, index) => words[index] === word),
+  );
+  return isSeries ? 18 : null;
+}
+
 // ESRB ratings seen in RAWG results (latest, upcoming, search, details),
 // so a game shown later without its RAWG data still gets its rating.
 const rememberedEsrb = new Map();
@@ -110,6 +154,10 @@ export function requiredGameAge(gameOrName) {
   const fromEsrb =
     esrbAge(game?.esrbSlug) ?? esrbAge(rememberedEsrb.get(gameNameKey(name)));
   if (fromEsrb !== null) return fromEsrb;
+
+  // No rating of its own: a spin-off of an 18+ series is 18+ too.
+  const fromSeries = seriesAge(name);
+  if (fromSeries !== null) return fromSeries;
 
   return DEFAULT_REQUIRED_AGE;
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   dedupeGames,
   esrbAge,
+  seriesAge,
   gameNameKey,
   rememberEsrbRating,
   requiredGameAge,
@@ -103,5 +104,44 @@ describe("dedupeGames", () => {
 
   it("copes with missing input", () => {
     expect(dedupeGames(undefined, undefined)).toEqual([]);
+  });
+});
+
+describe("spin-offs of 18+ series", () => {
+  it("rates games starting with an 18+ series name 18+", () => {
+    expect(requiredGameAge("Grand Theft Auto: San Andreas")).toBe(18);
+    expect(requiredGameAge("GTA Vice City Stories")).toBe(18);
+    expect(requiredGameAge("Cyberpunk 2077: Phantom Liberty")).toBe(18);
+    expect(requiredGameAge("Red Dead Redemption: Undead Nightmare")).toBe(18);
+    expect(requiredGameAge("Resident Evil 7: Biohazard")).toBe(18);
+    expect(requiredGameAge("The Last of Us: Left Behind")).toBe(18);
+    expect(requiredGameAge("Mortal Kombat 11")).toBe(18);
+    expect(requiredGameAge("Call of Duty: Black Ops 6")).toBe(18);
+  });
+
+  it("matches whole words only, never part of a word", () => {
+    expect(seriesAge("Gtamania")).toBeNull();
+    expect(seriesAge("Call of Juarez")).toBeNull();
+    expect(seriesAge("Red Dead Pixels")).toBeNull();
+    expect(seriesAge("Residential Evil Sim")).toBeNull();
+    expect(seriesAge("Cyberpunk Racer")).toBeNull();
+    expect(requiredGameAge("Gtamania")).toBe(16);
+  });
+
+  it("only counts the series name at the start of the title", () => {
+    expect(seriesAge("Learning GTA Physics")).toBeNull();
+  });
+
+  it("never overrides a game's own GamingVerse or ESRB rating", () => {
+    // ESRB says Teen for this made-up spin-off: that wins over the series.
+    expect(requiredGameAge({ name: "Call of Duty Kids Edition", esrbSlug: "teen" })).toBe(13);
+    // GamingVerse rating wins over everything.
+    expect(requiredGameAge("GTA V")).toBe(18);
+  });
+
+  it("blocks 16-year-olds from series spin-offs", () => {
+    expect(canAccessGame({ name: "Grand Theft Auto: San Andreas" }, 16)).toBe(false);
+    expect(canAccessGame({ name: "Cyberpunk 2077: Phantom Liberty" }, 17)).toBe(false);
+    expect(canAccessGame({ name: "Cyberpunk 2077: Phantom Liberty" }, 18)).toBe(true);
   });
 });
