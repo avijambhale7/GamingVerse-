@@ -248,6 +248,18 @@ reference-game-hero-thumbnail {
   cursor: pointer;
   box-shadow: 0 10px 26px rgba(236, 72, 153, 0.35);
 }
+/* "Try again" + "Search on YouTube" side by side */
+.gv-trailer-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+.gv-trailer-state-actions button + button {
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+}
 @media (max-width: 640px) {
   .gv-trailer-state-card {
     padding: 20px 16px 18px;

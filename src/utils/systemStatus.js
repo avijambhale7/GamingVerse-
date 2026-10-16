@@ -3,6 +3,7 @@
    Shared by api/health.js (server) and the admin System status
    card / "Needs your attention" box (browser).
 ========================================================= */
+import { plural } from "./plural.js";
 
 /* ---------- database rules: live vs. this build ---------- */
 
@@ -68,9 +69,9 @@ export function waitingLabel(sinceMs, nowMs = Date.now()) {
   const minutes = Math.floor((nowMs - since) / 60000);
   if (minutes < 60) return minutes <= 1 ? "just now" : `${minutes} min`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"}`;
+  if (hours < 24) return plural(hours, "hour");
   const days = Math.floor(hours / 24);
-  return `${days} day${days === 1 ? "" : "s"}`;
+  return plural(days, "day");
 }
 
 // The earliest timestamp in a list (0 when there is none).

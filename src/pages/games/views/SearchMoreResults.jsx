@@ -10,6 +10,7 @@ import { useEffect, useMemo, useState } from "react";
 import { equalTo, get, orderByChild, query, ref } from "firebase/database";
 import { db } from "../../../firebase";
 import { normalizeCafe } from "../../cafe/utils/cafeModel.js";
+import { plural } from "../../../utils/plural.js";
 
 let cache = null;
 let loading = null;
@@ -112,7 +113,7 @@ export default function SearchMoreResults({ query, onPick }) {
       items: results.clubs.map((club) => ({
         id: club.id,
         title: club.name || "Club",
-        sub: `${Number(club.memberCount) || 0} members${club.interest ? ` • ${club.interest}` : ""}`,
+        sub: `${plural(club.memberCount, "member")}${club.interest ? ` • ${club.interest}` : ""}`,
         image: "",
       })),
     },

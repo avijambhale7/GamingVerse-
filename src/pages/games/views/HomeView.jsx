@@ -9,6 +9,7 @@ import { canAccessGame, getRequiredGameAge, isBlockedGame } from "../utils/acces
 import { containsBlockedGameTerm } from "../utils/text.js";
 import { gameAgeRatings } from "../data/ageRatings.js";
 import { getGameDetails, getGameGenreLabel } from "../utils/gameInfo.js";
+import ServiceNotice from "../../../components/ServiceNotice.jsx";
 
 // Poster art with a graceful fallback: if the image can't load (bad URL,
 // file unavailable), show the "🎮 + name" tile instead of a broken icon.
@@ -31,6 +32,9 @@ export default function HomeView({
   activeCategory,
   activeView,
   automaticGamesError,
+  automaticGamesNote,
+  automaticGamesLoading,
+  retryGames,
   filteredAutomaticGames,
   filteredHorizontal,
   filteredPosters,
@@ -298,14 +302,19 @@ export default function HomeView({
               </div>
 
               {automaticGamesError ? (
-                <div className="automatic-games-message">
-                  <span>⚠️</span>
-                  <div>
-                    <strong>Latest games unavailable</strong>
-                    <p>{automaticGamesError}</p>
-                  </div>
-                </div>
+                <ServiceNotice
+                  tone="error"
+                  message={automaticGamesError}
+                  onRetry={retryGames}
+                  retrying={automaticGamesLoading}
+                />
               ) : filteredAutomaticGames.length > 0 ? (
+                <>
+                <ServiceNotice
+                  message={automaticGamesNote}
+                  onRetry={retryGames}
+                  retrying={automaticGamesLoading}
+                />
                 <div className="automatic-games-grid">
                   {visibleAutomaticGames.map((game) => {
                     const requiredAge = getRequiredGameAge(game.name);
@@ -370,6 +379,7 @@ export default function HomeView({
                     );
                   })}
                 </div>
+                </>
               ) : (
                 <div className="automatic-games-message">
                   <span>🎮</span>

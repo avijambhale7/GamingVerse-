@@ -22,6 +22,7 @@ import {
   normalizeUsername,
   releaseUsername,
 } from "../utils/usernames.js";
+import { plural } from "../utils/plural.js";
 
 function Profile() {
   const navigate = useNavigate();
@@ -420,7 +421,7 @@ function Profile() {
     if (hours < 24) return `${hours}h ago`;
 
     const days = Math.floor(hours / 24);
-    return `${days} day${days === 1 ? "" : "s"} ago`;
+    return `${plural(days, "day")} ago`;
   };
 
   const verdictLabel = {

@@ -12,6 +12,7 @@ import { ref, serverTimestamp, set } from "firebase/database";
 import { db } from "../../../firebase";
 import { stars } from "../utils/reviews.js";
 import useEscapeKey from "../../../utils/useEscapeKey.js";
+import { plural } from "../../../utils/plural.js";
 
 export function RatingBadge({ summary }) {
   if (!summary) return null;
@@ -105,7 +106,7 @@ export function RateVisitModal({ booking, user, existing, onClose, onDone }) {
               type="button"
               role="radio"
               aria-checked={rating === n}
-              aria-label={`${n} star${n === 1 ? "" : "s"}`}
+              aria-label={plural(n, "star")}
               className={n <= rating ? "on" : ""}
               onClick={() => setRating(n)}
             >

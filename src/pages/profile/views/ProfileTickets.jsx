@@ -12,6 +12,7 @@ import { db } from "../../../firebase";
 import CafeQrModal from "../../cafe/views/CafeQrModal.jsx";
 import "../../cafe/styles/qr.css";
 import "../../../components/PageSkeleton.css";
+import { plural } from "../../../utils/plural.js";
 
 // Usable tickets first, then waiting ones, then history.
 const STATUS_ORDER = {
@@ -118,7 +119,7 @@ export default function ProfileTickets({ navigate, uid }) {
                 </p>
                 <p>
                   🎮 {b.station || "Station"}
-                  {seats > 1 ? ` • ${seats} seats` : ""}
+                  {seats > 1 ? ` • ${plural(seats, "seat")}` : ""}
                 </p>
                 <small>{STATUS_NOTE[status] || status}</small>
               </div>

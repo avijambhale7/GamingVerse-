@@ -14,6 +14,7 @@ import useRemotePosters from "../utils/useRemotePosters.js";
 import useEscapeKey from "../../../utils/useEscapeKey.js";
 import { userPath } from "../../../utils/publicProfile.js";
 import SupportLink from "../../../components/SupportLink.jsx";
+import { pluralWord } from "../../../utils/plural.js";
 
 export default function ProfileView({
   activeTab,
@@ -131,7 +132,7 @@ export default function ProfileView({
             >
               <strong>{socialLists.followers.length}</strong>
               <span>
-                {socialLists.followers.length === 1 ? "Follower" : "Followers"}
+                {pluralWord(socialLists.followers.length, "Follower")}
               </span>
             </button>
             <button

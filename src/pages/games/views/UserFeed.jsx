@@ -44,6 +44,7 @@ import useEscapeKey from "../../../utils/useEscapeKey.js";
 import { completeGameCatalogue } from "../utils/catalogue.js";
 import "../styles/user-feed.css";
 import "../../../components/PageSkeleton.css";
+import { plural } from "../../../utils/plural.js";
 
 const MAX_CAPTION = 2200;
 const MAX_COMMENT = 500;
@@ -870,7 +871,7 @@ function FeedPost({
 
       <div className="uf-body">
         <strong className="uf-likes">
-          {likeCount} {likeCount === 1 ? "like" : "likes"}
+          {plural(likeCount, "like")}
         </strong>
 
         {post.game && (
@@ -907,7 +908,7 @@ function FeedPost({
             className="uf-view-all"
             onClick={() => setShowAll(true)}
           >
-            View all {comments.length} comments
+            View all {plural(comments.length, "comment")}
           </button>
         )}
 

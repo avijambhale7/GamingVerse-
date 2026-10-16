@@ -1,6 +1,7 @@
 /* =========================================================
    LIST HELPERS (pure — unit tested in listUtils.test.js)
 ========================================================= */
+import { plural } from "./plural.js";
 
 // Puts `item` at the front of `list`, removing any entry with the same
 // id first. Used right after saving something that a realtime listener
@@ -19,5 +20,5 @@ export function upsertById(list, item) {
 export function resultCountLabel(count, hasMore = false) {
   const n = Math.max(0, Number(count) || 0);
   if (hasMore) return `${n}+ results`;
-  return `${n} result${n === 1 ? "" : "s"}`;
+  return plural(n, "result");
 }

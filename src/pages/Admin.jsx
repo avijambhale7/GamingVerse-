@@ -33,6 +33,7 @@ import AdminAttention from "./admin/AdminAttention.jsx";
 import { countOpenReports } from "../utils/purchaseReports.js";
 import { oldestTime } from "../utils/systemStatus.js";
 import AdminSystemStatus from "./admin/AdminSystemStatus.jsx";
+import { plural } from "../utils/plural.js";
 
 // Module scope, evaluated once at page load — not a render-time call, so
 // the activity chart's "last 14 days" window doesn't need Date.now() (an
@@ -161,7 +162,7 @@ export default function Admin() {
 
       if (Object.keys(updates).length) await update(ref(db), updates);
       setMessage(
-        `Synced: ${bookingCount} bookings, ${seatCount} seat counts, ${Object.keys(handles).length} usernames.`,
+        `Synced: ${plural(bookingCount, "booking")}, ${plural(seatCount, "seat count")}, ${plural(Object.keys(handles).length, "username")}.`,
       );
     } catch (error) {
       console.error("Rebuild booking index error:", error);
@@ -382,7 +383,7 @@ export default function Admin() {
     if (!list.length) return;
     if (
       !window.confirm(
-        `Approve ${list.length} purchase request${list.length === 1 ? "" : "s"} from approved sellers? Each one is sent to its seller.`,
+        `Approve ${plural(list.length, "purchase request")} from approved sellers? Each one is sent to its seller.`,
       )
     ) {
       return;
@@ -400,7 +401,7 @@ export default function Admin() {
     setBulkApproving(false);
     setMessage(
       approved === list.length
-        ? `Approved ${approved} request${approved === 1 ? "" : "s"}.`
+        ? `Approved ${plural(approved, "request")}.`
         : `Approved ${approved} of ${list.length} — the rest couldn't be approved, try again.`,
     );
   };

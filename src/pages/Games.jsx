@@ -104,6 +104,8 @@ import {
   normalizeTrailerGameName,
 } from "./games/utils/text.js";
 import { verdictName } from "../utils/authorLabel.js";
+import { plural } from "../utils/plural.js";
+import { futureGames, readSavedGames, savedOnLabel } from "./games/utils/gamesFallback.js";
 
 /* =========================================================
    GAMES PAGE
@@ -114,6 +116,25 @@ const GAMES_UNAVAILABLE_MESSAGE =
   "Couldn't load the latest games right now. Showing GamingVerse picks.";
 const UPCOMING_UNAVAILABLE_MESSAGE =
   "Couldn't load upcoming games right now. Please try again later.";
+
+// Built-in games (src/data) whose release date is still ahead — the
+// Upcoming fallback when the live list and its saved copy are both
+// unavailable.
+function builtInUpcomingGames() {
+  const today = new Date().toISOString().slice(0, 10);
+  return futureGames(
+    completeGameCatalogue.map((game) => {
+      const details = getGameDetails(game.name) || {};
+      return {
+        ...game,
+        genre: details.genre || game.genre || "Game",
+        platforms: details.platforms || game.platforms || "",
+        releaseDate: details.releaseDate || game.releaseDate || "",
+      };
+    }),
+    today,
+  );
+}
 
 function Games() {
   const navigate = useNavigate();
@@ -289,6 +310,12 @@ function Games() {
   const [upcomingGames, setUpcomingGames] = useState([]);
   const [upcomingGamesLoading, setUpcomingGamesLoading] = useState(true);
   const [upcomingGamesError, setUpcomingGamesError] = useState("");
+  // Shown above a list that came from the saved copy / built-in games
+  // because the live list (RAWG) couldn't load.
+  const [automaticGamesNote, setAutomaticGamesNote] = useState("");
+  const [upcomingGamesNote, setUpcomingGamesNote] = useState("");
+  // "Try again": each press re-runs the loader, skipping the saved copy.
+  const [gamesRetry, setGamesRetry] = useState(0);
   // Games the admin has added directly, stored in Firebase so they show
   // up in the catalogue for every visitor, not just this browser.
   const [adminGames, setAdminGames] = useState([]);
@@ -301,7 +328,8 @@ function Games() {
     gamingClubs,
     selectedClubId,
     setSelectedClubId,
-    joinedClubIds,
+    isClubMember,
+    sendingClubPost,
     clubInterest,
     setClubInterest,
     clubSearch,
@@ -406,18 +434,15 @@ function Games() {
      ======================================================= */
   useEffect(() => {
     let cancelled = false;
+    // "Try again" goes straight to a live request.
+    const forceLive = gamesRetry > 0;
 
     const fetchAutomaticGames = async () => {
       if (!RAWG_ENABLED) {
         console.info("Live game data (RAWG) is turned off.");
-        const reason = GAMES_UNAVAILABLE_MESSAGE;
-
-        setAutomaticGames([]);
-        setUpcomingGames([]);
+        showFallbackGames();
         setAutomaticGamesLoading(false);
         setUpcomingGamesLoading(false);
-        setAutomaticGamesError(reason);
-        setUpcomingGamesError(UPCOMING_UNAVAILABLE_MESSAGE);
         return;
       }
 
@@ -447,9 +472,53 @@ function Games() {
         gameAgeRatings[game.name] = game.ageRating;
       };
 
+      // The live list couldn't load: show the last saved copy (any age),
+      // and for Upcoming fall back to built-in games with a future
+      // release date — so neither section sits empty.
+      function showFallbackGames() {
+        if (cancelled) return;
+        let saved = null;
+        try {
+          saved = readSavedGames(localStorage.getItem(CACHE_KEY));
+        } catch {
+          saved = null;
+        }
+        if (saved) {
+          saved.automaticGames.forEach((game) =>
+            cacheGameDetails(game, { upcoming: false }),
+          );
+          saved.upcomingGames.forEach((game) =>
+            cacheGameDetails(game, { upcoming: true }),
+          );
+          setCatalogueImageMap((prev) => ({
+            ...prev,
+            ...(saved.catalogueImages || {}),
+          }));
+        }
+        const savedNote = saved ? savedOnLabel(saved.savedAt) : "";
+
+        const automatic = saved?.automaticGames || [];
+        setAutomaticGames(automatic);
+        setAutomaticGamesNote(automatic.length ? savedNote : "");
+        setAutomaticGamesError(automatic.length ? "" : GAMES_UNAVAILABLE_MESSAGE);
+
+        let upcoming = saved?.upcomingGames || [];
+        let upcomingNote = upcoming.length ? savedNote : "";
+        if (!upcoming.length) {
+          upcoming = builtInUpcomingGames();
+          upcomingNote = upcoming.length
+            ? "Live release dates couldn't load — showing upcoming games from the GamingVerse catalogue."
+            : "";
+        }
+        setUpcomingGames(upcoming);
+        setUpcomingGamesNote(upcomingNote);
+        setUpcomingGamesError(upcoming.length ? "" : UPCOMING_UNAVAILABLE_MESSAGE);
+      }
+
       try {
         const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
         if (
+          !forceLive &&
           cached?.savedAt &&
           Date.now() - cached.savedAt < CACHE_TTL_MS &&
           Array.isArray(cached.automaticGames) &&
@@ -469,6 +538,8 @@ function Games() {
             }));
             setAutomaticGames(cached.automaticGames);
             setUpcomingGames(cached.upcomingGames);
+            setAutomaticGamesNote("");
+            setUpcomingGamesNote("");
             setAutomaticGamesLoading(false);
             setUpcomingGamesLoading(false);
           }
@@ -666,6 +737,8 @@ function Games() {
 
         if (!cancelled) {
           setUpcomingGames(sortedUpcoming);
+          setAutomaticGamesNote("");
+          setUpcomingGamesNote("");
         }
 
         try {
@@ -692,11 +765,10 @@ function Games() {
           const reason = /failed to fetch|networkerror|load failed/i.test(raw)
             ? "Could not reach RAWG. The API key may be invalid or out of quota, or the network is blocking api.rawg.io."
             : raw;
-          // Details are for developers (console); users get a plain line.
+          // Details are for developers (console); users get the saved or
+          // built-in games instead, with a note and "Try again".
           console.error("Live games unavailable:", reason);
-
-          setAutomaticGamesError(GAMES_UNAVAILABLE_MESSAGE);
-          setUpcomingGamesError(UPCOMING_UNAVAILABLE_MESSAGE);
+          showFallbackGames();
         }
       } finally {
         if (!cancelled) {
@@ -713,7 +785,8 @@ function Games() {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, []);
+  }, [gamesRetry]);
+  const retryGames = () => setGamesRetry((n) => n + 1);
 
   // Live gaming news (fetched + refreshed by the hook).
   const {
@@ -1534,7 +1607,8 @@ function Games() {
     }
   };
 
-  const openTrailer = async (game) => {
+  // { force: true } = the trailer screen's "Try again".
+  const openTrailer = async (game, { force = false } = {}) => {
     if (!canAccessGame(game, userAge)) {
       handleRestrictedGame(game);
       return;
@@ -1577,7 +1651,9 @@ function Games() {
 
     // Most games aren't in the verified list and RAWG rarely has clips
     // any more, so search YouTube (via /api/trailer) first.
-    const foundTrailer = await findYouTubeTrailer(details?.title || gameName);
+    const foundTrailer = await findYouTubeTrailer(details?.title || gameName, {
+      force,
+    });
     if (
       trailerSession !== trailerSessionRef.current ||
       !showTrailerRef.current
@@ -1966,7 +2042,7 @@ function Games() {
     if (hours < 1) return "Just now";
     if (hours < 24) return `${hours}h ago`;
     const days = Math.floor(hours / 24);
-    return `${days} day${days === 1 ? "" : "s"} ago`;
+    return `${plural(days, "day")} ago`;
   };
   /* Newest first. With the sort control removed there is one obvious
      order, and a fresh review should land where its author can see it. */
@@ -2111,6 +2187,8 @@ function Games() {
         openDetails={openDetails}
         upcomingGamesError={upcomingGamesError}
         upcomingGamesLoading={upcomingGamesLoading}
+        upcomingGamesNote={upcomingGamesNote}
+        retryGames={retryGames}
         userAge={userAge}
       />
 
@@ -2121,6 +2199,9 @@ function Games() {
         activeCategory={activeCategory}
         activeView={activeView}
         automaticGamesError={automaticGamesError}
+        automaticGamesNote={automaticGamesNote}
+        automaticGamesLoading={automaticGamesLoading}
+        retryGames={retryGames}
         filteredAutomaticGames={filteredAutomaticGames}
         filteredHorizontal={filteredHorizontal}
         filteredPosters={filteredPosters}
@@ -2157,7 +2238,8 @@ function Games() {
         filteredGamingClubs={filteredGamingClubs}
         filteredPosters={filteredPosters}
         gamingClubs={gamingClubs}
-        joinedClubIds={joinedClubIds}
+        isClubMember={isClubMember}
+        sendingClubPost={sendingClubPost}
         leaveClub={leaveClub}
         liveNews={liveNews}
         newClubDescription={newClubDescription}
@@ -2237,6 +2319,9 @@ function Games() {
         =================================================== */}
       <TrailerModal
         closeTrailer={closeTrailer}
+        retryTrailer={() =>
+          selectedGame && openTrailer(selectedGame, { force: true })
+        }
         selectedGame={selectedGame}
         showTrailer={showTrailer}
       />

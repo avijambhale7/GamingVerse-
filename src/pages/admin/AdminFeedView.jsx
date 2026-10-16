@@ -14,6 +14,7 @@ import { db } from "../../firebase";
 import timeAgo from "../../utils/timeAgo.js";
 import { userPath } from "../../utils/publicProfile.js";
 import "./AdminFeed.css";
+import { plural } from "../../utils/plural.js";
 
 const DAY = 24 * 60 * 60 * 1000;
 const FILTERS = [
@@ -199,7 +200,7 @@ export default function AdminFeedView({ bannedUids, onBan, onMessage }) {
                   <img src={post.imageData || post.imageURL} alt="" loading="lazy" />
                   {post.reportCount > 0 && (
                     <span className="afv-flag">
-                      ⚑ {post.reportCount} report{post.reportCount === 1 ? "" : "s"}
+                      ⚑ {plural(post.reportCount, "report")}
                     </span>
                   )}
                 </div>

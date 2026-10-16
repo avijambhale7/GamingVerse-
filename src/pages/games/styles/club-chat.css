@@ -292,3 +292,24 @@
     height: 36px;
   }
 }
+
+/* Non-members: "Join club to chat" in place of the message box */
+.club-chat-join-btn {
+  min-height: 40px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #ec4899, #a855f7 55%, #6366f1);
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+.club-chat-join-btn:hover {
+  filter: brightness(1.08);
+}
+.club-chat-send:disabled {
+  opacity: 0.45;
+  cursor: default;
+}

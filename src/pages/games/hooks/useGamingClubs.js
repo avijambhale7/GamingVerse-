@@ -19,6 +19,7 @@ import {
   set,
   update,
 } from "firebase/database";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../../../firebase";
 import { getClubInterestMeta } from "../data/clubs.js";
 
@@ -39,6 +40,16 @@ export default function useGamingClubs() {
   const [communityTalkPost, setCommunityTalkPost] = useState("");
   const [communityTalks, setCommunityTalks] = useState([]);
   const [clubDiscussions, setClubDiscussions] = useState([]);
+  const [sendingClubPost, setSendingClubPost] = useState(false);
+  // The signed-in user, followed live. The joined-clubs listener used to
+  // read auth.currentUser once at mount: if that one read failed (e.g.
+  // before sign-in had finished restoring) Firebase cancelled it for good,
+  // so every club opened later showed "View only" with no message box.
+  const [authUid, setAuthUid] = useState(() => auth.currentUser?.uid || "");
+  useEffect(
+    () => onAuthStateChanged(auth, (user) => setAuthUid(user?.uid || "")),
+    [],
+  );
 
   useEffect(() => {
     const unsubscribe = onValue(
@@ -58,12 +69,9 @@ export default function useGamingClubs() {
   }, []);
 
   useEffect(() => {
-    // Games.jsx only ever mounts while ProtectedRoute has an authenticated
-    // user; logging out unmounts it, so there's no user-less case to
-    // reset for here — joinedClubIds already starts at [].
-    if (!auth.currentUser) return undefined;
+    if (!authUid) return undefined;
     const unsubscribe = onValue(
-      ref(db, `userClubs/${auth.currentUser.uid}`),
+      ref(db, `userClubs/${authUid}`),
       (snapshot) => {
         const data = snapshot.val() || {};
         setJoinedClubIds(Object.keys(data));
@@ -71,7 +79,17 @@ export default function useGamingClubs() {
       (error) => console.error("Joined clubs listener error:", error),
     );
     return () => unsubscribe();
-  }, []);
+  }, [authUid]);
+
+  // A member is anyone who joined — and always the club's creator, even
+  // if their own membership record is missing (older clubs, or a create
+  // whose second write didn't land).
+  const isClubMember = (club) =>
+    Boolean(
+      club &&
+        authUid &&
+        (joinedClubIds.includes(club.id) || club.ownerUid === authUid),
+    );
 
   useEffect(() => {
     const talksQuery = query(ref(db, "communityTalks"), limitToLast(50));
@@ -114,6 +132,8 @@ export default function useGamingClubs() {
   }, [selectedClubId]);
 
   const openClub = (clubId) => {
+    // Don't show the previous club's messages while this one loads.
+    if (clubId !== selectedClubId) setClubDiscussions([]);
     setSelectedClubId(clubId);
     setShowCreateClub(false);
     setClubPost("");
@@ -142,7 +162,8 @@ export default function useGamingClubs() {
   const toggleClubMembership = async (clubId) => {
     // The card's Joined button is an OPEN action. Leaving a club is only
     // possible from inside the opened club, so it can never close by accident.
-    if (joinedClubIds.includes(clubId)) {
+    const club = gamingClubs.find((item) => item.id === clubId);
+    if (joinedClubIds.includes(clubId) || isClubMember(club)) {
       openClub(clubId);
       return;
     }
@@ -206,8 +227,10 @@ export default function useGamingClubs() {
 
   const postClubDiscussion = async () => {
     const text = clubPost.trim();
-    if (!text || !selectedClubId || !auth.currentUser) return;
+    // One send at a time: Enter + ➤ (or a double tap) can't post twice.
+    if (!text || !selectedClubId || !auth.currentUser || sendingClubPost) return;
 
+    setSendingClubPost(true);
     try {
       await push(ref(db, `clubDiscussions/${selectedClubId}`), {
         title: text,
@@ -221,6 +244,8 @@ export default function useGamingClubs() {
       setClubPost("");
     } catch (error) {
       console.error("Post club discussion error:", error);
+    } finally {
+      setSendingClubPost(false);
     }
   };
 
@@ -263,6 +288,8 @@ export default function useGamingClubs() {
     selectedClubId,
     setSelectedClubId,
     joinedClubIds,
+    isClubMember,
+    sendingClubPost,
     clubInterest,
     setClubInterest,
     clubSearch,

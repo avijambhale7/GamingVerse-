@@ -31,6 +31,7 @@ import { formatGameName } from "./profile/utils/gameImages.js";
 import useRemotePosters from "./profile/utils/useRemotePosters.js";
 import "./Profile.css";
 import "./profile/styles/user-profile.css";
+import { plural, pluralWord } from "../utils/plural.js";
 
 const POST_LIMIT = 30;
 const VERDICT_LABEL = {
@@ -46,7 +47,7 @@ function timeAgo(value) {
   const hours = Math.floor(ms / 3600000);
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
-  return `${days} day${days === 1 ? "" : "s"} ago`;
+  return `${plural(days, "day")} ago`;
 }
 
 // Opening another gamer's page starts fresh (no leftovers from the last one).
@@ -284,18 +285,18 @@ function UserProfilePage({ uid }) {
           <div className="profile-stats">
             <div>
               <strong>{posts.length}</strong>
-              <span>{posts.length === 1 ? "Post" : "Posts"}</span>
+              <span>{pluralWord(posts.length, "Post")}</span>
             </div>
             <div>
               <strong>{reviews.length}</strong>
-              <span>{reviews.length === 1 ? "Review" : "Reviews"}</span>
+              <span>{pluralWord(reviews.length, "Review")}</span>
             </div>
           </div>
 
           <div className="profile-social">
             <div className="profile-social-tile">
               <strong>{followerCount}</strong>
-              <span>{followerCount === 1 ? "Follower" : "Followers"}</span>
+              <span>{pluralWord(followerCount, "Follower")}</span>
             </div>
             <div className="profile-social-tile">
               <strong>{followingCount}</strong>

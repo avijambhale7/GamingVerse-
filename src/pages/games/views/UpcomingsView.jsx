@@ -4,6 +4,7 @@
 ========================================================= */
 
 import { canAccessGame, getRequiredGameAge } from "../utils/access.js";
+import ServiceNotice from "../../../components/ServiceNotice.jsx";
 
 export default function UpcomingsView({
   activeView,
@@ -11,6 +12,8 @@ export default function UpcomingsView({
   openDetails,
   upcomingGamesError,
   upcomingGamesLoading,
+  upcomingGamesNote,
+  retryGames,
   userAge,
 }) {
   return (
@@ -38,14 +41,14 @@ export default function UpcomingsView({
                   </div>
                 </div>
               ) : upcomingGamesError ? (
-                <div className="automatic-games-message">
-                  <span>⚠️</span>
-                  <div>
-                    <strong>Upcoming games unavailable</strong>
-                    <p>{upcomingGamesError}</p>
-                  </div>
-                </div>
+                <ServiceNotice
+                  tone="error"
+                  message={upcomingGamesError}
+                  onRetry={retryGames}
+                />
               ) : filteredUpcomingGames.length > 0 ? (
+                <>
+                <ServiceNotice message={upcomingGamesNote} onRetry={retryGames} />
                 <div className="automatic-games-grid">
                   {filteredUpcomingGames.map((game) => {
                     const requiredAge = getRequiredGameAge(game.name);
@@ -113,6 +116,7 @@ export default function UpcomingsView({
                     );
                   })}
                 </div>
+                </>
               ) : (
                 <div className="automatic-games-message">
                   <span>📅</span>

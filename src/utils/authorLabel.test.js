@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { authorLabel, plural, verdictName } from "./authorLabel.js";
+import { authorLabel, verdictName } from "./authorLabel.js";
 
 describe("authorLabel", () => {
   it("shows @username when the entry stored one", () => {
@@ -35,18 +35,5 @@ describe("verdictName", () => {
   it("copes with unknown values", () => {
     expect(verdictName("some-thing")).toBe("some thing");
     expect(verdictName(undefined)).toBe("");
-  });
-});
-
-describe("plural", () => {
-  it("uses the singular for exactly one", () => {
-    expect(plural(1, "Follower")).toBe("1 Follower");
-    expect(plural(1, "station")).toBe("1 station");
-  });
-
-  it("uses the plural otherwise", () => {
-    expect(plural(0, "Follower")).toBe("0 Followers");
-    expect(plural(2, "Follower")).toBe("2 Followers");
-    expect(plural(3, "Activity", "Activities")).toBe("3 Activities");
   });
 });

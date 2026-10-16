@@ -60,7 +60,7 @@ import {
   indexBookings,
 } from "./cafe/utils/bookingWrites.js";
 import { upsertById } from "../utils/listUtils.js";
-import { plural } from "../utils/authorLabel.js";
+import { plural, pluralWord } from "../utils/plural.js";
 
 // The map library (Leaflet) only downloads when someone opens Map view.
 const CafeMap = lazy(() => import("./cafe/views/CafeMap.jsx"));
@@ -540,7 +540,7 @@ export default function Cafe() {
         // Tell the café owner (in-app + push).
         notifyUser(
           selectedCafe.ownerUid,
-          `New booking request: ${bookingBase.customerName} • ${selectedDate} at ${selectedTime} • ${seatCount} seat${seatCount > 1 ? "s" : ""} at ${selectedCafe.name}.`,
+          `New booking request: ${bookingBase.customerName} • ${selectedDate} at ${selectedTime} • ${plural(seatCount, "seat")} at ${selectedCafe.name}.`,
           NOTIFY_TITLES.cafe,
         );
       } catch (firebaseError) {
@@ -706,7 +706,7 @@ export default function Cafe() {
               </div>
               <div>
                 <strong>{cafeStats.stations}</strong>
-                <small>{cafeStats.stations === 1 ? "Station" : "Stations"}</small>
+                <small>{pluralWord(cafeStats.stations, "Station")}</small>
               </div>
               <div>
                 <strong>
@@ -1106,7 +1106,7 @@ export default function Cafe() {
                       {saving
                         ? "Sending Request..."
                         : selectedTime
-                          ? `Request ${selectedTime} • ${seatCount} seat${seatCount > 1 ? "s" : ""} • ₹${(Number(selectedSpec ? selectedSpec.price : selectedCafe.pricePerHour) || 0) * seatCount}/hr`
+                          ? `Request ${selectedTime} • ${plural(seatCount, "seat")} • ₹${(Number(selectedSpec ? selectedSpec.price : selectedCafe.pricePerHour) || 0) * seatCount}/hr`
                           : "Select a Time Slot"}
                     </button>
                   </>
@@ -1139,8 +1139,8 @@ export default function Cafe() {
                 <span>DISCOVER</span>
                 <h2>Gaming Cafés</h2>
                 <p>
-                  <b>{filteredCafes.length}</b> café
-                  {filteredCafes.length === 1 ? "" : "s"} found
+                  <b>{filteredCafes.length}</b>{" "}
+                  {pluralWord(filteredCafes.length, "café")} found
                 </p>
               </div>
             </div>
@@ -1229,8 +1229,8 @@ export default function Cafe() {
                       <span>
                         🎮{" "}
                         {cafe.specs.length
-                          ? `${cafe.specs.length} station types`
-                          : `${cafe.totalSeats} seats`}
+                          ? plural(cafe.specs.length, "station type")
+                          : plural(cafe.totalSeats, "seat")}
                       </span>
                     </div>
                     <div className="cafe-card-actions">

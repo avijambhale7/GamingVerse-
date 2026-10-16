@@ -11,6 +11,8 @@ import { CLUB_INTERESTS, getClubInterestMeta } from "../data/clubs.js";
 import { chatDayKey, chatDayLabel, chatTime } from "../utils/text.js";
 import { horizontalGames } from "../utils/catalogue.js";
 import UserFeed from "./UserFeed.jsx";
+import { plural } from "../../../utils/plural.js";
+import ServiceNotice from "../../../components/ServiceNotice.jsx";
 
 export default function SpacesView({
   activeView,
@@ -26,7 +28,8 @@ export default function SpacesView({
   filteredGamingClubs,
   filteredPosters,
   gamingClubs,
-  joinedClubIds,
+  isClubMember,
+  sendingClubPost,
   leaveClub,
   liveNews,
   newClubDescription,
@@ -166,9 +169,12 @@ export default function SpacesView({
                     </span>
                   </button>
 
-                  {newsError && (
-                    <div className="news-live-note">{newsError}</div>
-                  )}
+                  <ServiceNotice
+                    className="news-live-note"
+                    message={newsError}
+                    onRetry={fetchLiveGamingNews}
+                    retrying={newsLoading}
+                  />
                 </div>
 
                 <div className="news-layout">
@@ -282,7 +288,7 @@ export default function SpacesView({
                       (club) => club.id === selectedClubId,
                     );
                     if (!selectedClub) return null;
-                    const joined = joinedClubIds.includes(selectedClub.id);
+                    const joined = isClubMember(selectedClub);
                     const clubMembers = selectedClub.memberCount || 0;
 
                     return (
@@ -314,7 +320,7 @@ export default function SpacesView({
                           </p>
 
                           <div className="club-open-meta">
-                            <span>♟ {clubMembers} members</span>
+                            <span>♟ {plural(clubMembers, "member")}</span>
                             <span>● {selectedClub.interest}</span>
                             <span>{joined ? "✓ Joined" : "Not joined"}</span>
                           </div>
@@ -325,7 +331,7 @@ export default function SpacesView({
                               <div className="club-whatsapp-title">
                                 <strong>{selectedClub.name}</strong>
                                 <span>
-                                  {clubMembers} members •{" "}
+                                  {plural(clubMembers, "member")} •{" "}
                                   {joined ? "Online" : "View only"}
                                 </span>
                               </div>
@@ -412,19 +418,30 @@ export default function SpacesView({
                                     setClubPost(event.target.value)
                                   }
                                   placeholder="Type a message"
+                                  aria-label="Message"
                                   maxLength={140}
+                                  enterKeyHint="send"
                                 />
                                 <button
                                   type="submit"
                                   className="club-chat-send"
                                   aria-label="Send message"
+                                  disabled={!clubPost.trim() || sendingClubPost}
                                 >
                                   ➤
                                 </button>
                               </form>
                             ) : (
                               <div className="club-chat-join-note">
-                                Join the club to send messages.
+                                <button
+                                  type="button"
+                                  className="club-chat-join-btn"
+                                  onClick={() =>
+                                    toggleClubMembership(selectedClub.id)
+                                  }
+                                >
+                                  Join club to chat
+                                </button>
                               </div>
                             )}
                           </section>
@@ -569,12 +586,12 @@ export default function SpacesView({
                           </span>
                           <h2>Clubs for Gamers</h2>
                         </div>
-                        <span>{filteredGamingClubs.length} clubs</span>
+                        <span>{plural(filteredGamingClubs.length, "club")}</span>
                       </div>
 
                       <div className="clubs-grid">
                         {filteredGamingClubs.map((club) => {
-                          const joined = joinedClubIds.includes(club.id);
+                          const joined = isClubMember(club);
                           return (
                             <article
                               className="gaming-club-card"
@@ -609,7 +626,7 @@ export default function SpacesView({
                                 <p>{club.description}</p>
 
                                 <div className="gaming-club-card-footer">
-                                  <span>👥 {club.memberCount || 0} members</span>
+                                  <span>👥 {plural(club.memberCount, "member")}</span>
                                   <button
                                     type="button"
                                     className={joined ? "joined" : ""}

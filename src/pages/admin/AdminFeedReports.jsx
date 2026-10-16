@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { onValue, ref, remove, update } from "firebase/database";
 import { db } from "../../firebase";
+import { plural } from "../../utils/plural.js";
 
 const REASON_LABELS = {
   spam: "Spam",
@@ -112,7 +113,7 @@ export default function AdminFeedReports({ bannedUids, onBan, onMessage }) {
                 {post?.caption && <p>{post.caption}</p>}
                 <div className="admin-feed-report-reasons">
                   <b>
-                    {count} report{count === 1 ? "" : "s"}
+                    {plural(count, "report")}
                   </b>
                   {Object.entries(reasons).map(([reason, n]) => (
                     <span key={reason}>

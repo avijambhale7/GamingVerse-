@@ -14,6 +14,7 @@ import useEscapeKey from "../../../utils/useEscapeKey.js";
 
 export default function TrailerModal({
   closeTrailer,
+  retryTrailer,
   selectedGame,
   showTrailer,
 }) {
@@ -42,10 +43,17 @@ export default function TrailerModal({
             🎬
           </span>
           <strong>No trailer found</strong>
-          <small>{`We couldn't find a playable trailer for ${title}.`}</small>
-          <button type="button" onClick={openOnYouTube}>
-            ▶ Search on YouTube
-          </button>
+          <small>{`We couldn't find a playable trailer for ${title}. The trailer service may be busy — try again, or search YouTube.`}</small>
+          <div className="gv-trailer-state-actions">
+            {retryTrailer && (
+              <button type="button" onClick={retryTrailer}>
+                ↻ Try again
+              </button>
+            )}
+            <button type="button" onClick={openOnYouTube}>
+              ▶ Search on YouTube
+            </button>
+          </div>
         </div>
       </div>
     );

@@ -16,6 +16,7 @@ import { getGameDetails } from "../utils/gameInfo.js";
 import { normalizeTrailerGameName } from "../utils/text.js";
 import { reviewOptions } from "../data/reviewOptions.js";
 import ReviewCard from "./ReviewCard.jsx";
+import { plural } from "../../../utils/plural.js";
 
 /* Geometry of the semicircular meter gauge. The path is a half
    circle of GAUGE_RADIUS drawn left to right, so an arc segment
@@ -491,7 +492,7 @@ export default function GameDetailsModal({
                                 totalVotes
                                   ? `${activePercent}% ${
                                       activeSegment.label || "positive"
-                                    } from ${totalVotes} votes`
+                                    } from ${plural(totalVotes, "vote")}`
                                   : "No votes yet"
                               }
                             >

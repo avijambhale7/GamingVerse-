@@ -41,8 +41,9 @@ export function getCachedTrailer(gameName) {
   return videoId ? `https://www.youtube.com/watch?v=${videoId}` : "";
 }
 
-/* Returns a YouTube watch URL, or "" when no trailer is found. */
-export function findYouTubeTrailer(gameName) {
+/* Returns a YouTube watch URL, or "" when no trailer is found.
+   { force: true } ("Try again") asks again even after a recent miss. */
+export function findYouTubeTrailer(gameName, { force = false } = {}) {
   const name = String(gameName || "").trim();
   if (!name) return Promise.resolve("");
   const key = name.toLowerCase();
@@ -51,7 +52,7 @@ export function findYouTubeTrailer(gameName) {
   if (cached?.videoId) {
     return Promise.resolve(`https://www.youtube.com/watch?v=${cached.videoId}`);
   }
-  if (cached?.missAt && Date.now() - cached.missAt < MISS_TTL_MS) {
+  if (!force && cached?.missAt && Date.now() - cached.missAt < MISS_TTL_MS) {
     return Promise.resolve("");
   }
 

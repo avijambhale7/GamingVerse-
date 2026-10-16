@@ -4,10 +4,11 @@
    café; "you are here" shows when Near me was used.
    Rendered by ../../Cafe.jsx in Map view.
 ========================================================= */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "../styles/cafe-map.css";
+import ServiceNotice from "../../../components/ServiceNotice.jsx";
 
 const escapeHtml = (text) =>
   String(text || "").replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`);
@@ -24,6 +25,10 @@ export default function CafeMap({ cafes, coords, userLocation, onSelect }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const layerRef = useRef(null);
+  const tilesRef = useRef(null);
+  // Map tiles come from OpenStreetMap; if they can't load the map is a
+  // blank grey box, so say so and offer "Try again".
+  const [tilesFailed, setTilesFailed] = useState(false);
   const onSelectRef = useRef(onSelect);
 
   useEffect(() => {
@@ -36,17 +41,36 @@ export default function CafeMap({ cafes, coords, userLocation, onSelect }) {
       zoom: 5,
       scrollWheelZoom: false,
     });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    const tiles = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: "&copy; OpenStreetMap contributors",
-    }).addTo(map);
+    });
+    let loaded = 0;
+    let failed = 0;
+    tiles.on("tileload", () => {
+      loaded += 1;
+      setTilesFailed(false);
+    });
+    tiles.on("tileerror", () => {
+      failed += 1;
+      // Only when nothing at all is loading (one slow tile isn't an outage).
+      if (!loaded && failed >= 2) setTilesFailed(true);
+    });
+    tiles.addTo(map);
+    tilesRef.current = tiles;
     layerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
     return () => {
       map.remove();
       mapRef.current = null;
+      tilesRef.current = null;
     };
   }, []);
+
+  const retryTiles = () => {
+    setTilesFailed(false);
+    tilesRef.current?.redraw();
+  };
 
   useEffect(() => {
     const map = mapRef.current;
@@ -86,6 +110,15 @@ export default function CafeMap({ cafes, coords, userLocation, onSelect }) {
 
   return (
     <div className="gv-cafe-map-wrap">
+      <ServiceNotice
+        tone="error"
+        message={
+          tilesFailed
+            ? "The map couldn't load (no connection to OpenStreetMap). Your cafés are still listed in List view."
+            : ""
+        }
+        onRetry={retryTiles}
+      />
       <div
         ref={containerRef}
         className="gv-cafe-map"

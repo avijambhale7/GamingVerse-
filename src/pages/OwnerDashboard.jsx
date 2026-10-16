@@ -37,6 +37,7 @@ import { getSellerName } from "../utils/profileName.js";
 import { mergePhotoList } from "../utils/photoList.js";
 import { NO_SHOW, canMarkNoShow, noShowCount } from "./cafe/utils/noShow.js";
 import { homePathFor } from "../utils/authFlow.js";
+import { plural } from "../utils/plural.js";
 
 const OWNER_ROLES = new Set([
   "owner",
@@ -1071,13 +1072,13 @@ export default function OwnerDashboard() {
                               className="dp-noshow-chip"
                               title="No-shows this customer has had at this café"
                             >
-                              ⚠ {pastNoShows} no-show{pastNoShows === 1 ? "" : "s"} here
+                              ⚠ {plural(pastNoShows, "no-show")} here
                             </span>
                           )}
                           <span>🕐 {booking.time}</span>
                           <span>🎮 {booking.station || "Gaming station"}</span>
                           {Number(booking.seats) > 1 && (
-                            <span>👥 {booking.seats} seats</span>
+                            <span>👥 {plural(booking.seats, "seat")}</span>
                           )}
                           <span>
                             📍 {booking.address || "Address unavailable"}

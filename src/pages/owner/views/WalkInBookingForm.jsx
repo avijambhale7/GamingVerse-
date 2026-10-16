@@ -19,6 +19,7 @@ import {
   isValidPhone,
   normalizePhone,
 } from "../../../utils/purchaseRequests.js";
+import { plural } from "../../../utils/plural.js";
 
 export default function WalkInBookingForm({ cafes, ownerUid, onDone }) {
   // Captured when the form opens; good enough for picking today's slots.
@@ -71,7 +72,7 @@ export default function WalkInBookingForm({ cafes, ownerUid, onDone }) {
         date,
         time,
         seats,
-        station: seats > 1 ? `${seats} seats (walk-in)` : "Walk-in",
+        station: seats > 1 ? `${plural(seats, "seat")} (walk-in)` : "Walk-in",
         pricePerHour,
         totalPrice: pricePerHour * seats,
         status: "Confirmed",
@@ -152,7 +153,7 @@ export default function WalkInBookingForm({ cafes, ownerUid, onDone }) {
           >
             {Array.from({ length: maxSeats }, (_, i) => i + 1).map((n) => (
               <option key={n} value={n}>
-                {n} seat{n > 1 ? "s" : ""}
+                {plural(n, "seat")}
               </option>
             ))}
           </select>
