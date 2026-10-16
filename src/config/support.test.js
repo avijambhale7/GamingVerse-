@@ -23,18 +23,13 @@ describe("placeholder detection", () => {
   });
 });
 
-// Fails if a dummy value is ever filled in. While the email hasn't been
-// set yet (see the TODO in support.js) this check is skipped, and
-// Admin → System status shows a warning instead.
+// Fails if a dummy value is ever filled in.
 describe("support contacts are real", () => {
   it("WhatsApp is either off or a real number", () => {
     expect(isPlaceholderWhatsApp(SUPPORT_WHATSAPP)).toBe(false);
   });
 
-  it.skipIf(isPlaceholderEmail(SUPPORT_EMAIL) && SUPPORT_EMAIL === "support@gamingverse.example")(
-    "the support email is real",
-    () => {
-      expect(isPlaceholderEmail(SUPPORT_EMAIL)).toBe(false);
-    },
-  );
+  it("the support email is real", () => {
+    expect(isPlaceholderEmail(SUPPORT_EMAIL)).toBe(false);
+  });
 });

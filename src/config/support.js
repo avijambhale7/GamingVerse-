@@ -2,17 +2,13 @@
    SUPPORT CONTACT DETAILS
    Shown in the "Help & Support" pop-up (login page, profile,
    and the date-of-birth note in Edit Profile).
-
-   TODO: replace SUPPORT_EMAIL with the real support address.
-   While it's a placeholder, Admin → System status shows a ⚠️
-   and the "support contacts are real" unit test is skipped.
 ========================================================= */
 
-export const SUPPORT_EMAIL = "support@gamingverse.example";
+export const SUPPORT_EMAIL = "avijambhale9@gmail.com";
 
 // WhatsApp number in international format, digits only (country code
 // first, e.g. 919876543210). Empty = no WhatsApp option is shown.
-export const SUPPORT_WHATSAPP = "";
+export const SUPPORT_WHATSAPP = "917387859144";
 
 // Values that mean "not filled in yet".
 export function isPlaceholderEmail(email = SUPPORT_EMAIL) {
