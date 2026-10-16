@@ -69,6 +69,7 @@ export default function HomeView({
                     src={heroGames[heroIndex % heroGames.length].image}
                     alt={heroGames[heroIndex % heroGames.length].name}
                     className="hero-image"
+                    fetchPriority="high"
                   />
                   <div className="hero-overlay"></div>
                 </div>
@@ -108,7 +109,7 @@ export default function HomeView({
                         onClick={() => setHeroIndex(index)}
                         aria-label={`Show ${game.name}`}
                       >
-                        {game.image ? <img src={game.image} alt="" /> : <span className="game-image-placeholder" aria-hidden="true">🎮</span>}
+                        {game.image ? <img src={game.image} alt="" loading="lazy" decoding="async" /> : <span className="game-image-placeholder" aria-hidden="true">🎮</span>}
                         <span>{game.name}</span>
                       </button>
                     ))}
@@ -211,7 +212,7 @@ export default function HomeView({
                         }
                       >
                         {game.image ? (
-                          <img src={game.image} alt={game.name} />
+                          <img src={game.image} alt={game.name} loading="lazy" decoding="async" />
                         ) : (
                           <span className="game-image-placeholder" aria-hidden="true">🎮</span>
                         )}

@@ -1,0 +1,4 @@
+# GamingVerse — everything public may be crawled; /api is server-only.
+User-agent: *
+Allow: /
+Disallow: /api/
