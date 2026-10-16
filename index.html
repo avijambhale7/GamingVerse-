@@ -7,12 +7,29 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#000000" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #000;
+      }
+    </style>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Loaded without blocking the first paint: text shows in the system
+         font for a moment, then switches to Inter. -->
     <link
+      rel="preload"
+      as="style"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
-      rel="stylesheet"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      />
+    </noscript>
     <title>GamingVerse</title>
     <meta
       name="description"
@@ -41,7 +58,15 @@
     <meta name="twitter:image" content="https://gaming-verse-ashy.vercel.app/icon-512.png" />
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Shown until the app's JavaScript arrives (same look as
+         src/components/PageLoading.jsx); React replaces it. -->
+    <div id="root">
+      <div
+        style="min-height: 100vh; background: #000; color: white; display: flex; justify-content: center; align-items: center; font-size: 20px; font-family: system-ui, sans-serif"
+      >
+        Loading GamingVerse...
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
