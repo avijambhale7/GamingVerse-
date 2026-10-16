@@ -186,6 +186,21 @@ export default function GameDetailsModal({
                         }
                         alt=""
                         aria-hidden="true"
+                        onLoad={(event) => {
+                          // Videos without an HD thumbnail don't fail: YouTube
+                          // sends a 120×90 grey placeholder instead. Swap to
+                          // the standard thumbnail, which every video has.
+                          const image = event.currentTarget;
+                          if (
+                            image.naturalWidth <= 120 &&
+                            image.src.includes("/maxresdefault.jpg")
+                          ) {
+                            image.src = image.src.replace(
+                              "/maxresdefault.jpg",
+                              "/hqdefault.jpg",
+                            );
+                          }
+                        }}
                         onError={(event) => {
                           const fallbackImage =
                             selectedGame?.heroImage ||
