@@ -27,6 +27,13 @@ function stateOf(ok, known = true) {
   return ok ? "ok" : "warn";
 }
 
+// Why the server can't use FIREBASE_SERVICE_ACCOUNT (from /api/health).
+const SERVICE_ACCOUNT_FIXES = {
+  misnamed: "A variable with a similar name exists. Its name must be exactly FIREBASE_SERVICE_ACCOUNT (no spaces).",
+  not_json: "FIREBASE_SERVICE_ACCOUNT isn't valid JSON. Paste the whole key file again, from the first { to the last }.",
+  incomplete: "FIREBASE_SERVICE_ACCOUNT is missing parts of the key file. Paste the whole key file again.",
+};
+
 function rowsFrom(health) {
   // Without the server key nothing else on the server can be checked.
   const serverReady = health.serviceAccount === true;
@@ -35,7 +42,10 @@ function rowsFrom(health) {
       id: "serviceAccount",
       label: "Server key (username login, push notifications)",
       state: stateOf(serverReady),
-      fix: `Add FIREBASE_SERVICE_ACCOUNT (the service-account JSON on one line) in ${ENV_HINT}, then redeploy.`,
+      fix: `${
+        SERVICE_ACCOUNT_FIXES[health.serviceAccountProblem] ||
+        "Add FIREBASE_SERVICE_ACCOUNT (the whole service-account JSON file)."
+      } Set it in ${ENV_HINT}, then redeploy.`,
     },
     {
       id: "rules",
@@ -106,7 +116,11 @@ export default function AdminSystemStatus() {
         const body = await response.json().catch(() => ({}));
         if (!alive) return;
         if (response.status === 503) {
-          setState({ loading: false, rows: rowsFrom({ serviceAccount: false }), error: "" });
+          setState({
+            loading: false,
+            rows: rowsFrom({ serviceAccount: false, serviceAccountProblem: body.serviceAccountProblem }),
+            error: "",
+          });
         } else if (!response.ok) {
           setState({
             loading: false,
