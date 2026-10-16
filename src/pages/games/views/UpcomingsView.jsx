@@ -13,6 +13,7 @@ export default function UpcomingsView({
   upcomingGamesError,
   upcomingGamesLoading,
   upcomingGamesNote,
+  upcomingFilterActive = false,
   retryGames,
   userAge,
 }) {
@@ -117,6 +118,14 @@ export default function UpcomingsView({
                   })}
                 </div>
                 </>
+              ) : upcomingGamesNote && !upcomingFilterActive ? (
+                // Live loading failed and the fallback had nothing either —
+                // that's not a filter result, so offer Try again.
+                <ServiceNotice
+                  tone="error"
+                  message="Couldn't load upcoming games right now."
+                  onRetry={retryGames}
+                />
               ) : (
                 <div className="automatic-games-message">
                   <span>📅</span>

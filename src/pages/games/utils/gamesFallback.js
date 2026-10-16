@@ -36,6 +36,14 @@ export function releaseDateISO(value = "") {
   return "";
 }
 
+// Whether a release date ("19 November 2026", "2026-11-19", …) is after
+// today. Compares real dates — comparing the raw text put
+// "19 November 2026" before "2026-…" and dropped every built-in game.
+export function isUpcomingRelease(releaseDate, todayISO = "") {
+  const iso = releaseDateISO(releaseDate);
+  return Boolean(iso) && iso > todayISO;
+}
+
 // Built-in games that haven't come out yet (release date after today),
 // soonest first. `games`: [{ name, releaseDate, … }].
 export function futureGames(games = [], todayISO = "") {

@@ -105,7 +105,13 @@ import {
 } from "./games/utils/text.js";
 import { verdictName } from "../utils/authorLabel.js";
 import { plural } from "../utils/plural.js";
-import { futureGames, readSavedGames, savedOnLabel } from "./games/utils/gamesFallback.js";
+import {
+  futureGames,
+  isUpcomingRelease,
+  readSavedGames,
+  savedOnLabel,
+} from "./games/utils/gamesFallback.js";
+import { indiaTodayISO } from "./cafe/utils/indiaTime.js";
 
 /* =========================================================
    GAMES PAGE
@@ -121,7 +127,7 @@ const UPCOMING_UNAVAILABLE_MESSAGE =
 // Upcoming fallback when the live list and its saved copy are both
 // unavailable.
 function builtInUpcomingGames() {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = indiaTodayISO();
   return futureGames(
     completeGameCatalogue.map((game) => {
       const details = getGameDetails(game.name) || {};
@@ -1216,8 +1222,8 @@ function Games() {
         matchesHomeCategory(game, activeCategory) &&
         !containsBlockedGameTerm(game.name) &&
         !hiddenGames[normalizeGameSearchText(game.name)] &&
-        game.releaseDate &&
-        game.releaseDate > new Date().toISOString().slice(0, 10),
+        // Real date comparison (built-in games say "19 November 2026").
+        isUpcomingRelease(game.releaseDate, indiaTodayISO()),
     );
   }, [
     upcomingGames,
@@ -2188,6 +2194,7 @@ function Games() {
         upcomingGamesError={upcomingGamesError}
         upcomingGamesLoading={upcomingGamesLoading}
         upcomingGamesNote={upcomingGamesNote}
+        upcomingFilterActive={Boolean(search.trim()) || activeCategory !== "All"}
         retryGames={retryGames}
         userAge={userAge}
       />
