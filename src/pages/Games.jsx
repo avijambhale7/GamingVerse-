@@ -234,6 +234,28 @@ function Games() {
     update(ref(db, `notifications/${uid}/${notificationId}`), { read: true });
   };
 
+  // Closing the bell after looking counts as reading everything in it,
+  // so the bell's dot goes away. (While it's open, unread ones keep
+  // their own dot so you can see what's new.)
+  const markAllNotificationsRead = useEffectEvent(() => {
+    const uid = auth.currentUser?.uid;
+    const patch = {};
+    notifications.forEach((item) => {
+      if (!item.read) patch[`${item.id}/read`] = true;
+    });
+    if (!uid || !Object.keys(patch).length) return;
+    update(ref(db, `notifications/${uid}`), patch).catch((error) =>
+      console.error("Mark all read failed:", error),
+    );
+  });
+  const notificationsWereOpen = useRef(false);
+  useEffect(() => {
+    if (notificationsWereOpen.current && !showNotifications) {
+      markAllNotificationsRead();
+    }
+    notificationsWereOpen.current = showNotifications;
+  }, [showNotifications]);
+
   useEffect(() => {
     // Games.jsx only ever mounts while ProtectedRoute has an authenticated
     // user, so there's no user-less case to reset for here — notifications
@@ -2165,7 +2187,7 @@ function Games() {
       {/* ===================================================
             NAVBAR
         =================================================== */}
-      <GamesNavbar
+      <GamesNavbar
         focusSearch={focusSearch}
         navigate={navigate}
         markNotificationRead={markNotificationRead}
@@ -2181,7 +2203,7 @@ function Games() {
         setActiveView={setActiveView}
         setNotificationTab={setNotificationTab}
         setSearch={setSearch}
-        setShowNotifications={setShowNotifications}
+        setShowNotifications={setShowNotifications}
         showNotifications={showNotifications}
       />
 
@@ -2215,7 +2237,7 @@ function Games() {
         filteredPosters={filteredPosters}
         heroGames={heroGames}
         heroIndex={heroIndex}
-        openDetails={openDetails}
+        openDetails={openDetails}
         setActiveCategory={setActiveCategory}
         setHeroIndex={setHeroIndex}
         setSearch={setSearch}
@@ -2243,7 +2265,7 @@ function Games() {
         communityTalks={communityTalks}
         createGamingClub={createGamingClub}
         fetchLiveGamingNews={fetchLiveGamingNews}
-        filteredGamingClubs={filteredGamingClubs}
+        filteredGamingClubs={filteredGamingClubs}
         filteredPosters={filteredPosters}
         gamingClubs={gamingClubs}
         isClubMember={isClubMember}
@@ -2285,7 +2307,7 @@ function Games() {
         closeDetails={closeDetails}
         collectionGames={collectionGames}
         composerVerdict={composerVerdict}
-        likedReviewIds={likedReviewIds}
+        likedReviewIds={likedReviewIds}
         openPoster={openPoster}
         openTrailer={openTrailer}
         postCommunityReview={postCommunityReview}

@@ -58,6 +58,8 @@ export default function GamesNavbar({
   setShowNotifications,
   showNotifications,
 }) {
+  const hasUnread = notifications.some((item) => !item.read);
+
   return (
     <>
       <header className="games-navbar">
@@ -208,13 +210,16 @@ export default function GamesNavbar({
                 onClick={() => {
                   setShowNotifications((current) => !current);
                 }}
-                aria-label="Notifications"
+                aria-label={hasUnread ? "Notifications (unread)" : "Notifications"}
                 aria-expanded={showNotifications}
               >
                 <span className="navbar-icon">
                   <GVIcon name="bell" size={19} />
                 </span>
-                <span className="notification-dot" aria-hidden="true"></span>
+                {/* Only when something is unread — it used to show always. */}
+                {hasUnread && (
+                  <span className="notification-dot" aria-hidden="true"></span>
+                )}
               </button>
 
               <button
