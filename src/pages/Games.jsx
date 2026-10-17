@@ -112,6 +112,7 @@ import {
 import { indiaTodayISO } from "./cafe/utils/indiaTime.js";
 import { dedupeGames, gameNameKey, rememberEsrbRating } from "./games/utils/ageRating.js";
 import { notificationTarget } from "../utils/notificationTarget.js";
+import { seededShuffle } from "./games/utils/shuffle.js";
 
 /* =========================================================
    GAMES PAGE
@@ -1242,11 +1243,31 @@ function Games() {
     hiddenGames,
   ]);
 
+  // The Live Catalogue shows its games in a new random order on every
+  // visit, then reshuffles every 40 s — but not while the pointer or
+  // keyboard focus is on the cards, the tab is hidden, or a search is on.
+  const [catalogueSeed, setCatalogueSeed] = useState(() =>
+    Math.floor(Math.random() * 1e9),
+  );
+  const cataloguePaused = useRef(false);
+  useEffect(() => {
+    if (activeView !== "home") return undefined;
+    const timer = setInterval(() => {
+      if (document.hidden || cataloguePaused.current) return;
+      setCatalogueSeed((seed) => seed + 1);
+    }, 40000);
+    return () => clearInterval(timer);
+  }, [activeView]);
+  const pauseCatalogueShuffle = (paused) => {
+    cataloguePaused.current = paused;
+  };
+
   const visibleAutomaticGames = useMemo(() => {
-    return showAllAutomaticGames
+    const ordered = search.trim()
       ? filteredAutomaticGames
-      : filteredAutomaticGames.slice(0, 24);
-  }, [filteredAutomaticGames, showAllAutomaticGames]);
+      : seededShuffle(filteredAutomaticGames, catalogueSeed);
+    return showAllAutomaticGames ? ordered : ordered.slice(0, 24);
+  }, [filteredAutomaticGames, showAllAutomaticGames, search, catalogueSeed]);
 
   const filteredUpcomingGames = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -2274,6 +2295,8 @@ function Games() {
         showAllFeaturedGames={showAllFeaturedGames}
         userAge={userAge}
         visibleAutomaticGames={visibleAutomaticGames}
+        catalogueShuffleKey={catalogueSeed}
+        pauseCatalogueShuffle={pauseCatalogueShuffle}
       />
 
       {/* ===================================================

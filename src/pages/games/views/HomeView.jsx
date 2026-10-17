@@ -51,6 +51,8 @@ export default function HomeView({
   showAllFeaturedGames,
   userAge,
   visibleAutomaticGames,
+  catalogueShuffleKey,
+  pauseCatalogueShuffle,
 }) {
   return (
     <>
@@ -319,7 +321,16 @@ export default function HomeView({
                   onRetry={retryGames}
                   retrying={automaticGamesLoading}
                 />
-                <div className="automatic-games-grid">
+                {/* key: a reshuffle re-mounts the grid so it fades in;
+                    hovering or focusing the cards pauses the reshuffle. */}
+                <div
+                  key={catalogueShuffleKey}
+                  className="automatic-games-grid gv-shuffle-in"
+                  onMouseEnter={() => pauseCatalogueShuffle(true)}
+                  onMouseLeave={() => pauseCatalogueShuffle(false)}
+                  onFocus={() => pauseCatalogueShuffle(true)}
+                  onBlur={() => pauseCatalogueShuffle(false)}
+                >
                   {visibleAutomaticGames.map((game) => {
                     const requiredAge = getRequiredGameAge(game);
                     const accessible = canAccessGame(game, userAge);
