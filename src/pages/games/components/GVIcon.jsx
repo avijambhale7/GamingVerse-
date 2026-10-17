@@ -95,6 +95,28 @@ function GVIcon({ name, size = 21 }) {
         <path d="M15 12h.01M18 10h.01" />
       </>
     ),
+    // Verdict icons (Skip, Timepass, Go for it, Perfection).
+    alert: (
+      <>
+        <path d="m21.7 18-8-14a2 2 0 0 0-3.4 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3Z" />
+        <path d="M12 9v4M12 17h.01" />
+      </>
+    ),
+    clock: (
+      <>
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 7v5l3 2" />
+      </>
+    ),
+    thumbsUp: (
+      <>
+        <path d="M7 10v11" />
+        <path d="M15 5.9 14 10h5.8a2 2 0 0 1 1.9 2.6l-2.3 8a2 2 0 0 1-1.9 1.4H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.8a2 2 0 0 0 1.8-1.1L12 2a3.1 3.1 0 0 1 3 3.9Z" />
+      </>
+    ),
+    star: (
+      <path d="M12 2.8 14.8 8.5l6.3.9-4.6 4.5 1.1 6.3L12 17.2l-5.6 3 1.1-6.3L2.9 9.4l6.3-.9L12 2.8Z" />
+    ),
   };
 
   return <svg {...common}>{paths[name]}</svg>;

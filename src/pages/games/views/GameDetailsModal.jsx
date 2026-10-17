@@ -16,6 +16,7 @@ import { getGameDetails } from "../utils/gameInfo.js";
 import { normalizeTrailerGameName } from "../utils/text.js";
 import { reviewOptions } from "../data/reviewOptions.js";
 import ReviewCard from "./ReviewCard.jsx";
+import GVIcon from "../components/GVIcon.jsx";
 import { plural } from "../../../utils/plural.js";
 
 /* Geometry of the semicircular meter gauge. The path is a half
@@ -26,11 +27,12 @@ const GAUGE_PATH = "M 12 100 A 88 88 0 0 1 188 100";
 
 /* Drawn in this order, worst verdict first, so the arc reads from
    the left exactly like the legend underneath it. */
+// `glyph` is the GVIcon in each legend pill, `hint` the line under its name.
 const METER_SEGMENTS = [
-  { key: "skip", tone: "skip", label: "Skip" },
-  { key: "timepass", tone: "timepass", label: "Timepass" },
-  { key: "go-for-it", tone: "go", label: "Go for it" },
-  { key: "perfection", tone: "perfection", label: "Perfection" },
+  { key: "skip", tone: "skip", label: "Skip", glyph: "alert", hint: "Not worth your time" },
+  { key: "timepass", tone: "timepass", label: "Timepass", glyph: "clock", hint: "Fun to kill time" },
+  { key: "go-for-it", tone: "go", label: "Go for it", glyph: "thumbsUp", hint: "Recommended" },
+  { key: "perfection", tone: "perfection", label: "Perfection", glyph: "star", hint: "A must-play" },
 ];
 
 const PREFERS_REDUCED_MOTION =
@@ -567,7 +569,11 @@ export default function GameDetailsModal({
                         return (
                           <div
                             key={segment.key}
-                            className={`inline-gv-meter-legend ${segment.tone}`}
+                            className={`inline-gv-meter-legend ${segment.tone}${
+                              totalVotes && activeSegment.key === segment.key
+                                ? " is-active"
+                                : ""
+                            }`}
                             tabIndex={0}
                             role="button"
                             aria-label={`${segment.label}: ${percent}%`}
@@ -576,8 +582,13 @@ export default function GameDetailsModal({
                             onFocus={() => setHoveredKey(segment.key)}
                             onBlur={() => setHoveredKey(null)}
                           >
-                            <span className="inline-gv-meter-dot" />
-                            <span>{segment.label}</span>
+                            <span className="inline-gv-meter-dot" aria-hidden="true">
+                              <GVIcon name={segment.glyph} size={17} />
+                            </span>
+                            <span className="inline-gv-meter-legend-text">
+                              <span>{segment.label}</span>
+                              <small>{segment.hint}</small>
+                            </span>
                             <strong>{percent}%</strong>
                           </div>
                         );
