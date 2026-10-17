@@ -43,6 +43,7 @@ import {
   stationLabel,
 } from "./cafe/utils/slots.js";
 import CafeQrModal from "./cafe/views/CafeQrModal.jsx";
+import SupportLink from "../components/SupportLink.jsx";
 import {
   CafeReviewList,
   RateVisitModal,
@@ -1257,6 +1258,21 @@ export default function Cafe() {
                   </div>
                 </article>
               ))}
+              {/* With only a few cafes the grid was mostly empty space;
+                  this fills it and invites cafe owners to join. */}
+              {filteredCafes.length < 4 && (
+                <article className="cafe-card cafe-invite-card">
+                  <span className="cafe-invite-icon" aria-hidden="true">🎮</span>
+                  <h3>More cafes are joining</h3>
+                  <p>
+                    Own a gaming cafe? List it on GamingVerse and get bookings
+                    with QR tickets.
+                  </p>
+                  <SupportLink className="cafe-invite-btn" topic="Listing my gaming cafe">
+                    Talk to us
+                  </SupportLink>
+                </article>
+              )}
             </div>
             )}
             {moreCafes && (

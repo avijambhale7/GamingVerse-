@@ -10,6 +10,7 @@ import { money } from "../../../utils/money.js";
 import ProductImage from "./ProductImage.jsx";
 import { isSoldOut } from "../../../utils/stock.js";
 import { resultCountLabel } from "../../../utils/listUtils.js";
+import SupportLink from "../../../components/SupportLink.jsx";
 
 export default function ProductCatalogue({
   openRequest,
@@ -379,6 +380,23 @@ export default function ProductCatalogue({
       ) : (
         <div className="products-grid">
           {filteredProducts.map(renderProductCard)}
+          {/* Few listings left the grid mostly empty; this fills the
+              space and invites sellers. */}
+          {filteredProducts.length < 4 && !hasMore && (
+            <article className="market-invite-card">
+              <span className="market-invite-icon" aria-hidden="true">
+                {marketType === "accessories" ? "🖱️" : "💿"}
+              </span>
+              <h3>More items coming soon</h3>
+              <p>
+                Have game CDs or gaming gear to sell? Sell them safely on
+                GamingVerse, with every request checked by an admin.
+              </p>
+              <SupportLink className="market-invite-btn" topic="Selling on GamingVerse">
+                Talk to us
+              </SupportLink>
+            </article>
+          )}
         </div>
       )}
       {hasMore && onLoadMore && (

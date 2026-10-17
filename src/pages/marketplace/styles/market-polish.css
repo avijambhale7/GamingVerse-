@@ -593,3 +593,52 @@
   color: #fda4af !important;
   font-weight: 800;
 }
+
+/* "More items coming soon" card: fills the grid when only a few items
+   are listed. Its button opens Help & Support. */
+.market-invite-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 320px;
+  padding: 32px 24px;
+  border: 1.5px dashed rgba(236, 72, 153, 0.45);
+  border-radius: 22px;
+  background: radial-gradient(circle at 50% 0%, rgba(236, 72, 153, 0.14), transparent 65%),
+    var(--gv-surface-2);
+  text-align: center;
+}
+.market-invite-icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #a855f7, #ec4899);
+  font-size: 30px;
+  box-shadow: 0 10px 30px rgba(236, 72, 153, 0.3);
+}
+.market-invite-card h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+}
+.market-invite-card p {
+  margin: 0;
+  max-width: 260px;
+  color: #a8a8b3;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.market-invite-btn.support-link {
+  margin-top: 6px;
+  padding: 10px 22px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #a855f7, #ec4899);
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+}

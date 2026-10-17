@@ -22,7 +22,7 @@ export default function AppTopNav() {
           key={tab.key}
           className={`app-top-nav-link ${activeKey === tab.key ? "active" : ""}`}
           type="button"
-          title={tab.label}
+          data-label={tab.label}
           aria-current={activeKey === tab.key ? "page" : undefined}
           onClick={() => navigate(tab.to)}
         >

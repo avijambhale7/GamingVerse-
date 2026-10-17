@@ -280,3 +280,71 @@
     animation: none;
   }
 }
+
+/* Release-year badge and rating (replace the old "AUTO" badge). */
+.automatic-game-meta .automatic-game-rating {
+  flex-shrink: 0;
+  margin-left: auto;
+  overflow: visible;
+  color: #fbbf24;
+  font-weight: 800;
+}
+
+/* Loading skeletons: same size as a real card, gently shimmering. */
+.automatic-game-skeleton {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 15px;
+  background: rgba(12, 12, 19, 0.92);
+}
+
+.skeleton-block {
+  margin: 0 14px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(168, 85, 247, 0.14) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: gv-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-image {
+  aspect-ratio: 16 / 9;
+  margin: 0;
+  border-radius: 0;
+}
+
+.skeleton-line {
+  height: 14px;
+}
+
+.skeleton-line.short {
+  width: 45%;
+}
+
+.skeleton-button {
+  width: 110px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+@keyframes gv-skeleton-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-block {
+    animation: none;
+  }
+}

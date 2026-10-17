@@ -14,6 +14,28 @@
   overflow: hidden;
   background: #111117;
 }
+/* Leaflet's own controls are white by default; match the dark map. */
+.gv-cafe-map .leaflet-bar {
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+}
+.gv-cafe-map .leaflet-bar a {
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  background: #16161c;
+  color: #e9d5ff;
+}
+.gv-cafe-map .leaflet-bar a:hover,
+.gv-cafe-map .leaflet-bar a:focus-visible {
+  background: #24183a;
+  color: #fff;
+}
+.gv-cafe-map .leaflet-control-attribution {
+  background: rgba(8, 8, 11, 0.75);
+  color: #8a8a94;
+}
+.gv-cafe-map .leaflet-control-attribution a {
+  color: #c084fc;
+}
 .gv-cafe-map-note {
   margin: 0;
   color: #9a9aa4;

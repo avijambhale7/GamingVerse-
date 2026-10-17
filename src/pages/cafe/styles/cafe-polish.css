@@ -664,3 +664,53 @@
   border-color: rgba(168, 85, 247, 0.55);
   background: rgba(168, 85, 247, 0.12);
 }
+
+/* "More cafes are joining" card: fills the grid when only a few cafes
+   are listed. Not clickable itself; its button opens Help & Support. */
+.cafe-card.cafe-invite-card {
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 320px;
+  padding: 32px 26px;
+  text-align: center;
+  cursor: default;
+  border: 1.5px dashed rgba(168, 85, 247, 0.45);
+  background: radial-gradient(circle at 50% 0%, rgba(168, 85, 247, 0.16), transparent 65%),
+    var(--gv-surface-2);
+}
+.cafe-card.cafe-invite-card:hover {
+  transform: none;
+}
+.cafe-invite-icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #ec4899, #a855f7 60%, #6366f1);
+  font-size: 30px;
+  box-shadow: 0 10px 30px rgba(168, 85, 247, 0.35);
+}
+.cafe-invite-card h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 20px;
+}
+.cafe-invite-card p {
+  margin: 0;
+  max-width: 280px;
+  color: #a8a8b3;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.cafe-invite-btn.support-link {
+  margin-top: 6px;
+  padding: 10px 22px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(120deg, #ec4899, #a855f7);
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+}

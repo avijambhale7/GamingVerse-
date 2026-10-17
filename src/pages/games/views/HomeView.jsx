@@ -358,9 +358,13 @@ export default function HomeView({
                           )}
                           <div className="automatic-game-image-gradient"></div>
 
-                          <div className="automatic-game-source-badge">
-                            AUTO
-                          </div>
+                          {/* Release year instead of "AUTO", which meant
+                              nothing to visitors. */}
+                          {/^\d{4}/.test(game.releaseDate || "") && (
+                            <div className="automatic-game-source-badge">
+                              {game.releaseDate.slice(0, 4)}
+                            </div>
+                          )}
                           <div className="automatic-game-age-badge">
                             {requiredAge}+
                           </div>
@@ -378,6 +382,14 @@ export default function HomeView({
                           <h3>{game.name}</h3>
                           <div className="automatic-game-meta">
                             <span>{game.genre}</span>
+                            {game.rating > 0 && (
+                              <span
+                                className="automatic-game-rating"
+                                aria-label={`Rated ${game.rating.toFixed(1)} out of 5`}
+                              >
+                                ★ {game.rating.toFixed(1)}
+                              </span>
+                            )}
                           </div>
                           <div className="automatic-game-platforms">
                             🎮 {game.platforms}
@@ -399,6 +411,23 @@ export default function HomeView({
                   })}
                 </div>
                 </>
+              ) : automaticGamesLoading ? (
+                /* Shimmering placeholder cards while the catalogue loads,
+                   instead of a "nothing found" message that isn't true yet. */
+                <div
+                  className="automatic-games-grid"
+                  role="status"
+                  aria-label="Loading games"
+                >
+                  {Array.from({ length: 8 }, (_, index) => (
+                    <div className="automatic-game-skeleton" key={index} aria-hidden="true">
+                      <div className="skeleton-block skeleton-image" />
+                      <div className="skeleton-block skeleton-line" />
+                      <div className="skeleton-block skeleton-line short" />
+                      <div className="skeleton-block skeleton-button" />
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="automatic-games-message">
                   <span>🎮</span>

@@ -41,10 +41,16 @@ export default function CafeMap({ cafes, coords, userLocation, onSelect }) {
       zoom: 5,
       scrollWheelZoom: false,
     });
-    const tiles = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: "&copy; OpenStreetMap contributors",
-    });
+    // CARTO's dark map style (OpenStreetMap data), so the map matches
+    // the site's dark theme instead of a bright white block.
+    const tiles = L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      {
+        maxZoom: 19,
+        subdomains: "abcd",
+        attribution: "&copy; OpenStreetMap contributors &copy; CARTO",
+      },
+    );
     let loaded = 0;
     let failed = 0;
     tiles.on("tileload", () => {
